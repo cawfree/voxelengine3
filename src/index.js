@@ -31,7 +31,7 @@ function Char() {
     this.radiation_light = 0;
 
     Char.prototype.sound_hit = function() {
-        var r = get_rand();
+        var r = Math.random();
         if(r < 0.4) {
             r = "blood1";
         } else if (r > 0.4 && r < 0.7) {
@@ -41,7 +41,7 @@ function Char() {
         }
         game.sounds.PlaySound(r, this.chunk.mesh.position, 300);
         if(this.alive) {
-            if(get_rand() > 0.8) {
+            if(Math.random() > 0.8) {
                 game.sounds.PlaySound("hit"+(1+Math.random()*2|0), 
                                       this.chunk.mesh.position,
                                       500);
@@ -183,7 +183,7 @@ function Char() {
                     }
                 }
                 for (var i = 0; i < this.chunk.blood_positions.length; i++) {
-                    if (get_rand() > 0.99) {
+                    if (Math.random() > 0.99) {
                         game.particles.blood(
                             this.chunk.blockSize*this.chunk.blood_positions[i].x + this.chunk.mesh.position.x,
                             this.chunk.blockSize*this.chunk.blood_positions[i].y + this.chunk.mesh.position.y,
@@ -197,32 +197,32 @@ function Char() {
                 this.add_blood--;
                 // Add blood footsteps
                 game.world.addColorBlock(
-                    this.chunk.mesh.position.x + (2 - get_rand() * 4),
+                    this.chunk.mesh.position.x + (2 - Math.random() * 4),
                     game.maps.ground-1,
-                    this.chunk.mesh.position.z + (2 - get_rand() * 4),
-                    138 + get_rand() * 20,
-                    8 + get_rand() * 10,
-                    8 + get_rand() * 10
+                    this.chunk.mesh.position.z + (2 - Math.random() * 4),
+                    138 + Math.random() * 20,
+                    8 + Math.random() * 10,
+                    8 + Math.random() * 10
                 );
             }
             if (this.add_radioactive > 0 && this.moving) {
                 this.add_radioactive--;
                 // Add radioactive footsteps
                 game.world.addColorBlock(
-                                    this.chunk.mesh.position.x + (2 - get_rand() * 4),
+                                    this.chunk.mesh.position.x + (2 - Math.random() * 4),
                                     game.maps.ground-1,
-                                    this.chunk.mesh.position.z + (2 - get_rand() * 4),
-                                    get_rand() * 50 | 0,
-                                    200 + get_rand() * 55 | 0,
-                                    50 + get_rand() * 55 | 0
+                                    this.chunk.mesh.position.z + (2 - Math.random() * 4),
+                                    Math.random() * 50 | 0,
+                                    200 + Math.random() * 55 | 0,
+                                    50 + Math.random() * 55 | 0
                 );
             }
-            if(this.radiation_poisoned > 0 && get_rand() > 0.9) {
+            if(this.radiation_poisoned > 0 && Math.random() > 0.9) {
                 for(var q = 0; q < this.radiation_poisoned; q++) {
                     game.particles.radiation(
-                             this.chunk.mesh.position.x + (2 - get_rand() * 4),
+                             this.chunk.mesh.position.x + (2 - Math.random() * 4),
                              this.chunk.to_y + 1,
-                             this.chunk.mesh.position.z + (2 - get_rand() * 4)
+                             this.chunk.mesh.position.z + (2 - Math.random() * 4)
                     );
                     if(this.radiation_poisoned > 5) {
                         this.chunk.hit(new THREE.Vector3(0,0,0), 1, null);
@@ -304,7 +304,7 @@ function Char() {
                 }, 3000);
             }
             this.dying = 0;
-            var r = get_rand();
+            var r = Math.random();
             if(r > 0.8) {
                 //this.chunk.mesh.rotation.z = Math.PI/2;
                 this.dying = 1;
@@ -358,7 +358,7 @@ function Enemy() {
                     this.target = game.player;
                 }
             } else {
-                if(get_rand() > 0.5) {
+                if(Math.random() > 0.5) {
                     this.target = 0;
                     this.flee = true;
                     this.moving = true;
@@ -374,7 +374,7 @@ function Enemy() {
         if(!size) { size = 1; }
         Char.prototype.create.call(this, model, x, y, z, size);
 
-        this.run_speed = 20; //+get_rand()*50;
+        this.run_speed = 20; //+Math.random()*50;
         this.moving = true;
        // setTimeout(function () { that.moving = true; }, 3000);
     };
@@ -441,7 +441,7 @@ function Enemy() {
                                 if (this.target == 0 && this.weapon != 0) {
                                     if(game.cdList[idx].owner.alive) {
                                         this.target = game.cdList[idx].owner;
-                                        this.follow_timer = get_rand()*10;
+                                        this.follow_timer = Math.random()*10;
                                       //  game.sounds.PlaySound("hunt"+(1+Math.random()*2|0), 
                                       //                        this.chunk.mesh.position,
                                       //                        500);
@@ -481,7 +481,7 @@ function Enemy() {
             this.cd_check += delta;
 
             //if (res.length > 0) {
-            this.chunk.mesh.rotation.y -= (1-get_rand()*2)*Math.sin(delta*3); 
+            this.chunk.mesh.rotation.y -= (1-Math.random()*2)*Math.sin(delta*3); 
             var pos = this.chunk.mesh.position.clone();
             pos.y = game.maps.ground;
             var res = game.world.checkExists(pos);
@@ -506,7 +506,7 @@ function Enemy() {
                     ((res[i] >> 16) & 0xFF) < 25 &&
                     ((res[i] >> 8) & 0xFF) < 25
                 ) {
-                    if(this.add_blood == 0 && get_rand() > 0.5) {
+                    if(this.add_blood == 0 && Math.random() > 0.5) {
                         this.add_blood = 60; // Walking on blood
                     }
                 } else if (((res[i] >> 24) & 0xFF) <= 50  &&
@@ -514,7 +514,7 @@ function Enemy() {
                     ((res[i] >> 8) & 0xFF) < 105 &&
                     ((res[i] >> 8) & 0xFF) >= 50)
                 {
-                    if(this.add_radioactive == 0 && get_rand() > 0.5) {
+                    if(this.add_radioactive == 0 && Math.random() > 0.5) {
                         this.add_radioactive = 30; // walking on radioactive
                         if(this.radiation_poisoned == 0) {
                             this.radiation_light = this.green_light.clone();
@@ -538,14 +538,14 @@ function Enemy() {
                 }
             }
 
-            if (get_rand() < 0.4) {
+            if (Math.random() < 0.4) {
                 game.particles.walkSmoke(this.chunk.mesh.position.x, game.maps.ground+1, this.chunk.mesh.position.z);
             }
         }
     };
 
     Enemy.prototype.shoot = function () {
-        if(get_rand() < this.shoot_ability) {
+        if(Math.random() < this.shoot_ability) {
             Char.prototype.shoot.call(this);
         }
     };
@@ -569,7 +569,7 @@ function Dudo(x, y, z) {
     Dudo.prototype.create = function (x, y, z) {
         Enemy.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z);
         this.chunk.mesh.rotation.order = 'YXZ';
-        if (get_rand() > 0.4) {
+        if (Math.random() > 0.4) {
             this.addWeapon(new Shotgun());
             this.weapon.attach(this.chunk.mesh);
             this.unloadWeapon();
@@ -617,9 +617,9 @@ function AgentBlack(x, y, z) {
     AgentBlack.prototype.create = function (x, y, z) {
         Enemy.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z, 0.5);
         this.chunk.mesh.rotation.order = 'YXZ';
-        if (get_rand() > 0.8) {
+        if (Math.random() > 0.8) {
             this.addWeapon(new Shotgun());
-        } else if(get_rand() > 0.5) {
+        } else if(Math.random() > 0.5) {
             this.addWeapon(new Sniper());
         } else {
             this.addWeapon(new Pistol());
@@ -669,9 +669,9 @@ function Agent(x, y, z) {
     Agent.prototype.create = function (x, y, z) {
         Enemy.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z, 0.5);
         this.chunk.mesh.rotation.order = 'YXZ';
-        if (get_rand() > 0.8) {
+        if (Math.random() > 0.8) {
             this.addWeapon(new Pistol());
-        } else if(get_rand() > 0.5) {
+        } else if(Math.random() > 0.5) {
             this.addWeapon(new Minigun());
         } else {
             this.addWeapon(new Shotgun());
@@ -715,7 +715,7 @@ function Greenie(x, y, z) {
     Greenie.prototype.create = function (x, y, z) {
         Enemy.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z, 1);
         this.chunk.mesh.rotation.order = 'YXZ';
-        if (get_rand() > 0.4) {
+        if (Math.random() > 0.4) {
             this.addWeapon(new P90());
             this.weapon.attach(this.chunk.mesh);
             this.unloadWeapon();
@@ -761,7 +761,7 @@ function Hearty(x, y, z) {
     Hearty.prototype.create = function (x, y, z) {
         Enemy.prototype.create.call(this, this.obj_type, x, game.maps.ground + this.y_offset, z);
         this.chunk.mesh.rotation.order = 'YXZ';
-        if (get_rand() > 0.4) {
+        if (Math.random() > 0.4) {
             this.addWeapon(new Sniper());
         } else {
             this.addWeapon(new RocketLauncher());
@@ -1055,7 +1055,7 @@ function Player(x, y, z) {
                         ((res[i] >> 16) & 0xFF) < 25 &&
                         ((res[i] >> 8) & 0xFF) < 25
                     ) {
-                        if(this.add_blood == 0 && get_rand() > 0.5) {
+                        if(this.add_blood == 0 && Math.random() > 0.5) {
                             this.add_blood = 40;
                         }
                     } else if (((res[i] >> 24) & 0xFF) <= 50  &&
@@ -1063,7 +1063,7 @@ function Player(x, y, z) {
                                ((res[i] >> 8) & 0xFF) < 105 &&
                                ((res[i] >> 8) & 0xFF) >= 50)
                     {
-                        if(this.add_radioactive == 0 && get_rand() > 0.5) {
+                        if(this.add_radioactive == 0 && Math.random() > 0.5) {
                             this.add_radioactive = 30; // walking on radioactive
                             if(this.radiation_poisoned == 0) {
                                 this.radiation_light = this.green_light.clone();
@@ -1113,7 +1113,7 @@ function Player(x, y, z) {
                     if(this.falling) {
                         game.sounds.StopSound("footsteps");
 
-                        if(get_rand() > 0.5) {
+                        if(Math.random() > 0.5) {
                             game.sounds.PlaySound("fall", this.chunk.mesh.position, 400);
                         } else {
                             game.sounds.PlaySound("fall2", this.chunk.mesh.position, 400);
@@ -1146,7 +1146,7 @@ function Player(x, y, z) {
                 }
             }
             this.cd_check += delta;
-            if (get_rand() < 0.4) {
+            if (Math.random() < 0.4) {
                 game.particles.walkSmoke(this.chunk.mesh.position.x, this.chunk.mesh.position.y, this.chunk.mesh.position.z);
             }
             //            this.chunk.mesh.rotation.z = 0.2 * Math.sin(time * this.speed);
@@ -1896,11 +1896,11 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
             var c = this.blocks[x][y][z];
             if (c != 0) {
                 if (this.type == "world") {
-                    if (get_rand() > 0.4) {
+                    if (Math.random() > 0.4) {
                         game.particles_box.world_debris(wx, wy, wz, this.blockSize, (c >> 24) & 0xFF, (c >> 16) & 0xFF, (c >> 8) & 0xFF);
                     }
                 } else {
-                    if (get_rand() > max) {
+                    if (Math.random() > max) {
                        // if(this.mesh.rotation.y == 0) {
                             mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x/2);
                             mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y/2);
@@ -1911,7 +1911,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                        //     mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z)/(Math.PI*2);
                        // }
                         var size = this.blockSize;
-                        if(get_rand() > 0.5) {
+                        if(Math.random() > 0.5) {
                             size = 1;
                         }
                         game.particles_box.debris(
@@ -1924,7 +1924,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                         );
                     }
                     if(this.owner.radioactive_leak) {
-                        if(get_rand() > 0.8) {
+                        if(Math.random() > 0.8) {
                             var mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x/2);
                             var mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y/2);
                             var mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z/2);
@@ -1937,7 +1937,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                         }
                     }
                     if (this.owner.radioactive) {
-                        if(get_rand() > max) {
+                        if(Math.random() > max) {
                             var mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x/2);
                             var mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y/2);
                             var mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z/2);
@@ -1954,10 +1954,10 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                     }
                     if (this.owner.base_type == "enemy" || this.owner.base_type == "player") {
                         var size = this.blockSize;
-                        if(get_rand() > 0.5) {
+                        if(Math.random() > 0.5) {
                             size = 1;
                         }
-                        if(get_rand() > max) {
+                        if(Math.random() > max) {
                             var mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x/2);
                             var mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y/2);
                             var mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z/2);
@@ -2043,9 +2043,9 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
 
 
         if(pos == null || this.type == "ff_object") {
-            x = get_rand() * this.chunk_size_x | 0;
-            z = get_rand() * this.chunk_size_z | 0;
-            y = get_rand() * this.chunk_size_y | 0;
+            x = Math.random() * this.chunk_size_x | 0;
+            z = Math.random() * this.chunk_size_z | 0;
+            y = Math.random() * this.chunk_size_y | 0;
         } else {
           //  if(this.mesh.rotation.y == 0) {
                 var p = this.mesh.position.y - (this.chunk_size_y*this.blockSize)/2;
@@ -2145,7 +2145,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                         if (rx >= 0 && ry >= 0 && rz >= 0 && rx < this.chunk_size_x && ry < this.chunk_size_y && rz < this.chunk_size_z) {
                             if ((this.blocks[rx][ry][rz] >> 8) != 0) {
                                 if (this.owner.base_type == "enemy" || this.owner.base_type == "player") {
-                                    if(get_rand() > max) {
+                                    if(Math.random() > max) {
                                         game.particles.blood(
                        //                            this.mesh.position.x + rx * this.blockSize,
                        //                            this.mesh.position.y + ry * this.blockSize,
@@ -2169,7 +2169,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                             if ((this.blocks[rx][ry][rz] >> 8) != 0) {
                                 ff.push(new THREE.Vector3(rx, ry, rz));
                                 if (this.owner.base_type == "enemy" || this.owner.base_type == "player") {
-                                    if(get_rand() > 0.5) {
+                                    if(Math.random() > 0.5) {
                                         this.blocks[rx][ry][rz] = (0xAA & 0xFF) << 24 | (0x08 & 0xFF) << 16 | (0x08 & 0xFF) << 8;
                                         this.blood_positions.push(new THREE.Vector3(rx, ry, rz));
                                     }
@@ -2350,7 +2350,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                 for (var z = 0; z < this.chunk_size_z; z++) {
                     if (this.blocks[x][y][z] != 0) {
                         var c = this.blocks[x][y][z];
-                        if (get_rand() > 0.9) {
+                        if (Math.random() > 0.9) {
                             game.particles.debris(
                                 pos.x + x * this.blockSize / 2,
                                 pos.y + y * this.blockSize / 2,
@@ -3383,9 +3383,9 @@ function FFChunk() {
     this.type = "ff_chunk";
 
     FFChunk.prototype.hit = function(dmg, dir, type, pos) {
-        dir.x += (1-get_rand()*2);
-        dir.y += (1-get_rand()*2);
-        dir.z += (1-get_rand()*2);
+        dir.x += (1-Math.random()*2);
+        dir.y += (1-Math.random()*2);
+        dir.z += (1-Math.random()*2);
         this.chunk.explode(dir, dmg);
         this.alive = false;
         game.removeFromCD(this.chunk.mesh);
@@ -3617,7 +3617,7 @@ function StreetLamp() {
     };
 
     StreetLamp.prototype.update = function(time, delta) {
-      //  if (get_rand() < this.light.intensity) {
+      //  if (Math.random() < this.light.intensity) {
       //      game.particles_box.fire(
       //          this.chunk.mesh.position.x,
       //          this.chunk.mesh.position.y + 15,
@@ -3723,9 +3723,9 @@ function DeadHearty() {
 
     DeadHearty.prototype.update = function(time, delta) {
         var pos = this.chunk.mesh.position;
-        game.particles.radiation(pos.x+(2-get_rand()*4), pos.y, pos.z+(2-get_rand()*4));
-        if(get_rand() > 0.9) {
-            this.light.intensity = (2-get_rand());
+        game.particles.radiation(pos.x+(2-Math.random()*4), pos.y, pos.z+(2-Math.random()*4));
+        if(Math.random() > 0.9) {
+            this.light.intensity = (2-Math.random());
         }
     };
 
@@ -3763,10 +3763,10 @@ function BarrelFire() {
 
     BarrelFire.prototype.update = function(time, delta) {
         var pos = this.chunk.mesh.position;
-        game.particles.fire(pos.x+(4-get_rand()*8), game.maps.ground+6+this.chunk.to_y*2, pos.z+(4-get_rand()*8));
-        if(get_rand() > 0.9) {
-            this.light.intensity = 2-get_rand()*0.1;
-            this.light.distance = (20+get_rand()*5);
+        game.particles.fire(pos.x+(4-Math.random()*8), game.maps.ground+6+this.chunk.to_y*2, pos.z+(4-Math.random()*8));
+        if(Math.random() > 0.9) {
+            this.light.intensity = 2-Math.random()*0.1;
+            this.light.distance = (20+Math.random()*5);
         }
     };
 
@@ -3804,10 +3804,10 @@ function Barrel() {
 
     Barrel.prototype.update = function(time, delta) {
         var pos = this.chunk.mesh.position;
-        game.particles.radiation(pos.x+(1-get_rand()*2), game.maps.ground+4+this.chunk.to_y*2, pos.z+(1-get_rand()*2));
-        if(get_rand() > 0.9) {
-            this.light.intensity = 2-get_rand()*0.1;
-            this.light.distance = (20+get_rand()*5);
+        game.particles.radiation(pos.x+(1-Math.random()*2), game.maps.ground+4+this.chunk.to_y*2, pos.z+(1-Math.random()*2));
+        if(Math.random() > 0.9) {
+            this.light.intensity = 2-Math.random()*0.1;
+            this.light.distance = (20+Math.random()*5);
         }
     };
 
@@ -3901,7 +3901,7 @@ function Lamp1() {
     };
 
     Lamp1.prototype.update = function(time, delta) {
-        if (get_rand() < this.light.intensity) {
+        if (Math.random() < this.light.intensity) {
             game.particles_box.fire(
                 this.chunk.mesh.position.x,
                 this.chunk.mesh.position.y + 8,
@@ -4055,7 +4055,7 @@ function Heart() {
             if (this.active[i].alive) {
                 this.active[i].rotation.y += Math.sin(delta);
                 this.active[i].position.y = game.maps.ground+6 + Math.sin(time * 2.5);
-                if(get_rand() > 0.5) {
+                if(Math.random() > 0.5) {
                     game.particles.blueMagic(
                                              this.active[i].position.x,
                                              this.active[i].position.y,
@@ -4209,70 +4209,70 @@ function ParticlePool(size, type) {
         this.get({
             size: 0.5,
             type: "smoke",
-            r: 200 + get_rand() * 55 | 0,
-            g: get_rand() * 180 | 0,
-            b: get_rand() * 200 | 0,
+            r: 200 + Math.random() * 55 | 0,
+            g: Math.random() * 180 | 0,
+            b: Math.random() * 200 | 0,
             x: x,
             y: y,
             z: z,
-            life: get_rand() * 1,
+            life: Math.random() * 1,
             power: 0.01,
             gravity: 0,
             bounces: 0,
             mass: 10,
             fx_: 0.5,
             fz_: 0.5,
-            vx: 0.5 - get_rand() * 1,
-            vy: get_rand(),
-            vz: 0.5 - get_rand() * 1
+            vx: 0.5 - Math.random() * 1,
+            vy: Math.random(),
+            vz: 0.5 - Math.random() * 1
         });
     };
 
     ParticlePool.prototype.explosion = function (x, y, z, power, type) {
         var c = 0;
         for (var i = 0; i < power*10; i++) {
-            c = 50+ get_rand()*205|0;
+            c = 50+ Math.random()*205|0;
            // Add smoke
             this.get({
                 size: 0.5,
                 type: "smoke",
-                x: x+2-get_rand()*4,
+                x: x+2-Math.random()*4,
                 y: y,
-                z: z+2-get_rand()*4,
+                z: z+2-Math.random()*4,
                 r: c,
                 g: c,
                 b: c,
-                life: get_rand()*3,
-                power: get_rand() * 5,
+                life: Math.random()*3,
+                power: Math.random() * 5,
                 gravity: -0.5,
                 bounces: 0,
                 mass: 10,
                 fx_: 0.1,
                 fz_: 0.1,
-                vx: get_rand(),
-                vy: get_rand()*2,
-                vz: get_rand()
+                vx: Math.random(),
+                vy: Math.random()*2,
+                vz: Math.random()
             });
             // add fire
             this.get({
                 size: 0.5,
                 type: "smoke",
-                r: 200+get_rand()*55|0,
+                r: 200+Math.random()*55|0,
                 g: 180,
-                b: get_rand()*50|0,
-                x: x+2-get_rand()*4,
+                b: Math.random()*50|0,
+                x: x+2-Math.random()*4,
                 y: y,
-                z: z+2-get_rand()*4,
-                life: get_rand()*3,
-                power: 5 + get_rand() * 5,
+                z: z+2-Math.random()*4,
+                life: Math.random()*3,
+                power: 5 + Math.random() * 5,
                 gravity: 5,
                 bounces: 0,
                 mass: 10,
                 fx_: 0.5,
                 fz_: 0.5,
-                vx: 3 - get_rand() * 6,
-                vy: get_rand() * 8,
-                vz: 3 - get_rand() * 6
+                vx: 3 - Math.random() * 6,
+                vy: Math.random() * 8,
+                vz: 3 - Math.random() * 6
             });
         }
         if (type == "missile") {
@@ -4298,11 +4298,11 @@ function ParticlePool(size, type) {
 
     ParticlePool.prototype.chunkDebris = function (x, y, z, chunk, dirx, diry, dirz, power) {
         var vx, vy, vz, fx, fz;
-        fz = get_rand(); //0.3;//+power/50;
-        fx = get_rand(); // 0.3;//+power/50;
-        vx = dirx + (1 - get_rand() * 2);
-        vy = diry + get_rand() * 4;
-        vz = dirz + (1 - get_rand() * 2);
+        fz = Math.random(); //0.3;//+power/50;
+        fx = Math.random(); // 0.3;//+power/50;
+        vx = dirx + (1 - Math.random() * 2);
+        vy = diry + Math.random() * 4;
+        vz = dirz + (1 - Math.random() * 2);
         type = "chunk_debris";
      //   if(chunk.current_blocks > 0) {
      //       mass = 1/(chunk.current_blocks*0.01); 
@@ -4321,9 +4321,9 @@ function ParticlePool(size, type) {
             y: y,
             z: z,
             life: 5,
-            power: (1 + get_rand() * 5),
+            power: (1 + Math.random() * 5),
             gravity: 9.82,
-            bounces: 2 + get_rand() * 2 | 0,
+            bounces: 2 + Math.random() * 2 | 0,
             mass: 1,
             fx_: fx,
             fz_: fz,
@@ -4337,11 +4337,11 @@ function ParticlePool(size, type) {
     // Shell from a gun
     ParticlePool.prototype.empty_shell = function (x, y, z, mesh) {
         var vx, vy, vz, fx, fz;
-        vx = get_rand();
-        vy = get_rand();
-        vz = get_rand();
-        fx = 0.2 + get_rand();
-        fz = 0.2 + get_rand();
+        vx = Math.random();
+        vy = Math.random();
+        vz = Math.random();
+        fx = 0.2 + Math.random();
+        fz = 0.2 + Math.random();
         this.get({
             chunk_mesh: mesh,
             type: "empty_shell",
@@ -4367,23 +4367,23 @@ function ParticlePool(size, type) {
     ParticlePool.prototype.radioactive_splat = function (x, y, z, size, dirx, diry, dirz) {
         this.get({
             type: "radioactive_splat",
-            r: get_rand() * 50 | 0,
-            g: 200 + get_rand() * 100 | 0,
-            b: 50 + get_rand() * 55 | 0,
+            r: Math.random() * 50 | 0,
+            g: 200 + Math.random() * 100 | 0,
+            b: 50 + Math.random() * 55 | 0,
             size: size,
             x: x,
             y: y,
             z: z,
-            life: get_rand() * 20,
-            power: 2 + get_rand() * 2,
-            gravity: get_rand()*2,
+            life: Math.random() * 20,
+            power: 2 + Math.random() * 2,
+            gravity: Math.random()*2,
             bounces: 0,
             mass: 10,
             fx_: 1.5 - Math.random()*3,
             fz_: 1.5 - Math.random()*3,
-            vx: 0.5 - get_rand() * 2,
-            vy: 0.5 + get_rand() * 2,
-            vz: 0.5 - get_rand() * 2
+            vx: 0.5 - Math.random() * 2,
+            vy: 0.5 + Math.random() * 2,
+            vz: 0.5 - Math.random() * 2
         });
     };
 
@@ -4391,22 +4391,22 @@ function ParticlePool(size, type) {
     ParticlePool.prototype.radioactive_leak = function (x, y, z, size) {
         this.get({
             type: "radioactive_leak",
-            r: get_rand() * 50 | 0,
-            g: 200 + get_rand() * 55 | 0,
-            b: 50 + get_rand() * 55 | 0,
+            r: Math.random() * 50 | 0,
+            g: 200 + Math.random() * 55 | 0,
+            b: 50 + Math.random() * 55 | 0,
             size: size,
             x: x,
             y: y,
             z: z,
-            life: get_rand() * 3,
-            power: 2 + get_rand() * 2,
+            life: Math.random() * 3,
+            power: 2 + Math.random() * 2,
             gravity: 9.82,
             bounces: 0,
             mass: 10,
-            fx: 0.2 + (0.5 - get_rand() * 1),
-            fz: 0.2 + (0.5 - get_rand() * 1),
+            fx: 0.2 + (0.5 - Math.random() * 1),
+            fz: 0.2 + (0.5 - Math.random() * 1),
             vx: 1-Math.random()*2,
-            vy: get_rand()*2.5,
+            vy: Math.random()*2.5,
             vz: 1-Math.random()*2,
         });
     };
@@ -4419,19 +4419,19 @@ function ParticlePool(size, type) {
             x: x,
             y: y,
             z: z,
-            life: get_rand() * 3,
-            power: 3 + get_rand() * 3,
+            life: Math.random() * 3,
+            power: 3 + Math.random() * 3,
             gravity: 9.82,
             r: 138,
-            g: get_rand() * 15 | 0,
-            b: get_rand() * 15 | 0,
+            g: Math.random() * 15 | 0,
+            b: Math.random() * 15 | 0,
             bounces: 2,
             mass: 10,
-            fx: 0.2 + (0.5 - get_rand() * 1),
-            fz: 0.2 + (0.5 - get_rand() * 1),
-            vx: dirx + (0.5 - get_rand() * 1),
-            vy: diry + get_rand(),
-            vz: dirz + (0.5 - get_rand() * 1)
+            fx: 0.2 + (0.5 - Math.random() * 1),
+            fz: 0.2 + (0.5 - Math.random() * 1),
+            vx: dirx + (0.5 - Math.random() * 1),
+            vy: diry + Math.random(),
+            vz: dirz + (0.5 - Math.random() * 1)
         });
     };
 
@@ -4443,19 +4443,19 @@ function ParticlePool(size, type) {
             x: x,
             y: y,
             z: z,
-            life: get_rand() * 4,
-            power: 5 + get_rand() * 5,
+            life: Math.random() * 4,
+            power: 5 + Math.random() * 5,
             gravity: 9.82,
             r: r,
             g: g,
             b: b,
-            bounces: 2 + get_rand() * 2 | 0,
+            bounces: 2 + Math.random() * 2 | 0,
             mass: 10,
             fx_: 0.5 - Math.random(),
             fz_: 0.5 - Math.random(),
-            vx: 2 - get_rand() * 4,
-            vy: 3 + get_rand() * 4,
-            vz: 2 - get_rand() * 4
+            vx: 2 - Math.random() * 4,
+            vy: 3 + Math.random() * 4,
+            vz: 2 - Math.random() * 4
         });
     };
 
@@ -4468,7 +4468,7 @@ function ParticlePool(size, type) {
         var gravity = 9.82;
         if (dirx != null) {
             vx = dirx;
-            vy = diry + get_rand() * 4;
+            vy = diry + Math.random() * 4;
             vz = dirz;
             fx = 0.2;
             fz = 0.2;
@@ -4479,9 +4479,9 @@ function ParticlePool(size, type) {
                 vz = 2 - Math.random() * 4;
                 gravity = 12;
             } else {
-                vx = 2 - get_rand() * 4;
-                vy = 2 + get_rand() * 4;
-                vz = 2 - get_rand() * 4;
+                vx = 2 - Math.random() * 4;
+                vy = 2 + Math.random() * 4;
+                vz = 2 - Math.random() * 4;
             }
             fz = 0.4;
             fx = 0.4;
@@ -4498,8 +4498,8 @@ function ParticlePool(size, type) {
             bounces = 0;
             life = 0.8;
         } else {
-            bounces = 2 + get_rand()*2|0;
-            life = get_rand() * 4;
+            bounces = 2 + Math.random()*2|0;
+            life = Math.random() * 4;
         }
         this.get({
             stay: stay,
@@ -4509,7 +4509,7 @@ function ParticlePool(size, type) {
             y: y,
             z: z,
             life: life,
-            power: 5 + get_rand() * 5,
+            power: 5 + Math.random() * 5,
             gravity: gravity,
             r: r,
             g: g,
@@ -4533,7 +4533,7 @@ function ParticlePool(size, type) {
             x: rand1,
             y: 200,
             z: rand2,
-            life: get_rand() * 15,
+            life: Math.random() * 15,
             power: 0,
             gravity: 5.82,
             r: 79,
@@ -4556,7 +4556,7 @@ function ParticlePool(size, type) {
             x: rand1,
             y: 150,
             z: rand2,
-            life: get_rand() * 25,
+            life: Math.random() * 25,
             power: 0,
             gravity: 0.8,
             r: 255,
@@ -4571,14 +4571,14 @@ function ParticlePool(size, type) {
     };
 
     ParticlePool.prototype.walkSmoke = function (x, y, z) {
-        var rand = -2 + get_rand() * 4;
-        var rand_c = get_rand() * 100 | 0;
+        var rand = -2 + Math.random() * 4;
+        var rand_c = Math.random() * 100 | 0;
         this.get({
             size: 1,
             x: x + rand,
             y: y - 3,
             z: z + rand,
-            life: get_rand(),
+            life: Math.random(),
             power: 0.1,
             gravity: 0,
             r: 155 + rand_c,
@@ -4596,21 +4596,21 @@ function ParticlePool(size, type) {
         var r = 0; 
         var g = 0;
         var b = 0;
-        if(get_rand() > 0.5) {
-            r = get_rand() * 50 | 0;
-            g = 100 + get_rand() * 100 | 0;
-            b = 200 + get_rand() * 55 | 0;
+        if(Math.random() > 0.5) {
+            r = Math.random() * 50 | 0;
+            g = 100 + Math.random() * 100 | 0;
+            b = 200 + Math.random() * 55 | 0;
         } else {
-            r = 200 + get_rand() * 55 | 0;
+            r = 200 + Math.random() * 55 | 0;
             g = 0;
-            b = 200 + get_rand() * 55 | 0; 
+            b = 200 + Math.random() * 55 | 0; 
         }
         this.get({
             size: 0.5,
-            x: 3 - get_rand() * 6 + x,
-            y: 3 - get_rand() * 6 + y,
-            z: 3 - get_rand() * 6 + z,
-            life: get_rand() * 1.3,
+            x: 3 - Math.random() * 6 + x,
+            y: 3 - Math.random() * 6 + y,
+            z: 3 - Math.random() * 6 + z,
+            life: Math.random() * 1.3,
             power: 0.5,
             gravity: -2,
             r: r,
@@ -4622,61 +4622,61 @@ function ParticlePool(size, type) {
     ParticlePool.prototype.radiation = function (x, y, z) {
         this.get({
             size: 0.3,
-            x: 3 - get_rand() * 6 + x,
-            y: 3 - get_rand() * 6 + y,
-            z: 3 - get_rand() * 6 + z,
-            life: get_rand() * 1.3,
+            x: 3 - Math.random() * 6 + x,
+            y: 3 - Math.random() * 6 + y,
+            z: 3 - Math.random() * 6 + z,
+            life: Math.random() * 1.3,
             power: 0.5,
             gravity: -1,
-            r: get_rand() * 50 | 0,
-            g: 200 + get_rand() * 100 | 0,
-            b: 50 + get_rand() * 55 | 0,
+            r: Math.random() * 50 | 0,
+            g: 200 + Math.random() * 100 | 0,
+            b: 50 + Math.random() * 55 | 0,
         });
     };
 
     ParticlePool.prototype.blueMagic = function (x, y, z) {
         this.get({
             size: 0.5,
-            x: 3 - get_rand() * 6 + x,
-            y: 3 - get_rand() * 6 + y,
-            z: 3 - get_rand() * 6 + z,
-            life: get_rand() * 1.3,
+            x: 3 - Math.random() * 6 + x,
+            y: 3 - Math.random() * 6 + y,
+            z: 3 - Math.random() * 6 + z,
+            life: Math.random() * 1.3,
             power: 0.5,
             gravity: -2,
-            r: get_rand() * 50 | 0,
-            g: 100 + get_rand() * 100 | 0,
-            b: 200 + get_rand() * 55 | 0,
+            r: Math.random() * 50 | 0,
+            g: 100 + Math.random() * 100 | 0,
+            b: 200 + Math.random() * 55 | 0,
         });
     };
 
     ParticlePool.prototype.debris_smoke = function (x, y, z, size) {
         // random black/white + fire
         var r, g, b;
-        var v = get_rand();
+        var v = Math.random();
         if (v < 0.3) {
-            r = 200 + get_rand() * 55;
-            g = 150 + get_rand() * 80;
-            b = 20 + get_rand() * 20;
+            r = 200 + Math.random() * 55;
+            g = 150 + Math.random() * 80;
+            b = 20 + Math.random() * 20;
             // white 
-            //          r = g = b = 200+get_rand()*55;
+            //          r = g = b = 200+Math.random()*55;
         } else if (v < 0.6) {
             // black
-            //            r = g = b = 0+get_rand()*50;
+            //            r = g = b = 0+Math.random()*50;
 
-            r = 200 + get_rand() * 55;
-            g = 80 + get_rand() * 80;
-            b = 20 + get_rand() * 20;
+            r = 200 + Math.random() * 55;
+            g = 80 + Math.random() * 80;
+            b = 20 + Math.random() * 20;
         } else {
-            r = 150 + get_rand() * 105;
-            g = 80 + get_rand() * 80;
-            b = 20 + get_rand() * 20;
+            r = 150 + Math.random() * 105;
+            g = 80 + Math.random() * 80;
+            b = 20 + Math.random() * 20;
         }
         this.get({
             size: size,
             x: x,
             y: y,
             z: z,
-            life: get_rand() * 0.5,
+            life: Math.random() * 0.5,
             power: 0.5,
             gravity: -2,
             r: r,
@@ -4691,7 +4691,7 @@ function ParticlePool(size, type) {
             x: x,
             y: y,
             z: z,
-            life: get_rand(),
+            life: Math.random(),
             power: 0.5,
             gravity: -2,
             r: 255,
@@ -4701,23 +4701,23 @@ function ParticlePool(size, type) {
     };
 
     ParticlePool.prototype.gunSmoke = function (x, y, z, dirx, diry, dirz) {
-        var rand_c = get_rand() * 100 | 0;
+        var rand_c = Math.random() * 100 | 0;
         this.get({
             size: 0.5,
-            x: x + (2 - get_rand() * 4),
+            x: x + (2 - Math.random() * 4),
             y: y,
-            z: z + (2 - get_rand() * 4),
-            life: get_rand() * 1,
+            z: z + (2 - Math.random() * 4),
+            life: Math.random() * 1,
             power: 5.5,
-            gravity: get_rand() * 6,
+            gravity: Math.random() * 6,
             r: 200 + rand_c,
             g: 100 + rand_c,
             b: 0,
             fx_: 0.1,
             fz_: 0.1,
-            vx: get_rand() + dirx,
-            vy: get_rand() + diry,
-            vz: get_rand() + dirz,
+            vx: Math.random() + dirx,
+            vy: Math.random() + diry,
+            vz: Math.random() + dirz,
         });
     };
 
@@ -4732,15 +4732,15 @@ function ParticlePool(size, type) {
             x: x,
             y: y,
             z: z,
-            life: 4+get_rand()*2,
+            life: 4+Math.random()*2,
             gravity: 9.82,
-            bounces: get_rand()*3|0,
+            bounces: Math.random()*3|0,
             power: 2,
             fx_: 1.2,
             fz_: 1.2,
             vx: dirx,
             vz: dirz,
-            vy: diry+(0.6-get_rand()*1) + 5,
+            vy: diry+(0.6-Math.random()*1) + 5,
             light: false,
         });
     };
@@ -4759,9 +4759,9 @@ function ParticlePool(size, type) {
             power: 6,
             fx_: 2.4 + speed,
             fz_: 2.4 + speed,
-            vx: dirx+(0.1-get_rand()*0.2),
-            vz: dirz+(0.1-get_rand()*0.2),
-            vy: diry+(0.1-get_rand()*0.2),
+            vx: dirx+(0.1-Math.random()*0.2),
+            vz: dirz+(0.1-Math.random()*0.2),
+            vy: diry+(0.1-Math.random()*0.2),
             light: false,
         });
     };
@@ -4786,8 +4786,8 @@ function ParticlePool(size, type) {
                 power: 6,
                 fx_: 2.4 + speed,
                 fz_: 2.4 + speed,
-                vx: dirx + (1 - get_rand() * 2),
-                vz: dirz + (1 - get_rand() * 2),
+                vx: dirx + (1 - Math.random() * 2),
+                vz: dirz + (1 - Math.random() * 2),
                 vy: diry,
             }));
         }
@@ -4835,8 +4835,8 @@ function ParticlePool(size, type) {
             power: 7,
             fx_: 2.4 + speed,
             fz_: 2.4 + speed,
-            vx: dirx+(0.1-get_rand()*0.2),
-            vz: dirz+(0.1-get_rand()*0.2),
+            vx: dirx+(0.1-Math.random()*0.2),
+            vz: dirz+(0.1-Math.random()*0.2),
             vy: diry,
         });
     };
@@ -4859,9 +4859,9 @@ function ParticlePool(size, type) {
             power: 2,
             fx_: 2.4 + speed,
             fz_: 2.4 + speed,
-            vx: dirx+(0.5-get_rand()),
-            vz: dirz+(0.5-get_rand()),
-            vy: diry+(0.5-get_rand()),
+            vx: dirx+(0.5-Math.random()),
+            vz: dirz+(0.5-Math.random()),
+            vy: diry+(0.5-Math.random()),
             light: false,
         });
     };
@@ -4884,8 +4884,8 @@ function ParticlePool(size, type) {
             power: 6,
             fx_: 2.4 + speed,
             fz_: 2.4 + speed,
-            vx: dirx+(0.1-get_rand()*0.2),
-            vz: dirz+(0.1-get_rand()*0.2),
+            vx: dirx+(0.1-Math.random()*0.2),
+            vz: dirz+(0.1-Math.random()*0.2),
             vy: diry,
         });
     };
@@ -5025,9 +5025,9 @@ function Particle() {
         this.spin = 1;
 
         this.bounces = 0;
-        this.bounces_orig = (1 + get_rand() * 2) | 0;
-        this.fx_ = get_rand() * 2;
-        this.fz_ = get_rand() * 2;
+        this.bounces_orig = (1 + Math.random() * 2) | 0;
+        this.fx_ = Math.random() * 2;
+        this.fz_ = Math.random() * 2;
 
         this.newPos = 0;
         this.ticks = 0;
@@ -5118,7 +5118,7 @@ function Particle() {
 
             switch (this.type) {
                 case "world_debris":
-                    if (get_rand() > 0.8) {
+                    if (Math.random() > 0.8) {
                         game.particles.debris_smoke(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, 0.5);
                     }
                     this.mesh.rotation.set(this.vx, this.vy, this.vz);
@@ -5136,9 +5136,9 @@ function Particle() {
                 );
                 if(this.chunk.owner.base_type == "enemy" || this.chunk.owner.base_type == "player") {
                     game.particles.blood(
-                              this.mesh.position.x + (2 - get_rand() * 4),
-                              this.mesh.position.y + (2 - get_rand() * 4),
-                              this.mesh.position.z + (2 - get_rand() * 4),
+                              this.mesh.position.x + (2 - Math.random() * 4),
+                              this.mesh.position.y + (2 - Math.random() * 4),
+                              this.mesh.position.z + (2 - Math.random() * 4),
                               0.5, this.vx/this.spin, this.vy/this.spin, this.vz/this.spin
                     );
                     this.bounce();
@@ -5146,25 +5146,25 @@ function Particle() {
                 break;
                 case "empty_shell":
                     this.mesh.rotation.set(this.vx, this.vy, this.vz);
-                    if(get_rand() > 0.96) {
+                    if(Math.random() > 0.96) {
                         game.sounds.PlaySound("ammo_fall", this.mesh.position, 210);
                     }
                     this.bounce();
-                    if (get_rand() > 0.9) {
-                        game.particles.smoke(this.mesh.position.x + get_rand(), this.mesh.position.y, this.mesh.position.z, 0.3); // this.mesh.rotation);
+                    if (Math.random() > 0.9) {
+                        game.particles.smoke(this.mesh.position.x + Math.random(), this.mesh.position.y, this.mesh.position.z, 0.3); // this.mesh.rotation);
                     }
                     break;
                 case "radioactive_leak":
                     this.addRadiationToGround();
                     break;
                 case "radioactive_splat":
-                   // this.gravity = get_rand()*Math.sin(time);
+                   // this.gravity = Math.random()*Math.sin(time);
                     break;
                 case "blood":
                     this.addBloodToGround();
                     break;
                 case "minigun":
-                   // if (get_rand() > 0.9) {
+                   // if (Math.random() > 0.9) {
                    //     game.particles.smoke(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, 0.3); //, this.mesh.rotation);
                    // }
                     this.cd(time, delta);
@@ -5173,9 +5173,9 @@ function Particle() {
                     //game.particles.smoke(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, 0.2); //, this.mesh.rotation);
                     this.cd(time, delta);
                     game.particles.smoke(
-                        this.mesh.position.x - 0.5 + get_rand(),
-                        this.mesh.position.y - 0.5 + get_rand(),
-                        this.mesh.position.z - 0.5 + get_rand(),
+                        this.mesh.position.x - 0.5 + Math.random(),
+                        this.mesh.position.y - 0.5 + Math.random(),
+                        this.mesh.position.z - 0.5 + Math.random(),
                         0.3); //, this.mesh.rotation);
                     break;
                 case "shell":
@@ -5183,19 +5183,19 @@ function Particle() {
                     break;
                 case "grenade":
                     game.particles.smoke(
-                        this.mesh.position.x - 0.5 + get_rand(),
-                        this.mesh.position.y - 0.5 + get_rand(),
-                        this.mesh.position.z - 0.5 + get_rand(),
+                        this.mesh.position.x - 0.5 + Math.random(),
+                        this.mesh.position.y - 0.5 + Math.random(),
+                        this.mesh.position.z - 0.5 + Math.random(),
                         0.3); //, this.mesh.rotation);
                     this.bounce();
                     this.cd(time, delta);
                     break;
                 case "snow":
-                    this.mesh.position.z += get_rand()*Math.cos(time/5);
-                    this.mesh.position.x += get_rand()*Math.cos(time/5);
+                    this.mesh.position.z += Math.random()*Math.cos(time/5);
+                    this.mesh.position.x += Math.random()*Math.cos(time/5);
                     break;
                 case "rain":
-                    if(get_rand() > 0.5) {
+                    if(Math.random() > 0.5) {
                         this.splatterRain();
                     }
                     break;
@@ -5228,7 +5228,7 @@ function Particle() {
               //case "chunk_debris":
               //  break;
                 case "empty_shell":
-                    this.mesh.rotation.set(1.57, 0, Math.PI * get_rand());
+                    this.mesh.rotation.set(1.57, 0, Math.PI * Math.random());
                     //this.placeOnGround();
                     break;
                 case "shell":
@@ -5277,19 +5277,19 @@ function Particle() {
     Particle.prototype.addRadiationToGround = function () {
         if (game.world.checkExists(this.mesh.position.clone()).length != 0) {
             game.world.addColorBlock(this.mesh.position.x, this.mesh.position.y-1, this.mesh.position.z, this.r, this.g, this.b);
-            if (get_rand() > 0.5) {
+            if (Math.random() > 0.5) {
                 game.world.addColorBlock(this.mesh.position.x + 1, this.mesh.position.y-1, this.mesh.position.z + 1, this.r, this.g, this.b);
             }
-            if (get_rand() > 0.5) {
+            if (Math.random() > 0.5) {
                 game.world.addColorBlock(this.mesh.position.x - 1, this.mesh.position.y-1, this.mesh.position.z + 1,this.r, this.g, this.b);
             }
-            if (get_rand() > 0.5) {
+            if (Math.random() > 0.5) {
                 game.world.addColorBlock(this.mesh.position.x, this.mesh.position.y-1, this.mesh.position.z + 1, this.r, this.g, this.b);
             }
-            if (get_rand() > 0.5) {
+            if (Math.random() > 0.5) {
                 game.world.addColorBlock(this.mesh.position.x, this.mesh.position.y-1, this.mesh.position.z - 1, this.r, this.g, this.b);
             }
-            if (get_rand() > 0.5) {
+            if (Math.random() > 0.5) {
                 game.world.addColorBlock(this.mesh.position.x - 1, this.mesh.position.y-1, this.mesh.position.z - 1, this.r, this.g, this.b);
             }
             this.active = 0;
@@ -5299,19 +5299,19 @@ function Particle() {
     Particle.prototype.addBloodToGround = function () {
         if (game.world.checkExists(this.mesh.position.clone()).length != 0) {
             game.world.addColorBlock(this.mesh.position.x, this.mesh.position.y-1, this.mesh.position.z, 138, 7, 7);
-            if (get_rand() > 0.5) {
+            if (Math.random() > 0.5) {
                 game.world.addColorBlock(this.mesh.position.x + 1, this.mesh.position.y-1, this.mesh.position.z + 1, 128, 7, 7);
             }
-            if (get_rand() > 0.5) {
+            if (Math.random() > 0.5) {
                 game.world.addColorBlock(this.mesh.position.x - 1, this.mesh.position.y-1, this.mesh.position.z + 1, 158, 7, 7);
             }
-            if (get_rand() > 0.5) {
+            if (Math.random() > 0.5) {
                 game.world.addColorBlock(this.mesh.position.x, this.mesh.position.y-1, this.mesh.position.z + 1, 158, 7, 7);
             }
-            if (get_rand() > 0.5) {
+            if (Math.random() > 0.5) {
                 game.world.addColorBlock(this.mesh.position.x, this.mesh.position.y-1, this.mesh.position.z - 1, 158, 20, 20);
             }
-            if (get_rand() > 0.5) {
+            if (Math.random() > 0.5) {
                 game.world.addColorBlock(this.mesh.position.x - 1, this.mesh.position.y-1, this.mesh.position.z - 1, 128, 20, 20);
             }
             this.active = 0;
@@ -5669,52 +5669,6 @@ var lfsr = (function(){
 lfsr.setSeed();
 
 //////////////////////////////////////////////////////////////////////
-// Static random numbers used where repetition is not an issue
-// ruby: x = [] ; 200.times do |d| x << (rand(100000).to_f)/100000.0 end
-//////////////////////////////////////////////////////////////////////
-// Between 0 - 1
-var stat_num_map = [
-    0.77746, 0.38325, 0.82969, 0.05736, 0.33151, 0.43286, 0.26037, 0.85439, 0.57122, 0.73872, 0.28077,
-    0.49789, 0.58933, 0.09512, 0.75828, 0.41196, 0.0807, 0.50793, 0.75701, 0.68665, 0.08474, 0.16016,
-    0.43875, 0.81966, 0.61215, 0.13987, 0.50136, 0.95285, 0.57436, 0.70174, 0.67813, 0.49587, 0.83456,
-    0.73027, 0.86012, 0.0924, 0.43373, 0.98667, 0.45188, 0.79781, 0.3626, 0.59903, 0.99556, 0.43216,
-    0.45571, 0.64112, 0.85143, 0.75009, 0.94958, 0.36195, 0.35397, 0.58863, 0.01064, 0.68362, 0.05133,
-    0.44274, 0.68037, 0.63273, 0.74691, 0.17625, 0.73156, 0.52864, 0.35168, 0.72908, 0.89366, 0.83301,
-    0.42203, 0.06304, 0.94694, 0.54525, 0.32247, 0.57608, 0.80634, 0.12162, 0.02639, 0.27409, 0.25831,
-    0.44754, 0.11184, 0.02311, 0.03436, 0.34766, 0.79593, 0.6783, 0.19008, 0.00183, 0.9768, 0.3301,
-    0.20512, 0.11993, 0.58733, 0.03422, 0.18652, 0.33865, 0.24856, 0.77101, 0.09319, 0.55872, 0.4192,
-    0.19792, 0.38903, 0.18217, 0.65521, 0.94122, 0.6499, 0.30811, 0.89826, 0.09543, 0.87178, 0.51089,
-    0.89722, 0.1274, 0.9531, 0.13679, 0.25896, 0.37279, 0.43501, 0.21727, 0.88999, 0.11503, 0.17848,
-    0.16564, 0.88475, 0.3432, 0.39633, 0.5139, 0.36382, 0.69775, 0.06262, 0.66089, 0.33486, 0.78529,
-    0.93855, 0.43085, 0.47818, 0.51298, 0.03996, 0.46495, 0.66424, 0.70112, 0.82315, 0.23446, 0.41075,
-    0.04516, 0.52066, 0.17212, 0.49415, 0.63684, 0.03172, 0.33451, 0.72341, 0.18837, 0.2362, 0.97798,
-    0.90431, 0.11286, 0.05978, 0.15245, 0.3747, 0.49159, 0.09513, 0.75614, 0.05216, 0.4333, 0.45121,
-    0.1803, 0.80168, 0.54211, 0.70403, 0.11684, 0.16551, 0.2291, 0.20917, 0.87581, 0.01812, 0.78673,
-    0.42666, 0.1552, 0.3867, 0.71406, 0.58447, 0.80413, 0.72927, 0.99886, 0.18384, 0.48211, 0.60929,
-    0.87499, 0.30788, 0.34838, 0.73324, 0.2314, 0.3593, 0.91898, 0.10065, 0.39987, 0.72087, 0.4016,
-    0.25805, 0.05051, 0.70141, 0.83446, 0.84307, 0.05106, 0.00964, 0.3026, 0.31798, 0.95077, 0.11042,
-    0.14119, 0.84516, 0.98542, 0.98902, 0.05506, 0.6112, 0.67786, 0.69112, 0.84239, 0.36507, 0.01173,
-    0.87732, 0.6359, 0.35604, 0.24673, 0.44617, 0.37018, 0.76193, 0.72712, 0.88626, 0.01643, 0.9409,
-    0.18734, 0.03506, 0.67585, 0.28602, 0.74197, 0.17264, 0.9465, 0.42938, 0.41604, 0.21111, 0.2791,
-    0.9034, 0.16715, 0.59769, 0.73084, 0.60744, 0.67604, 0.48812, 0.12001, 0.76125, 0.46963, 0.39409,
-    0.36054, 0.32468, 0.19014, 0.66838, 0.54969, 0.09771, 0.22431, 0.1457, 0.66945, 0.71004, 0.69441,
-    0.36207, 0.48927, 0.89035, 0.90515, 0.43973, 0.02986, 0.3815, 0.86726, 0.13784, 0.68904, 0.38601,
-    0.69549, 0.78781, 0.3029, 0.86677, 0.5366, 0.62056, 0.0575, 0.20683, 0.10916, 0.0233, 0.25164,
-    0.72227, 0.97402, 0.45464, 0.55953, 0.45408, 0.27305, 0.63581, 0.38718, 0.04453, 0.78245, 0.67373,
-    0.72035, 0.38357, 0.26547
-];
-var cnt = 0;
-function get_rand() {
-    if(cnt < stat_num_map.length-1) {
-        cnt++;
-    } else {
-        cnt = 0;
-    }
-    return stat_num_map[cnt];
-}
-
-
-//////////////////////////////////////////////////////////////////////
 // Load image files to pixel map
 //////////////////////////////////////////////////////////////////////
 function loadImageFile(file, callback) {
@@ -5982,7 +5936,7 @@ function Weapon() {
             game.scene.add(this.chunk.mesh);
             game.addToCD(this.chunk.mesh);
             this.setRotation(Math.PI, Math.PI, 0);
-            this.setPosition(pos.x+(6-get_rand()*12), 6, pos.z+(6-get_rand()*12));
+            this.setPosition(pos.x+(6-Math.random()*12), 6, pos.z+(6-Math.random()*12));
             this.attached = false;
             this.attached_id = 0;
         }
@@ -6008,7 +5962,7 @@ function Weapon() {
             //var light = this.shoot_light.clone();
             var draw_light = false;
             // Keep fps higher
-            if(this.obj_type == "minigun" && get_rand() > 0.5) {
+            if(this.obj_type == "minigun" && Math.random() > 0.5) {
             //    draw_light = false;
             }
             if (draw_light) {
@@ -6070,7 +6024,7 @@ function Shotgun() {
 
         for (var i = 0; i < 10; i++) {
             game.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
-            game.particles.smoke(point.x + (1 - get_rand() * 2), point.y + (1 - get_rand() * 2), point.z + (1 - get_rand() * 2), 0.5);
+            game.particles.smoke(point.x + (1 - Math.random() * 2), point.y + (1 - Math.random() * 2), point.z + (1 - Math.random() * 2), 0.5);
         }
        // shooter.translateZ(-this.recoil);
         game.particles.ammoShell(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
@@ -6305,7 +6259,7 @@ function RocketLauncher() {
 
         for(var i = 0; i < 50; i++) {
             game.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
-            game.particles.smoke(point.x+(1-get_rand()*2), point.y + (1-get_rand()*2), point.z+(1-get_rand()*2), 0.5);
+            game.particles.smoke(point.x+(1-Math.random()*2), point.y + (1-Math.random()*2), point.z+(1-Math.random()*2), 0.5);
         }
 //        shooter.translateZ(-this.recoil);
     };
@@ -6605,9 +6559,9 @@ function World() {
                     } else {
                         game.particles.radiation
                         (
-                         this.radioactive_blocks[v][0]+(1-get_rand()*2),
-                         this.radioactive_blocks[v][1]+(1-get_rand()*2),
-                         this.radioactive_blocks[v][2]+(1-get_rand()*2)
+                         this.radioactive_blocks[v][0]+(1-Math.random()*2),
+                         this.radioactive_blocks[v][1]+(1-Math.random()*2),
+                         this.radioactive_blocks[v][2]+(1-Math.random()*2)
                         );
                     }
                 }
