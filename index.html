@@ -36,6 +36,15 @@ p {
 
 <body>
 
+<div style="position: relative; z-index: 1; " id="container"></div>
+
+<script src="lib/three.js"></script>
+<script src="lib/Detector.js"></script>
+<script src="lib/stats.min.js"></script>
+<script src="lib/THREEx.KeyboardState.js"></script>
+
+<script src="dist/bundle.js"></script>
+
 <div id="info" style="color: #FFFFFF; margin-top: 0px; position: absolute; z-index:100;">
     <span>Switch Weapon: <b style="color: #FF0000;">F</b> Drop Weapon: <b style="color: #FF0000;">E</b> Walk: <b style="color: #ff0000;">WASD (+mouse)</b> Flashlight On/Off: <b style="color: #FF0000;">T/R</b> </span>
     <span><button style="margin-left: 10px;" id="lock" class="btn btn-sm btn-primary" onclick="LockPointer();">Lock Mouse</button></span>
@@ -46,32 +55,6 @@ p {
     <p id="skipped"></p>
     <p id="particles"></p>
 </div>
-<div style="position: relative; z-index: 1; " id="container"></div>
 
-<script src="lib/three.js"></script>
-<script src="lib/Detector.js"></script>
-<script src="lib/stats.min.js"></script>
-<script src="lib/THREEx.KeyboardState.js"></script>
-
-<!--<script src="js/weapon.js"></script>
-<script src="js/sound.js"></script>
-<script src="js/char.js"></script>
-<script src="js/vox.js"></script>
-<script src="js/objects.js"></script>
-<script src="js/textures.js"></script>
-<script src="js/chunk.js"></script>
-<script src="js/world.js"></script>
-<script src="js/map.js"></script>
-<script src="js/utils.js"></script>
-<script src="js/particles.js"></script>
-<script src="js/model_loader.js"></script>
-<script src="js/main.js"></script> -->
-
-<script src="dist/bundle.js"></script>
-
-<!--<script>
-    var game = new Main();
-    game.init();
-</script>-->
 </body>
 </html>

@@ -3,7 +3,6 @@ const x = require('../assets/vox/agent.vox');
 console.log('got here');
 console.log(x);
 
-
 //////////////////////////////////////////////////////////////////////
 // Char base class
 //////////////////////////////////////////////////////////////////////
@@ -555,6 +554,7 @@ function Enemy() {
 Enemy.prototype = new Char;
 Enemy.prototype.constructor = Enemy;
 
+
 //////////////////////////////////////////////////////////////////////
 // Enemy type: Dudo
 //
@@ -594,6 +594,8 @@ function Dudo(x, y, z) {
 }
 Dudo.prototype = new Enemy;
 Dudo.prototype.constructor = Dudo;
+
+
 
 //////////////////////////////////////////////////////////////////////
 // Enemy type: AgentBlack
@@ -645,6 +647,8 @@ function AgentBlack(x, y, z) {
 AgentBlack.prototype = new Enemy;
 AgentBlack.prototype.constructor = AgentBlack;
 
+
+
 //////////////////////////////////////////////////////////////////////
 // Enemy type: Agent
 //
@@ -695,6 +699,7 @@ function Agent(x, y, z) {
 Agent.prototype = new Enemy;
 Agent.prototype.constructor = Agent;
 
+
 //////////////////////////////////////////////////////////////////////
 // Enemy type: Greenie
 //
@@ -740,6 +745,7 @@ function Greenie(x, y, z) {
 Greenie.prototype = new Enemy;
 Greenie.prototype.constructor = Greenie;
 
+
 //////////////////////////////////////////////////////////////////////
 // Enemy type: Hearty
 //
@@ -782,6 +788,9 @@ function Hearty(x, y, z) {
 }
 Hearty.prototype = new Enemy;
 Hearty.prototype.constructor = Hearty;
+
+
+
 
 //////////////////////////////////////////////////////////////////////
 // Player class
@@ -3053,10 +3062,56 @@ function Maps() {
                     var found = 0;
                     for (var k in that.objects) {
                         if (data[i].r == that.objects[k].r && data[i].g == that.objects[k].g && data[i].b == that.objects[k].b) {
-                            var o = new window[k]();
+
+                            const entityTypes = {
+                              FFChunk,
+                              Portal,
+                              PainKillers,
+                              PaperPoliceCar,
+                              PaperAgent,
+                              Tree,
+                              StreetLamp,
+                              UfoSign,
+                              RadiationSign,
+                              DeadHearty,
+                              BarrelFire,
+                              Barrel,
+                              FBIHQ,
+                              SpiderWeb,
+                              Lamp1,
+                              AmmoCrate,
+                              AmmoSniper,
+                              AmmoP90,
+                              Ammo,
+                              Shell,
+                              Heart,
+                              Greenie,
+                              Agent,
+                              AgentBlack,
+                              Hearty,
+                              DeadHearty,
+                              Player,
+                              Dudo,
+                              Lamp1,
+                              Greenie,
+                              Barrel,
+                              BarrelFire,
+                              FBIHQ,
+                              Tree,
+                              StreetLamp,
+                              PaperAgent,
+                              PaperPoliceCar,
+                              PainKillers,
+                            };
+                          console.log(k);
+
+                            var o = new entityTypes[k]();
+                            //var o = new window[k]();
+
                             o.create(data[i].y, 0, data[i].x);
                             that.loaded.push(o);
                             if (k == "Player") {
+                              console.log('assigning player');
                                 game.player = o;
                             }
                             found = 0;
@@ -5690,6 +5745,8 @@ function LockPointer() {
 
     e.requestPointerLock();
 }
+
+window.LockPointer = LockPointer;
 
 function isFrontOfPlayer(v1) {
     var targetPosition = new THREE.Vector3();
