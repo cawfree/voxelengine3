@@ -1,7 +1,7 @@
-const x = require('../assets/vox/agent.vox');
-
-console.log('got here');
-console.log(x);
+//const x = require('../assets/vox/agent.vox');
+//
+//console.log('this is agent');
+//console.log(x);
 
 //////////////////////////////////////////////////////////////////////
 // Char base class
@@ -3185,14 +3185,24 @@ Level1.prototype.constructor = Level1;
 //////////////////////////////////////////////////////////////////////
 function ModelLoader() {
     this.models = []
-    this.models["greenie"] = ["/assets/vox/greenie.vox", 1, "object"];
-    this.models["agent"] = ["/assets/vox/agent.vox", 0.1, "object"];
-    this.models["agentblack"] = ["/assets/vox/agent_black.vox", 0.1, "object"];
-    this.models["hearty"] = ["/assets/vox/hearty.vox", 1, "object"];
-    this.models["dead_hearty"] = ["/assets/vox/dead_hearty.vox", 1, "object"];
-    this.models["player"] = ["/assets/vox/player.vox", 1, "object"];
-    this.models["dudo"] = ["/assets/vox/dudo.vox", 1, "object"];
-    this.models["lamp1"] = ["/assets/vox/lamp1.vox", 1, "object"];
+    this.models["greenie"] = [require("../assets/vox/greenie.vox"), 1, "object"];
+    this.models["agent"] = [require("../assets/vox/agent.vox"), 0.1, "object"];
+    this.models["agentblack"] = [require("../assets/vox/agent_black.vox"), 0.1, "object"];
+    this.models["hearty"] = [require("../assets/vox/hearty.vox"), 1, "object"];
+    this.models["dead_hearty"] = [require("../assets/vox/dead_hearty.vox"), 1, "object"];
+    this.models["player"] = [require("../assets/vox/player.vox"), 1, "object"];
+    this.models["dudo"] = [require("../assets/vox/dudo.vox"), 1, "object"];
+    this.models["lamp1"] = [require("../assets/vox/lamp1.vox"), 1, "object"];
+    this.models["barrel"] = [require("../assets/vox/barrel.vox"), 0.1, "object"];
+    this.models["barrel_fire"] = [require("../assets/vox/barrel_fire.vox"), 0.1, "object"];
+    this.models["fbihq"] = [require("../assets/vox/fbi_hq.vox"), 5, "object"];
+    this.models["tree"] = [require("../assets/vox/tree.vox"), 1, "object"];
+    this.models["streetlamp"] = [require("../assets/vox/StreetLamp.vox"), 1, "object"];
+    this.models["tree"] = [require("../assets/vox/test1.vox"), 1, "object"];
+    this.models["paperagent"] = [require("../assets/vox/paperagent.vox"), 1, "object"];
+    this.models["paperpolicecar"] = [require("../assets/vox/policecar.vox"), 1, "object"];
+
+    // TODO: Don't know how to load images yet.
     this.models["shotgun"] = ["/assets/pixelart/shotgun.png", 8, "object"];
     this.models["shell"] = ["/assets/pixelart/shell.png", 20, "object"];
     this.models["heart"] = ["/assets/pixelart/heart.png", 3, "object"];
@@ -3208,14 +3218,7 @@ function ModelLoader() {
     this.models["painkillers"] = ["/assets/pixelart/painkillers.jpg", 1, "object"];
     this.models["radiation_sign"] = ["/assets/pixelart/radiation_sign.png", 1, "object"];
     this.models["ufo_sign"] = ["/assets/pixelart/sign_ufo.png", 1, "object"];
-    this.models["barrel"] = ["/assets/vox/barrel.vox", 0.1, "object"];
-    this.models["barrel_fire"] = ["/assets/vox/barrel_fire.vox", 0.1, "object"];
-    this.models["fbihq"] = ["/assets/vox/fbi_hq.vox", 5, "object"];
-    this.models["tree"] = ["/assets/vox/tree.vox", 1, "object"];
-    this.models["streetlamp"] = ["/assets/vox/StreetLamp.vox", 1, "object"];
-    this.models["tree"] = ["/assets/vox/test1.vox", 1, "object"];
-    this.models["paperagent"] = ["/assets/vox/paperagent.vox", 1, "object"];
-    this.models["paperpolicecar"] = ["/assets/vox/policecar.vox", 1, "object"];
+
     //this.models["fbihq"] = ["/assets/vox/demon.vox", 1, "object"];
 
     this.files = [];
@@ -3234,19 +3237,8 @@ function ModelLoader() {
         }
 
         var that = this;
-        if(this.models[key][0].indexOf("vox") != -1) {
-            var oReq = new XMLHttpRequest();
-            oReq.open("GET", this.models[key][0], true);
-            oReq.responseType = "arraybuffer";
 
-            var that = this;
-            oReq.send(null);
-            oReq.onload = function () {
-                that.models[key][0] = oReq.response;
-                that.loadModel(key);
-                that.loadFiles();
-            };
-        } else if(this.models[key][0].indexOf("png") != 1) {
+        if (typeof this.models[key][0] === 'string') { 
             loadImageFile(this.models[key][0], function(data, width, height) {
                 var chunk = new Chunk(0, 0, 0, width, height, that.models[key][1], key, 1, that.models[key][2]);
                 chunk.init();
@@ -3267,7 +3259,29 @@ function ModelLoader() {
                 chunk.mesh.visible = false;
                 that.loadFiles();
             });
+        } else {
+          // XXX: This is already loaded due to webpack.
+          that.loadModel(key);
+          that.loadFiles();
+          //that.models.[key][0] 
         }
+        //if(this.models[key][0].indexOf("vox") != -1) {
+        //    var oReq = new XMLHttpRequest();
+        //    oReq.open("GET", this.models[key][0], true);
+        //    oReq.responseType = "arraybuffer";
+
+        //    var that = this;
+        //    oReq.send(null);
+        //    oReq.onload = function () {
+        //        that.models[key][0] = oReq.response;
+        //        console.log('returned model is:',key);
+        //        console.log(oReq.response);
+        //        that.loadModel(key);
+        //        that.loadFiles();
+        //    };
+        //} else if(this.models[key][0].indexOf("png") != 1) {
+        //    
+        //}
     };
 
     ModelLoader.prototype.loadModel = function(name) {

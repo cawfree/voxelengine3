@@ -10,7 +10,7 @@ module.exports = {
     rules: [
       {
         test: /\.vox/i,
-        use: 'raw-loader',
+        use: 'arraybuffer-loader',
       },
     ],
   },
