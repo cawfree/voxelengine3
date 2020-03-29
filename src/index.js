@@ -6107,56 +6107,51 @@ function World() {
     };
 
     World.prototype.explode = function(x, y, z, power, type) {
+
         x |= 0;
         y |= 0;
         z |= 0;
+
         var pow = power*power;
 
         var list = [];
         var vx = 0, vy = 0, vz = 0, val = 0, offset = 0;
-        for(var rx = x-power; rx <= x+power; rx++) {
-            vx = Math.pow((rx-x), 2); 
-                for(var rz = z-power; rz <= z+power; rz++) {
-                    vz = Math.pow((rz-z),2)+vx; 
-                        for(var ry = y-power; ry <= y+power; ry++) {
-                            if(ry < 0) {
-                                continue;
-                            }
-                            val = Math.pow((ry-y),2)+vz;
-                            if(val <= pow) {
-                                list.push({x: rx, y: ry, z: rz});
-                            }
-                        }
+        for (var rx = x-power; rx <= x+power; rx++) {
+          vx = Math.pow((rx-x), 2); 
+          for (var rz = z-power; rz <= z+power; rz++) {
+            vz = Math.pow((rz-z),2)+vx; 
+            for (var ry = y-power; ry <= y+power; ry++) {
+              if (ry > 0) {
+                val = Math.pow((ry-y),2) + vz;
+                if (val <= pow) {
+                  list.push({x: rx, y: ry, z: rz});
                 }
-        }
-        // Check if any object is in the way.
-        if(type == "missile" || type == "grenade") {
-            var pos = 0;
-            var pxp = x+power*2;
-            var pxm = x-power*2;
-            var pzp = z+power*2;
-            var pzm = z-power*2;
-            for(var i = 0; i < game.cdList.length; i++) {
-                if(game.cdList[i].owner) {
-                    pos = game.cdList[i].owner.chunk.mesh.position;
-                    if(game.cdList[i].owner.chunk.hit) {
-                        if(pos.x >= pxm && pos.x <= pxp && 
-                           pos.z >= pzm && pos.z <= pzp) {
-                            if(this.isFunction(game.cdList[i].owner.hit)) {
-                                game.cdList[i].owner.hit(power, new THREE.Vector3(0,0,0), "missile", new THREE.Vector3(x,y,z));
-                            }
-                        }
-                    }
-                }
+              }
             }
-        } else {
-            game.sounds.PlaySound("bullet_wall", new THREE.Vector3(x,y,z), 500);
+          }
         }
-        this.removeBatch(list);
-    };
-
-    World.prototype.isFunction = function(object) {
-        return !!(object && object.constructor && object.call && object.apply);
+        if (type == "missile" || type == "grenade") {
+          var pos = 0;
+          var pxp = x+power*2;
+          var pxm = x-power*2;
+          var pzp = z+power*2;
+          var pzm = z-power*2;
+          for (var i = 0; i < game.cdList.length; i++) {
+            const { owner } = game.cdList[i];
+            if (owner) {
+              const { hit } = owner;
+              if (typeof hit === "function") {
+                pos = owner.chunk.mesh.position;
+                if (pos.x >= pxm && pos.x <= pxp && pos.z >= pzm && pos.z <= pzp) {
+                  owner.hit(power, new THREE.Vector3(0,0,0), "missile", new THREE.Vector3(x,y,z));
+                }
+              }
+            }
+          }
+        } else {
+          game.sounds.PlaySound("bullet_wall", new THREE.Vector3(x,y,z), 500);
+        }
+      this.removeBatch(list);
     };
 
     World.prototype.getColor = function(pos) {
