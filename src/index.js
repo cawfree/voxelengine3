@@ -23,9 +23,41 @@ class Char {
     this.green_light = new THREE.PointLight(0x00FF00, 2, 10);
     this.radiation_light = 0;
   }
+  shouldIrradiate(res) {
+    for (var i = 0; i < res.length; i++) {
+      if (((res[i] >> 24) & 0xFF) > 100 && ((res[i] >> 16) & 0xFF) < 25 && ((res[i] >> 8) & 0xFF) < 25) {
+        if (this.add_blood == 0 && Math.random() > 0.5) {
+          this.add_blood = 60; // Walking on blood
+        }
+      } else if (((res[i] >> 24) & 0xFF) <= 50  && ((res[i] >> 16) & 0xFF) >= 200 && ((res[i] >> 8) & 0xFF) < 105 && ((res[i] >> 8) & 0xFF) >= 50) {
+        if (this.add_radioactive == 0 && Math.random() > 0.5) {
+          this.add_radioactive = 30; // walking on radioactive
+          if (this.radiation_poisoned == 0) {
+            this.radiation_light = this.green_light.clone();
+            this.radiation_light.intensity = 0.1;
+            this.radiation_light.position.y = 1;
+            this.chunk.mesh.add(this.radiation_light);
+          }
+          this.radiation_poisoned++;
+          this.radiation_light.intensity += 0.5;
+          this.radiation_light.distance += 2;
+
+          // Add random radiation 
+          this.chunk.addBlock(
+            Math.random()*this.chunk.chunk_size_x|0,
+            Math.random()*this.chunk.chunk_size_y|0,
+            Math.random()*this.chunk.chunk_size_z|0,
+            (res[i][1] >> 24) & 0xFF, 
+            (res[i][1] >> 16) & 0xFF,
+            (res[i][1] >> 8) & 0xFF
+          );
+        }
+      }
+    }
+  }
   sound_hit() {
     var r = Math.random();
-    if(r < 0.4) {
+    if (r < 0.4) {
       r = "blood1";
     } else if (r > 0.4 && r < 0.7) {
       r = "blood2";
@@ -33,20 +65,18 @@ class Char {
       r = "blood3";
     }
     game.sounds.PlaySound(r, this.chunk.mesh.position, 300);
-    if(this.alive) {
-      if(Math.random() > 0.8) {
-        game.sounds.PlaySound("hit"+(1+Math.random()*2|0), 
-          this.chunk.mesh.position,
-          500);
+    if (this.alive) {
+      if (Math.random() > 0.8) {
+        // TODO: Something really interesting going here.
+        game.sounds.PlaySound("hit" + (1 + Math.random() * 2 | 0), this.chunk.mesh.position, 500);
       }
     }
   }
   create(model, x, y, z, size) {
     if(!size) { size = 1; }
-    // Load model.
+
     this.chunk = game.modelLoader.getModel(model, size, this);
 
-    // Set initial position
     this.init_pos.x = x;
     this.init_pos.y = y;
     this.init_pos.z = z;
@@ -90,7 +120,7 @@ class Char {
   }
   update(time, delta) {
     // open wound.
-    if(this.dying != 0) {
+    if (this.dying != 0) {
       this.dying_counter++;
       var max = 5;
       var step = 0.05;
@@ -161,9 +191,9 @@ class Char {
         for (var i = 0; i < this.chunk.blood_positions.length; i++) {
           if (Math.random() > 0.99) {
             game.particles.blood(
-              this.chunk.blockSize*this.chunk.blood_positions[i].x + this.chunk.mesh.position.x,
-              this.chunk.blockSize*this.chunk.blood_positions[i].y + this.chunk.mesh.position.y,
-              this.chunk.blockSize*this.chunk.blood_positions[i].z + this.chunk.mesh.position.z,
+              this.chunk.blockSize * this.chunk.blood_positions[i].x + this.chunk.mesh.position.x,
+              this.chunk.blockSize * this.chunk.blood_positions[i].y + this.chunk.mesh.position.y,
+              this.chunk.blockSize * this.chunk.blood_positions[i].z + this.chunk.mesh.position.z,
               0.5, 0, 0, 0
             );
           }
@@ -171,7 +201,6 @@ class Char {
       }
       if (this.add_blood > 0 && this.moving) {
         this.add_blood--;
-        // Add blood footsteps
         game.world.addColorBlock(
           this.chunk.mesh.position.x + (2 - Math.random() * 4),
           game.maps.ground-1,
@@ -186,7 +215,7 @@ class Char {
         // Add radioactive footsteps
         game.world.addColorBlock(
           this.chunk.mesh.position.x + (2 - Math.random() * 4),
-          game.maps.ground-1,
+          game.maps.ground - 1,
           this.chunk.mesh.position.z + (2 - Math.random() * 4),
           Math.random() * 50 | 0,
           200 + Math.random() * 55 | 0,
@@ -396,7 +425,7 @@ class Enemy extends Char {
               }
             }
           } 
-          if(this.chunk.checkCD(game.cdList[idx].position, 5)) {
+          if (this.chunk.checkCD(game.cdList[idx].position, 5)) {
             if (game.cdList[idx].owner.base_type == "weapon") {
               if (this.weapon == 0) {
                 this.addWeapon(game.cdList[idx].owner);
@@ -418,7 +447,9 @@ class Enemy extends Char {
       this.chunk.mesh.rotation.y -= (1-Math.random()*2)*Math.sin(delta*3); 
       var pos = this.chunk.mesh.position.clone();
       pos.y = game.maps.ground;
-      var res = game.world.checkExists(pos);
+
+      const res = game.world.checkExists(pos);
+
       if (res.length != 0) {
         this.chunk.mesh.translateZ(delta * this.speed);
         if (!this.cd()) {
@@ -433,36 +464,9 @@ class Enemy extends Char {
         this.target = 0;
       }
       this.chunk.mesh.rotation.z = 0.2 * Math.sin(time * this.speed);
-      for (var i = 0; i < res.length; i++) {
-        if (((res[i] >> 24) & 0xFF) > 100 && ((res[i] >> 16) & 0xFF) < 25 && ((res[i] >> 8) & 0xFF) < 25) {
-          if (this.add_blood == 0 && Math.random() > 0.5) {
-            this.add_blood = 60; // Walking on blood
-          }
-        } else if (((res[i] >> 24) & 0xFF) <= 50  && ((res[i] >> 16) & 0xFF) >= 200 && ((res[i] >> 8) & 0xFF) < 105 && ((res[i] >> 8) & 0xFF) >= 50) {
-          if (this.add_radioactive == 0 && Math.random() > 0.5) {
-            this.add_radioactive = 30; // walking on radioactive
-            if (this.radiation_poisoned == 0) {
-              this.radiation_light = this.green_light.clone();
-              this.radiation_light.intensity = 0.1;
-              this.radiation_light.position.y = 1;
-              this.chunk.mesh.add(this.radiation_light);
-            }
-            this.radiation_poisoned++;
-            this.radiation_light.intensity += 0.5;
-            this.radiation_light.distance += 2;
+      
+      this.shouldIrradiate(res);
 
-            // Add random radiation 
-            this.chunk.addBlock(
-              Math.random()*this.chunk.chunk_size_x|0,
-              Math.random()*this.chunk.chunk_size_y|0,
-              Math.random()*this.chunk.chunk_size_z|0,
-              (res[i][1] >> 24) & 0xFF, 
-              (res[i][1] >> 16) & 0xFF,
-              (res[i][1] >> 8) & 0xFF
-            );
-          }
-        }
-      }
       if (Math.random() < 0.4) {
         game.particles.walkSmoke(this.chunk.mesh.position.x, game.maps.ground+1, this.chunk.mesh.position.z);
       }
@@ -487,9 +491,9 @@ class Dudo extends Enemy {
     super.create(this.obj_type, x, game.maps.ground + this.y_offset, z);
     this.chunk.mesh.rotation.order = 'YXZ';
     if (Math.random() > 0.4) {
-        this.addWeapon(new Shotgun());
-        this.weapon.attach(this.chunk.mesh);
-        this.unloadWeapon();
+      this.addWeapon(new Shotgun());
+      this.weapon.attach(this.chunk.mesh);
+      this.unloadWeapon();
     }
   }
   loadWeapon() {
@@ -892,35 +896,10 @@ class Player extends Char {
         this.cd_check = 0;
         var pos = this.chunk.mesh.position.clone();
         pos.y = game.maps.ground;
-        var res = game.world.checkExists(pos);
-        for (var i = 0; i < res.length; i++) {
-          if (((res[i] >> 24) & 0xFF) > 100 && ((res[i] >> 16) & 0xFF) < 25 && ((res[i] >> 8) & 0xFF) < 25) {
-            if (this.add_blood == 0 && Math.random() > 0.5) {
-              this.add_blood = 40;
-            }
-          } else if (((res[i] >> 24) & 0xFF) <= 50  && ((res[i] >> 16) & 0xFF) >= 200 && ((res[i] >> 8) & 0xFF) < 105 && ((res[i] >> 8) & 0xFF) >= 50) {
-            if (this.add_radioactive == 0 && Math.random() > 0.5) {
-              this.add_radioactive = 30; // walking on radioactive
-              if (this.radiation_poisoned == 0) {
-                this.radiation_light = this.green_light.clone();
-                this.radiation_light.intensity = 0.1;
-                this.radiation_light.position.y = 1;
-                this.chunk.mesh.add(this.radiation_light);
-              }
-              this.radiation_poisoned++;
-              this.radiation_light.intensity += 0.5;
-              this.radiation_light.distance += 2;
-              this.chunk.addBlock(
-                Math.random()*this.chunk.chunk_size_x|0,
-                Math.random()*this.chunk.chunk_size_y|0,
-                Math.random()*this.chunk.chunk_size_z|0,
-                (res[i][1] >> 24) & 0xFF, 
-                (res[i][1] >> 16) & 0xFF,
-                (res[i][1] >> 8) & 0xFF,
-              );
-            }
-          }
-        }
+        const res = game.world.checkExists(pos);
+
+        this.shouldIrradiate(res);
+        
         if (res.length == 0) {
           this.falling = true;
           // Only fall if hole is big enough to fit in :)
