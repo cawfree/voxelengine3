@@ -39,6 +39,10 @@ function SocketHandler(socket, data) {
     logger.log("Incoming connection from "+ip.address+":"+ip.port);
 }
 
+const shouldServeFile = () => {
+
+};
+
 //======================================================
 //
 // Handler for web requests (webserver)
@@ -71,24 +75,39 @@ function Handler(req, res)
         contentType = 'image/jpg';
         break;
     }
-    fs.exists(file, function(exists) {
-        if(exists) {
-            console.log("Serve file: "+file);
-            fs.readFile(file,function(err,data) {
-                console.log("CONTENT: ",contentType);
-                if(contentType != undefined) {
-                    res.writeHead(200, {'Content-Type': contentType});
-                } else {
-                    res.writeHead(200);
-                }
-                res.end(data);
-            });
+
+  const file2 = '../dist/'+req.url;
+
+  const legacyExists = fs.existsSync(file);
+  const bundledExists = fs.existsSync(file2);
+
+  if (!legacyExists && !bundledExists) {
+    console.log("File not found:" + file);
+    if(contentType != undefined) {
+        res.writeHead(404, {'Content-Type': contentType});
+        res.end("Wizard killed the requested file with a Fireball! R.I.P "+file);
+    }
+  } else if (legacyExists) {
+    console.log("Serve file: "+file);
+    fs.readFile(file,function(err,data) {
+        console.log("CONTENT: ",contentType);
+        if(contentType != undefined) {
+            res.writeHead(200, {'Content-Type': contentType});
         } else {
-            console.log("File not found:" + file);
-            if(contentType != undefined) {
-                res.writeHead(404, {'Content-Type': contentType});
-                res.end("Wizard killed the requested file with a Fireball! R.I.P "+file);
-            }
-        };
+            res.writeHead(200);
+        }
+        res.end(data);
     });
+  } else if (bundledExists) {
+    console.log("Serve file: "+file);
+    fs.readFile(file2,function(err,data) {
+        console.log("CONTENT: ",contentType);
+        if(contentType != undefined) {
+            res.writeHead(200, {'Content-Type': contentType});
+        } else {
+            res.writeHead(200);
+        }
+        res.end(data);
+    });
+  }
 }

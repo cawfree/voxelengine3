@@ -12,6 +12,10 @@ module.exports = {
         test: /\.vox/i,
         use: 'arraybuffer-loader',
       },
+      {
+        test: /\.(png|jpe?g|gif)$/i,
+        use: 'file-loader',
+      },
     ],
   },
   optimization: {

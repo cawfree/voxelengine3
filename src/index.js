@@ -1,5 +1,5 @@
 //const x = require('../assets/vox/agent.vox');
-//
+
 //console.log('this is agent');
 //console.log(x);
 
@@ -3203,21 +3203,21 @@ function ModelLoader() {
     this.models["paperpolicecar"] = [require("../assets/vox/policecar.vox"), 1, "object"];
 
     // TODO: Don't know how to load images yet.
-    this.models["shotgun"] = ["/assets/pixelart/shotgun.png", 8, "object"];
-    this.models["shell"] = ["/assets/pixelart/shell.png", 20, "object"];
-    this.models["heart"] = ["/assets/pixelart/heart.png", 3, "object"];
-    this.models["ammo"] = ["/assets/pixelart/ammo.png", 20, "object"];
-    this.models["ak47"] = ["/assets/pixelart/ak47.png", 5, "object"];
-    this.models["p90"] = ["/assets/pixelart/p90.png", 5, "object"];
-    this.models["pistol"] = ["/assets/pixelart/pistol.png", 5, "object"];
-    this.models["sniper"] = ["/assets/pixelart/sniper.png", 5, "object"];
-    this.models["minigun"] = ["/assets/pixelart/minigun.png", 10, "object"];
-    this.models["rocketlauncher"] = ["/assets/pixelart/rocketlauncher.png", 8, "object"];
-    this.models["grenadelauncher"] = ["/assets/pixelart/grenadelauncher.png", 8, "object"];
-    this.models["spiderweb"] = ["/assets/pixelart/spiderweb.png", 1, "object"];
-    this.models["painkillers"] = ["/assets/pixelart/painkillers.jpg", 1, "object"];
-    this.models["radiation_sign"] = ["/assets/pixelart/radiation_sign.png", 1, "object"];
-    this.models["ufo_sign"] = ["/assets/pixelart/sign_ufo.png", 1, "object"];
+    this.models["shotgun"] = [require("../assets/pixelart/shotgun.png"), 8, "object"];
+    this.models["shell"] = [require("../assets/pixelart/shell.png"), 20, "object"];
+    this.models["heart"] = [require("../assets/pixelart/heart.png"), 3, "object"];
+    this.models["ammo"] = [require("../assets/pixelart/ammo.png"), 20, "object"];
+    this.models["ak47"] = [require("../assets/pixelart/ak47.png"), 5, "object"];
+    this.models["p90"] = [require("../assets/pixelart/p90.png"), 5, "object"];
+    this.models["pistol"] = [require("../assets/pixelart/pistol.png"), 5, "object"];
+    this.models["sniper"] = [require("../assets/pixelart/sniper.png"), 5, "object"];
+    this.models["minigun"] = [require("../assets/pixelart/minigun.png"), 10, "object"];
+    this.models["rocketlauncher"] = [require("../assets/pixelart/rocketlauncher.png"), 8, "object"];
+    this.models["grenadelauncher"] = [require("../assets/pixelart/grenadelauncher.png"), 8, "object"];
+    this.models["spiderweb"] = [require("../assets/pixelart/spiderweb.png"), 1, "object"];
+    this.models["painkillers"] = [require("../assets/pixelart/painkillers.jpg"), 1, "object"];
+    this.models["radiation_sign"] = [require("../assets/pixelart/radiation_sign.png"), 1, "object"];
+    this.models["ufo_sign"] = [require("../assets/pixelart/sign_ufo.png"), 1, "object"];
 
     //this.models["fbihq"] = ["/assets/vox/demon.vox", 1, "object"];
 
@@ -3238,8 +3238,8 @@ function ModelLoader() {
 
         var that = this;
 
-        if (typeof this.models[key][0] === 'string') { 
-            loadImageFile(this.models[key][0], function(data, width, height) {
+        if (typeof (this.models[key][0].default) === 'string') { 
+            loadImageFile(this.models[key][0].default, function(data, width, height) {
                 var chunk = new Chunk(0, 0, 0, width, height, that.models[key][1], key, 1, that.models[key][2]);
                 chunk.init();
                // var data2 = [];
@@ -5715,6 +5715,7 @@ function get_rand() {
 // Load image files to pixel map
 //////////////////////////////////////////////////////////////////////
 function loadImageFile(file, callback) {
+  console.log('load image',file);
     var image = new Image();
     image.src = file;
     var ctx = document.createElement('canvas').getContext('2d');
