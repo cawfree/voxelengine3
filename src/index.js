@@ -901,25 +901,16 @@ class Player extends Char {
         if (res.length == 0) {
           this.falling = true;
           // Only fall if hole is big enough to fit in :)
-          for (var ofx = -1; ofx <= 1; ofx++) {
-            for (var ofz = -1; ofz <= 1; ofz++) { 
-              for (var ofy = game.maps.ground; ofy >= 0; ofy--) {
+          for (var ofx = -1; ofx <= 1 && this.falling; ofx++) {
+            for (var ofz = -1; ofz <= 1 && this.falling; ofz++) { 
+              for (var ofy = game.maps.ground; ofy >= 0 && this.falling; ofy--) {
                 var post = this.chunk.mesh.position.clone();
                 post.x += ofx;
                 post.y = ofy;
                 post.z += ofz;
                 var r = game.world.checkExists(post);
-                if (r.length != 0) {
-                  this.falling = false;
-                  break;
-                }
+                this.falling = !(r.length !== 0);
               }
-              if (!this.falling) {
-                break;
-              }
-            }
-            if (!this.falling) {
-              break;
             }
           }
           if (this.falling) {
