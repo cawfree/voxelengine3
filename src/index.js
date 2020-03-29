@@ -401,12 +401,14 @@ class Enemy extends Char {
       if (this.cd_check > 0.1) { // 10 fps
         this.cd_check = 0;
         for(var idx = 0; idx < game.cdList.length; idx++) {
-          if(this.chunk.checkCD(game.cdList[idx].position, this.view_range_current)) {
-            if (this.chunk.mesh.id != game.cdList[idx].id) {
-              if (game.cdList[idx].owner.obj_type != this.obj_type && (game.cdList[idx].owner.base_type == "player")) { // TBD //|| game.cdList[idx].object.owner.base_type == "enemy")) {
+          const current = game.cdList[idx];
+          const { position, id, owner } = current;
+          if(this.chunk.checkCD(position, this.view_range_current)) {
+            if (this.chunk.mesh.id != id) {
+              if (owner.obj_type != this.obj_type && (owner.base_type == "player")) { // TBD //|| game.cdList[idx].object.owner.base_type == "enemy")) {
                 if (this.target == 0 && this.weapon != 0) {
-                  if (game.cdList[idx].owner.alive) {
-                    this.target = game.cdList[idx].owner;
+                  if (owner.alive) {
+                    this.target = owner;
                     this.follow_timer = Math.random()*10;
                     this.loadWeapon();
                   }
@@ -415,23 +417,22 @@ class Enemy extends Char {
                   this.loadWeapon();
                   this.shoot();
                 }
-              } else if (game.cdList[idx].owner.base_type == "weapon") {
-                // walk to weapon
-                if ((this.weapon == 0 || this.weapon.damage < game.cdList[idx].owner.damage) && !this.flee) {
-                  this.target = game.cdList[idx].owner;
+              } else if (owner.base_type == "weapon") {
+                if ((this.weapon == 0 || this.weapon.damage < owner.damage) && !this.flee) {
+                  this.target = owner;
                 }
               }
             }
           } 
-          if (this.chunk.checkCD(game.cdList[idx].position, 5)) {
-            if (game.cdList[idx].owner.base_type == "weapon") {
+          if (this.chunk.checkCD(position, 5)) {
+            if (owner.base_type == "weapon") {
               if (this.weapon == 0) {
-                this.addWeapon(game.cdList[idx].owner);
+                this.addWeapon(owner);
                 this.loadWeapon();
                 this.target = 0;
-              } else if(this.weapon.damage < game.cdList[idx].owner.damage) {
+              } else if(this.weapon.damage < owner.damage) {
                 this.dropWeapon();
-                this.addWeapon(game.cdList[idx].owner);
+                this.addWeapon(owner);
                 this.target = 0;
                 this.loadWeapon();
               }
@@ -6270,12 +6271,6 @@ function World() {
         }
     };
 
-   // World.prototype.rebuildBatches = function() {
-   //     for(var i = 0; i < this.chunks.length; i++) {
-   //         this.chunks[i].build();
-   //     }
-   // };
-
     World.prototype.update = function(time, delta) {
         if(!game.player.chunk) {
             return;
@@ -6296,67 +6291,19 @@ function World() {
             for(var i = 0; i < 10; i++) {
                 v = Math.random()*this.radioactive_blocks.length|0;
                 if(this.radioactive_blocks[v] != 0) {
-                    if(this.checkExists(new THREE.Vector3(this.radioactive_blocks[v][0],
-                                 this.radioactive_blocks[v][1], 
-                                 this.radioactive_blocks[v][2])).length == 0)
-                    {
+                    if(this.checkExists(new THREE.Vector3(this.radioactive_blocks[v][0], this.radioactive_blocks[v][1], this.radioactive_blocks[v][2])).length == 0) {
                         this.radioactive_blocks[v] = 0;
                     } else {
-                        game.particles.radiation
-                        (
+                        game.particles.radiation(
                          this.radioactive_blocks[v][0]+(1-Math.random()*2),
                          this.radioactive_blocks[v][1]+(1-Math.random()*2),
-                         this.radioactive_blocks[v][2]+(1-Math.random()*2)
+                         this.radioactive_blocks[v][2]+(1-Math.random()*2),
                         );
                     }
                 }
             }
         }
-
-
-     //   this.debug_update += delta;
-       // if(this.debug_update > 2) {
-       //     this.debug_update = 0;
-       //     var tris = 0;
-       //     var blocks = 0;
-       //     var skips = 0;
-       //     var visible = 0;
-       //     var all_blocks = 0;
-       //     for(var i = 0; i < this.chunks.length; i++) {
-       //         if(this.chunks[i].mesh) {
-       //             if(this.chunks[i].mesh.visible) {
-       //                 visible++;
-       //             }
-       //         }
-       //         tris += this.chunks[i].triangles;
-       //         blocks += this.chunks[i].total_blocks;
-       //         all_blocks += this.chunks[i].chunk_size_x * this.chunks[i].chunk_size_y * this.chunks[i].chunk_size_z;
-       //         skips += this.chunks[i].skips;
-       //         //this.chunks[i].applyShadow();
-       //     }
-       //     $('#blocks').html("Blocks:"+blocks+ " (Chunks: "+this.chunks.length+") (Visible: "+visible+") (ALL: "+all_blocks+")");
-       //     $('#triangles').html("Triangles:"+tris);
-       //     $('#skipped').html("Triangles skipped:"+skips);
-       //     //$('#particles').html("Particles Total: "+(game.particles.size+game.particles_box.size)+ "  Free: "+(game.particles.free.length+game.particles_box.free.length) + " Active: "+(game.particles.active.length+game.particles_box.active.length)+ " Queue: "+(game.particles.queue.length+game.particles_box.queue.length));
-       //     var active1 = 0;
-       //     for(var i = 0; i < game.particles_box.particles.length; i++) {
-       //         if(game.particles_box.particles[i].active == 1) {
-       //             active1++;
-       //         }
-       //     }
-       //     var free = game.particles_box.size - active1;
-       //     var free_boxes = free;
-       //     var active2 = 0;
-       //     for(var i = 0; i < game.particles.particles.length; i++) {
-       //         if(game.particles.particles[i].active == 1) {
-       //             active2++;
-       //         }
-       //     }
-       //     free += game.particles.size - active2;
-       //     $('#particles').html("Particles Total: "+(game.particles.size+game.particles_box.size)+ "  Free: "+(free) + " Active: " + (active2+active1) + " Free Block: "+free_boxes);
-       // }
     };
-
 }
 
 let game = new Main();
