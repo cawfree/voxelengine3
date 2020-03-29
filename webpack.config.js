@@ -16,6 +16,10 @@ module.exports = {
         test: /\.(png|jpe?g|gif)$/i,
         use: 'file-loader',
       },
+      {
+        test: /\.mp3/i,
+        use: 'file-loader',
+      },
     ],
   },
   optimization: {
