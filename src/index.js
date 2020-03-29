@@ -74,28 +74,18 @@ function Char() {
         if (this.weapon != 0) {
             this.unloadWeapon();
             this.weapon.detach(this.chunk.mesh, this.chunk.mesh.position);
-            // Wait a while to not pick up same weapon again.
-            var that = this;
-            //setTimeout(function() {
-            that.weapon = 0;
-            //}, 500);
+            this.weapon = 0;
         }
     };
 
     Char.prototype.unloadWeapon = function () {
-        var that = this;
         this.can_shoot = false;
-        setTimeout(function () {
-            that.loaded = false;
-        }, 200);
+        setTimeout(() => this.loaded = false, 200);
     };
 
     Char.prototype.loadWeapon = function () {
-        var that = this;
         this.can_shoot = true;
-        setTimeout(function () {
-            that.loaded = true;
-        }, 200);
+        setTimeout(() => this.loaded = true, 200);
     };
 
     Char.prototype.shoot = function () {
@@ -373,10 +363,8 @@ function Enemy() {
     Enemy.prototype.create = function (model, x, y, z, size) {
         if(!size) { size = 1; }
         Char.prototype.create.call(this, model, x, y, z, size);
-
         this.run_speed = 20; //+Math.random()*50;
         this.moving = true;
-       // setTimeout(function () { that.moving = true; }, 3000);
     };
 
     Enemy.prototype.update = function (time, delta) {
@@ -876,10 +864,7 @@ function Player(x, y, z) {
             return;
         }
         this.can_switch = false;
-        var that = this;
-        setTimeout(function () {
-            that.can_switch = true;
-        }, 200);
+        setTimeout(() => this.can_switch = true, 200);
 
         // Check if a weapon is loaded, then unload it.
         var id = this.getWeaponId();
@@ -2341,7 +2326,6 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                 }
             }
         }
-        var that = this;
     };
 
     Chunk.prototype.virtual_explode = function (pos) {
@@ -2835,12 +2819,11 @@ function Maps() {
 
     Maps.prototype.init = function (name, ground, objects) {
         this.name = name;
-        var that = this;
 
         // Load ground
-        loadImageFile(ground, function (data, width, height, map) {
-            that.width = width;
-            that.height = height;
+        loadImageFile(ground, (data, width, height, map) => {
+            this.width = width;
+            this.height = height;
             var walls = [];
             var floor = [];
             var wall_map = new Array(width);
@@ -2864,7 +2847,7 @@ function Maps() {
 
                     if(p.r == 0x22 && p.g == 0x22 && p.b == 0x22) {
                         for (var y = 0; y < wall_height; y++) {
-                            var pix = game.textures.getPixel(y, x, that.wall2_texture);
+                            var pix = game.textures.getPixel(y, x, this.wall2_texture);
                             walls.push({ x: x, y: y, z: z, r: pix.r, g: pix.g, b: pix.b });
                             wall_map[x][z] = 1;
                         }
@@ -2872,7 +2855,7 @@ function Maps() {
 
                     if (map[x + 1][z].a == 0) {
                         for (var y = 0; y < wall_height; y++) {
-                            var pix = game.textures.getPixel(y, z, that.wall_texture);
+                            var pix = game.textures.getPixel(y, z, this.wall_texture);
                             for (var xx = 0; xx < wall_thickness; xx++) {
                                 walls.push({ x: x + xx, y: y, z: z, r: pix.r, g: pix.g, b: pix.b });
                                 walls.push({ x: x + xx, y: y, z: z - 1, r: pix.r, g: pix.g, b: pix.b });
@@ -2885,7 +2868,7 @@ function Maps() {
                     }
                     if (map[x - 1][z].a == 0) {
                         for (var y = 0; y < wall_height; y++) {
-                            var pix = game.textures.getPixel(y, z, that.wall_texture);
+                            var pix = game.textures.getPixel(y, z, this.wall_texture);
                             for (var xx = 0; xx < wall_thickness; xx++) {
                                 walls.push({ x: x - xx, y: y, z: z, r: pix.r, g: pix.g, b: pix.b });
                                 walls.push({ x: x - xx, y: y, z: z - 1, r: pix.r, g: pix.g, b: pix.b });
@@ -2896,7 +2879,7 @@ function Maps() {
                     }
                     if (map[x][z + 1].a == 0) {
                         for (var y = 0; y < wall_height; y++) {
-                            var pix = game.textures.getPixel(y, x, that.wall_texture);
+                            var pix = game.textures.getPixel(y, x, this.wall_texture);
                             for (var zz = 0; zz < wall_thickness; zz++) {
                                 walls.push({ x: x - 1, y: y, z: z + zz, r: pix.r, g: pix.g, b: pix.b });
                                 walls.push({ x: x, y: y, z: z + zz, r: pix.r, g: pix.g, b: pix.b });
@@ -2907,7 +2890,7 @@ function Maps() {
                     }
                     if (map[x][z - 1].a == 0) {
                         for (var y = 0; y < wall_height; y++) {
-                            var pix = game.textures.getPixel(y, x, that.wall_texture);
+                            var pix = game.textures.getPixel(y, x, this.wall_texture);
                             for (var zz = 0; zz < wall_thickness; zz++) {
                                 walls.push({ x: x - 1, y: y, z: z - zz, r: pix.r, g: pix.g, b: pix.b });
                                 walls.push({ x: x, y: y, z: z - zz, r: pix.r, g: pix.g, b: pix.b });
@@ -3042,15 +3025,15 @@ function Maps() {
                 // 0.01 = offset so we don't see black borders on the floor.
                 var chunk = 0;
                 if (max_x > max_z) {
-                    chunk = new Chunk(x - wall_thickness, that.ground, z - wall_thickness, max_x + wall_thickness, wall_height, max_z + wall_thickness, "x", 1, "world");
+                    chunk = new Chunk(x - wall_thickness, this.ground, z - wall_thickness, max_x + wall_thickness, wall_height, max_z + wall_thickness, "x", 1, "world");
                 } else {
-                    chunk = new Chunk(x - wall_thickness, that.ground, z, max_x + wall_thickness, wall_height, max_z + wall_thickness, "x", 1, "world");
+                    chunk = new Chunk(x - wall_thickness, this.ground, z, max_x + wall_thickness, wall_height, max_z + wall_thickness, "x", 1, "world");
                 }
                 chunk.init();
                 for (var i = 0; i < walls.length; i++) {
                     if (walls[i].x >= x && walls[i].x <= x + max_x &&
                         walls[i].z >= z && walls[i].z <= z + max_z) {
-                        chunk.addBlock(walls[i].x, walls[i].y + that.ground, walls[i].z, walls[i].r, walls[i].g, walls[i].b);
+                        chunk.addBlock(walls[i].x, walls[i].y + this.ground, walls[i].z, walls[i].r, walls[i].g, walls[i].b);
                     }
                 }
                 //chunk.addBatch();
@@ -3058,13 +3041,13 @@ function Maps() {
             }
 
             // Load objects + enemies + player
-            loadImageFile(objects, function (data, width, height) {
+            loadImageFile(objects, (data, width, height) => {
                 var list = [];
                 for (var i = 0; i < data.length; i++) {
                     if (data[i].a == 0) { continue; }
                     var found = 0;
-                    for (var k in that.objects) {
-                        if (data[i].r == that.objects[k].r && data[i].g == that.objects[k].g && data[i].b == that.objects[k].b) {
+                    for (var k in this.objects) {
+                        if (data[i].r == this.objects[k].r && data[i].g == this.objects[k].g && data[i].b == this.objects[k].b) {
 
                             const entityTypes = {
                               FFChunk,
@@ -3112,7 +3095,7 @@ function Maps() {
                             //var o = new window[k]();
 
                             o.create(data[i].y, 0, data[i].x);
-                            that.loaded.push(o);
+                            this.loaded.push(o);
                             if (k == "Player") {
                               console.log('assigning player');
                                 game.player = o;
@@ -3239,15 +3222,13 @@ function ModelLoader() {
             return;
         }
 
-        var that = this;
-
         if (typeof (this.models[key][0].default) === 'string') { 
-            loadImageFile(this.models[key][0].default, function(data, width, height) {
-                var chunk = new Chunk(0, 0, 0, width, height, that.models[key][1], key, 1, that.models[key][2]);
+            loadImageFile(this.models[key][0].default, (data, width, height) => {
+                var chunk = new Chunk(0, 0, 0, width, height, this.models[key][1], key, 1, this.models[key][2]);
                 chunk.init();
                // var data2 = [];
                 for(var i = 0; i < data.length; i++) {
-                    for(var y = 0; y < that.models[key][1]; y++) {
+                    for(var y = 0; y < this.models[key][1]; y++) {
                         //data2.push({x: data[i].x, y: data[i].y, z: y, r: data[i].r, g: data[i].g, b: data[i].b});
                         chunk.addBlock(data[i].x, data[i].y, y, data[i].r, data[i].g, data[i].b);
                     }
@@ -3257,34 +3238,16 @@ function ModelLoader() {
                 //chunk.batch_points = data2;
                 //chunk.bp = data2.length;
                 //chunk.addBatch();
-                that.models[key] = chunk;
+                this.models[key] = chunk;
                 // Remove mesh from scene (cloned later)
                 chunk.mesh.visible = false;
-                that.loadFiles();
+                this.loadFiles();
             });
         } else {
           // XXX: This is already loaded due to webpack.
-          that.loadModel(key);
-          that.loadFiles();
-          //that.models.[key][0] 
+          this.loadModel(key);
+          this.loadFiles();
         }
-        //if(this.models[key][0].indexOf("vox") != -1) {
-        //    var oReq = new XMLHttpRequest();
-        //    oReq.open("GET", this.models[key][0], true);
-        //    oReq.responseType = "arraybuffer";
-
-        //    var that = this;
-        //    oReq.send(null);
-        //    oReq.onload = function () {
-        //        that.models[key][0] = oReq.response;
-        //        console.log('returned model is:',key);
-        //        console.log(oReq.response);
-        //        that.loadModel(key);
-        //        that.loadFiles();
-        //    };
-        //} else if(this.models[key][0].indexOf("png") != 1) {
-        //    
-        //}
     };
 
     ModelLoader.prototype.loadModel = function(name) {
@@ -5395,9 +5358,8 @@ function SoundLoader() {
         this.sounds[name].gainNode.connect(this.context.destination);
         this.sounds[name].source.start(0);
 
-        var that = this;
-        this.sounds[name].source.onended = function() {
-            that.sounds[name].source = null;
+        this.sounds[name].source.onended = () => {
+          this.sounds[name].source = null;
         };
 
         if(position != undefined) {
@@ -5573,15 +5535,14 @@ function Textures() {
         image.src = filename;
         image.id = id;
         var ctx = document.createElement('canvas').getContext('2d');
-        var that = this;
 
-        image.onload = function() {
+        image.onload = () => {
             var scale = 1;
             ctx.canvas.width = image.width;
             ctx.canvas.height = image.height;
 
-            that.tex[image.id].width = image.width;
-            that.tex[image.id].height = image.height;
+            this.tex[image.id].width = image.width;
+            this.tex[image.id].height = image.height;
 
             var size = image.width * image.height;
             var data = new Float32Array( size );
@@ -5595,19 +5556,19 @@ function Textures() {
             var imaged = ctx.getImageData(0, 0, image.width, image.height);
             var pix = imaged.data;
 
-            that.tex[image.id].map = new Array();
+            this.tex[image.id].map = new Array();
             for(var y = 0; y < image.height; y++) {
                 var pos = y * image.width * 4;
-                that.tex[image.id].map[y] = new Array();
+                this.tex[image.id].map[y] = new Array();
                 for(var x = 0; x < image.width; x++) {
                     var all = pix[pos]+pix[pos+1]+pix[pos+2];
                     pos++;
                     pos++;
                     pos++;
-                    that.tex[image.id].map[y][x] = all;
+                    this.tex[image.id].map[y][x] = all;
                 }
             }
-            that.loaded++;
+            this.loaded++;
         }
     };
 
@@ -5616,27 +5577,26 @@ function Textures() {
         image.src = filename;
         image.id = id;
         var ctx = document.createElement('canvas').getContext('2d');
-        var that = this;
-        image.onload = function() {
+        image.onload = () => {
             ctx.canvas.width  = image.width;
             ctx.canvas.height = image.height;
             ctx.drawImage(image, 0, 0);
-            that.tex[image.id].width = image.width;
-            that.tex[image.id].height = image.height;
-            that.tex[image.id].map = new Array();
+            this.tex[image.id].width = image.width;
+            this.tex[image.id].height = image.height;
+            this.tex[image.id].map = new Array();
             var imgData = ctx.getImageData(0, 0, image.width, image.height);
             for(var y = 0; y < image.height; y++) {
                 var pos = y * image.width * 4;
-                that.tex[image.id].map[y] = new Array();
+                this.tex[image.id].map[y] = new Array();
                 for(var x = 0; x < image.width; x++) {
                     var r = imgData.data[pos++];
                     var g = imgData.data[pos++];
                     var b = imgData.data[pos++];
                     var a = imgData.data[pos++];
-                    that.tex[image.id].map[y][x] = {'r': r, 'g': g, 'b': b, 'a': a};
+                    this.tex[image.id].map[y][x] = {'r': r, 'g': g, 'b': b, 'a': a};
                 }
             }
-            that.loaded++;
+            this.loaded++;
         }
     };
 
@@ -5676,8 +5636,7 @@ function loadImageFile(file, callback) {
     var image = new Image();
     image.src = file;
     var ctx = document.createElement('canvas').getContext('2d');
-    var that = this;
-    image.onload = function() {
+    image.onload = () => {
         ctx.canvas.width  = image.width;
         ctx.canvas.height = image.height;
         ctx.drawImage(image, 0, 0);
