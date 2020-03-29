@@ -23,7 +23,7 @@ class Char {
     this.green_light = new THREE.PointLight(0x00FF00, 2, 10);
     this.radiation_light = 0;
   }
-  shouldIrradiate(res) {
+  shouldBleedOrGlow(res) {
     for (var i = 0; i < res.length; i++) {
       if (((res[i] >> 24) & 0xFF) > 100 && ((res[i] >> 16) & 0xFF) < 25 && ((res[i] >> 8) & 0xFF) < 25) {
         if (this.add_blood == 0 && Math.random() > 0.5) {
@@ -327,7 +327,7 @@ class Enemy extends Char {
   }
   hit(damage, dir, type, pos) {
     var die = super.hit(damage, dir, type, pos);
-    if (die == true & this.moving) {
+    if (die & this.moving) {
       this.moving = false;
       //game.objects["heart"].add(this.chunk.mesh.position.x, this.chunk.mesh.position.y, this.chunk.mesh.position.z);
       this.die();
@@ -336,14 +336,12 @@ class Enemy extends Char {
         if (this.weapon != 0) {
           this.target = game.player;
         }
+      } else if(Math.random() > 0.5) {
+        this.target = 0;
+        this.flee = true;
+        this.moving = true;
       } else {
-        if(Math.random() > 0.5) {
-          this.target = 0;
-          this.flee = true;
-          this.moving = true;
-        } else {
-          this.range_from_player = 10;
-        }
+        this.range_from_player = 10;
       }
     }
     return die;
@@ -431,18 +429,17 @@ class Enemy extends Char {
                 this.addWeapon(game.cdList[idx].owner);
                 this.loadWeapon();
                 this.target = 0;
-              } else {
-                if(this.weapon.damage < game.cdList[idx].owner.damage) {
-                  this.dropWeapon();
-                  this.addWeapon(game.cdList[idx].owner);
-                  this.target = 0;
-                  this.loadWeapon();
-                }
+              } else if(this.weapon.damage < game.cdList[idx].owner.damage) {
+                this.dropWeapon();
+                this.addWeapon(game.cdList[idx].owner);
+                this.target = 0;
+                this.loadWeapon();
               }
             }
           }
         }
       }
+
       this.cd_check += delta;
       this.chunk.mesh.rotation.y -= (1-Math.random()*2)*Math.sin(delta*3); 
       var pos = this.chunk.mesh.position.clone();
@@ -465,10 +462,10 @@ class Enemy extends Char {
       }
       this.chunk.mesh.rotation.z = 0.2 * Math.sin(time * this.speed);
       
-      this.shouldIrradiate(res);
+      this.shouldBleedOrGlow(res);
 
       if (Math.random() < 0.4) {
-        game.particles.walkSmoke(this.chunk.mesh.position.x, game.maps.ground+1, this.chunk.mesh.position.z);
+        game.particles.walkSmoke(this.chunk.mesh.position.x, game.maps.ground + 1, this.chunk.mesh.position.z);
       }
     }
   }
@@ -898,7 +895,7 @@ class Player extends Char {
         pos.y = game.maps.ground;
         const res = game.world.checkExists(pos);
 
-        this.shouldIrradiate(res);
+        this.shouldBleedOrGlow(res);
         
         if (res.length == 0) {
           this.falling = true;
