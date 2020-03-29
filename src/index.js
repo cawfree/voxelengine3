@@ -95,47 +95,47 @@ class Char {
       var max = 5;
       var step = 0.05;
       if(this.dying == 1) {
-        if(this.chunk.mesh.rotation.z < Math.PI/2) {
+        if(this.chunk.mesh.rotation.z < Math.PI * 0.5) {
           this.chunk.mesh.rotation.z += step;
-        } else if(this.chunk.mesh.rotation.z > Math.PI/2) {
+        } else if(this.chunk.mesh.rotation.z > Math.PI * 0.5) {
           this.chunk.mesh.rotation.z -= step;
         }
         if(this.dying_counter == max) {
           this.alive = false;
-          this.chunk.mesh.rotation.z = Math.PI/2;
+          this.chunk.mesh.rotation.z = Math.PI * 0.5;
           this.chunk.mesh.position.y = game.maps.ground;
         }
       } else if(this.dying == 2) {
-        if(this.chunk.mesh.rotation.z < -Math.PI/2) {
+        if(this.chunk.mesh.rotation.z < -Math.PI * 0.5) {
           this.chunk.mesh.rotation.z += step;
-        } else if(this.chunk.mesh.rotation.z > -Math.PI/2) {
+        } else if(this.chunk.mesh.rotation.z > -Math.PI * 0.5) {
           this.chunk.mesh.rotation.z -= step;
         }
         if(this.dying_counter == max) {
           this.alive = false;
-          this.chunk.mesh.rotation.z = -Math.PI/2;
+          this.chunk.mesh.rotation.z = -Math.PI * 0.5;
           this.chunk.mesh.position.y = game.maps.ground;
         }
       } else if(this.dying == 3) {
-        if(this.chunk.mesh.rotation.x < -Math.PI/2) {
+        if(this.chunk.mesh.rotation.x < -Math.PI * 0.5) {
           this.chunk.mesh.rotation.x += step;
-        } else if(this.chunk.mesh.rotation.x > -Math.PI/2) {
+        } else if(this.chunk.mesh.rotation.x > -Math.PI * 0.5) {
           this.chunk.mesh.rotation.x -= step;
         }
         if(this.dying_counter == max) {
           this.alive = false;
-          this.chunk.mesh.rotation.x = -Math.PI/2;
+          this.chunk.mesh.rotation.x = -Math.PI * 0.5;
           this.chunk.mesh.position.y = game.maps.ground;
         }
       } else if(this.dying == 4) {
-        if(this.chunk.mesh.rotation.x < Math.PI/2) {
+        if(this.chunk.mesh.rotation.x < Math.PI * 0.5) {
           this.chunk.mesh.rotation.x += step;
-        } else if(this.chunk.mesh.rotation.x > Math.PI/2) {
+        } else if(this.chunk.mesh.rotation.x > Math.PI * 0.5) {
           this.chunk.mesh.rotation.x -= step;
         }
         if(this.dying_counter == max) {
           this.alive = false;
-          this.chunk.mesh.rotation.x = Math.PI/2;
+          this.chunk.mesh.rotation.x = Math.PI * 0.5;
           this.chunk.mesh.position.y = game.maps.ground;
         }
       }
@@ -214,42 +214,43 @@ class Char {
     var pos = this.chunk.mesh.position;
     var points = [];
     points[0] = new THREE.Vector3(
-      pos.x+this.chunk.chunk_size_x/2,
+      pos.x+this.chunk.chunk_size_x * 0.5,
       pos.y,
       pos.z
     );
     points[1] = new THREE.Vector3(
       pos.x,
       pos.y,
-      pos.z+this.chunk.chunk_size_z/2
+      pos.z+this.chunk.chunk_size_z * 0.5,
     );
     points[2] = new THREE.Vector3(
       pos.x,
       pos.y,
-      pos.z-this.chunk.chunk_size_z/2
+      pos.z-this.chunk.chunk_size_z * 0.5,
     );
     points[3] = new THREE.Vector3(
-      pos.x-this.chunk.chunk_size_x/2,
+      pos.x-this.chunk.chunk_size_x * 0.5,
       pos.y,
       pos.z
     );
 
     var res = true;
-    for(var i = 0; i < points.length; i++) {
-      if(game.world.checkExists(points[i]).length > 0) {
+    for (var i = 0; i < points.length && res; i++) {
+      if (game.world.checkExists(points[i]).length > 0) {
         res = false;
       }
     }
-    for(var idx = 0; idx < game.cdList.length; idx++) {
-      if(this.chunk.mesh.id != game.cdList[idx].id && game.cdList[idx].owner.alive && game.cdList[idx].owner.base_type != "weapon" && game.cdList[idx].owner.obj_type != "painkillers") {
-        if(this.chunk.checkCD(game.cdList[idx].position, 6)) {
+    for (var idx = 0; idx < game.cdList.length && res; idx++) {
+      if (this.chunk.mesh.id != game.cdList[idx].id && game.cdList[idx].owner.alive && game.cdList[idx].owner.base_type != "weapon" && game.cdList[idx].owner.obj_type != "painkillers") {
+        if (this.chunk.checkCD(game.cdList[idx].position, 6)) {
           res = false;
         }
       }
     }
     return res;
   }
-  hit (damage, direction, type, pos) {
+  onHit() { /* do nothing */ }
+  hit(damage, direction, type, pos) {
     this.bleed_timer = this.chunk.health / 100 * 10;
 
     var die = false;
@@ -260,33 +261,16 @@ class Char {
     die = this.chunk.health < 90? true: false;
     if (die && this.alive) {
       this.dropWeapon();
-      // this.alive = false; 
-      if(this.base_type == "player") {
-        this.chunk.mesh.remove(game.camera);
-        var pos = this.chunk.mesh.position.clone();
-        pos.y = game.maps.ground;
-        game.scene.add(game.camera);
-        game.camera.position.z = pos.z;
-        game.camera.position.x = pos.x;
-        game.camera.position.y = 150; //120; 150
-        game.camera.rotation.x = -Math.PI/2;
-        setTimeout(function() {
-          game.reset();
-        }, 3000);
-      }
+      this.onHit();
       this.dying = 0;
       var r = Math.random();
       if(r > 0.8) {
-        //this.chunk.mesh.rotation.z = Math.PI/2;
         this.dying = 1;
       } else if(r > 0.5) {
-        // this.chunk.mesh.rotation.z = -Math.PI/2;
         this.dying = 2;
       } else if(r > 0.3) {
-        //  this.chunk.mesh.rotation.x = -Math.PI/2;
         this.dying = 3;
       } else {
-        //this.chunk.mesh.rotation.x = Math.PI/2;
         this.dying = 4;
       }
     }
@@ -692,6 +676,18 @@ class Player extends Char {
     this.flashlight = new THREE.SpotLight(0xFFFFFF);
     this.footsteps = false;
   }
+  onHit() {
+    super.onHit();
+    this.chunk.mesh.remove(game.camera);
+    var pos = this.chunk.mesh.position.clone();
+    pos.y = game.maps.ground;
+    game.scene.add(game.camera);
+    game.camera.position.z = pos.z;
+    game.camera.position.x = pos.x;
+    game.camera.position.y = 150;
+    game.camera.rotation.x = Math.PI * -0.5;
+    setTimeout(() => game.reset(), 3000);
+  }
   reset() {
     this.removeBindings();
     this.weapons = [];
@@ -965,8 +961,8 @@ class Player extends Char {
             //game.camera.lookAt(this.chunk.mesh);
             game.camera.position.z = pos.z;
             game.camera.position.x = pos.x;
-            game.camera.position.y = 150; //120; 150
-            game.camera.rotation.x = -Math.PI/2;
+            game.camera.position.y = 150;
+            game.camera.rotation.x = -Math.PI * 0.5;
           }
         }
         for (var idx = 0; idx < game.cdList.length; idx++) {
@@ -993,7 +989,7 @@ class Player extends Char {
       var movementX = event.movementX || event.mozMovementX || event.webkitMovementX ||0;
       var x = movementX*0.001;
       var axis = new THREE.Vector3(0,1,0);
-      var radians = -(Math.PI/2)*x;
+      var radians = (Math.PI * -0.5) * x;
       var rotObjectMatrix = new THREE.Matrix4();
       rotObjectMatrix.makeRotationAxis(axis.normalize(), radians);
       this.chunk.mesh.matrix.multiply(rotObjectMatrix);
@@ -1725,15 +1721,9 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                     }
                 } else {
                     if (Math.random() > max) {
-                       // if(this.mesh.rotation.y == 0) {
-                            mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x/2);
-                            mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y/2);
-                            mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z/2);
-                       // } else { // -Math.PI
-                       //     mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x)/(Math.PI*2);
-                       //     mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y)/(Math.PI*2);
-                       //     mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z)/(Math.PI*2);
-                       // }
+                        mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x * 0.5);
+                        mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y * 0.5);
+                        mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z * 0.5);
                         var size = this.blockSize;
                         if(Math.random() > 0.5) {
                             size = 1;
@@ -1749,9 +1739,9 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                     }
                     if(this.owner.radioactive_leak) {
                         if(Math.random() > 0.8) {
-                            var mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x/2);
-                            var mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y/2);
-                            var mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z/2);
+                            var mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x * 0.5);
+                            var mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y * 0.5);
+                            var mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z * 0.5);
                             game.particles.radioactive_leak(
                                                              mp_x + x * this.blockSize,
                                                              mp_y + y * this.blockSize,
@@ -1762,9 +1752,9 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                     }
                     if (this.owner.radioactive) {
                         if(Math.random() > max) {
-                            var mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x/2);
-                            var mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y/2);
-                            var mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z/2);
+                            var mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x * 0.5);
+                            var mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y * 0.5);
+                            var mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z * 0.5);
                             game.particles.radioactive_splat(
                                                              mp_x + x * this.blockSize,
                                                              mp_y + y * this.blockSize,
@@ -1782,9 +1772,9 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                             size = 1;
                         }
                         if(Math.random() > max) {
-                            var mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x/2);
-                            var mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y/2);
-                            var mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z/2);
+                            var mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x * 0.5);
+                            var mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y * 0.5);
+                            var mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z * 0.5);
                             //for (var t = 0; t < 2; t++) {
                             game.particles.blood(
                                 mp_x + x * this.blockSize,
@@ -1866,36 +1856,22 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
         }
 
 
-        if(pos == null || this.type == "ff_object") {
+        if (pos == null || this.type == "ff_object") {
             x = Math.random() * this.chunk_size_x | 0;
             z = Math.random() * this.chunk_size_z | 0;
             y = Math.random() * this.chunk_size_y | 0;
         } else {
-          //  if(this.mesh.rotation.y == 0) {
-                var p = this.mesh.position.y - (this.chunk_size_y*this.blockSize)/2;
-                var h = pos.y - p;
-                y = h*(1/this.blockSize) |0;
+            var p = this.mesh.position.y - (this.chunk_size_y*this.blockSize) * 0.5;
+            var h = pos.y - p;
+            y = h*(1/this.blockSize) |0;
 
-                p = this.mesh.position.x - (this.chunk_size_x * this.blockSize / 2);
-                h = pos.x - p;
-                x = h*(1/this.blockSize) |0;
+            p = this.mesh.position.x - (this.chunk_size_x * this.blockSize * 0.5);
+            h = pos.x - p;
+            x = h*(1/this.blockSize) |0;
 
-                p = this.mesh.position.z - (this.chunk_size_z * this.blockSize / 2);
-                h = pos.z - p;
-                z = h*(1/this.blockSize) | 0;
-           // } else if(this.mesh.rotation.y == -Math.PI) {
-           //     var p = this.mesh.position.y - (this.chunk_size_y*this.blockSize)/2;
-           //     var h = pos.y - p;
-           //     y = h*(1/this.blockSize) |0;
-
-           //     p = this.mesh.position.x + (this.chunk_size_x * this.blockSize / 2);
-           //     h = pos.x - p;
-           //     x = h*(1/this.blockSize) |0;
-
-           //     p = this.mesh.position.z + (this.chunk_size_z * this.blockSize / 2);
-           //     h = pos.z - p;
-           //     z = h*(1/this.blockSize) | 0;
-           // }
+            p = this.mesh.position.z - (this.chunk_size_z * this.blockSize * 0.5);
+            h = pos.z - p;
+            z = h*(1/this.blockSize) | 0;
         }
 
         x = x > 0? x: 0;
@@ -1974,9 +1950,9 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                        //                            this.mesh.position.x + rx * this.blockSize,
                        //                            this.mesh.position.y + ry * this.blockSize,
                        //                            this.mesh.position.z + rz * this.blockSize,
-                                                   this.mesh.position.x - (this.blockSize * this.chunk_size_x)/2 +rx*this.blockSize,
-                                                   this.mesh.position.y - (this.blockSize * this.chunk_size_y)/2 +ry*this.blockSize,
-                                                   this.mesh.position.z - (this.blockSize * this.chunk_size_z)/2 +rz*this.blockSize, 
+                                                   this.mesh.position.x - (this.blockSize * this.chunk_size_x) * 0.5 +rx*this.blockSize,
+                                                   this.mesh.position.y - (this.blockSize * this.chunk_size_y) * 0.5 +ry*this.blockSize,
+                                                   this.mesh.position.z - (this.blockSize * this.chunk_size_z) * 0.5  +rz*this.blockSize, 
                                                    0.5,
                                                    dir.x,
                                                    dir.y,
@@ -2190,7 +2166,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
     };
 
     Chunk.prototype.blockExists_w = function(pos) {
-        var l = (this.blockSize*this.chunk_size_x/2)*(1/this.blockSize);
+        var l = (this.blockSize*this.chunk_size_x * 0.5)*(1/this.blockSize);
         var x = this.chunk_size_x - (pos.x - (this.mesh.position.x - l)) | 0; 
         var y = this.chunk_size_y - (pos.y - (this.mesh.position.y - l)) | 0; 
         var z = this.chunk_size_z - (pos.z - (this.mesh.position.z - l)) | 0; 
@@ -3294,7 +3270,7 @@ function PaperPoliceCar() {
         this.chunk = game.modelLoader.getModel("paperpolicecar", 0.6, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
-        this.chunk.mesh.position.set(x, game.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize)/2, z);
+        this.chunk.mesh.position.set(x, game.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
     };
 }
 PaperPoliceCar.prototype = new Obj; 
@@ -3314,7 +3290,7 @@ function PaperAgent() {
         this.chunk = game.modelLoader.getModel("paperagent", 0.2, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
-        this.chunk.mesh.position.set(x, game.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize)/2, z);
+        this.chunk.mesh.position.set(x, game.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
     };
 }
 PaperAgent.prototype = new Obj; 
@@ -3335,7 +3311,7 @@ function Tree() {
         this.chunk = game.modelLoader.getModel("tree", 0.5, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
-        this.chunk.mesh.position.set(x, game.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize)/2, z);
+        this.chunk.mesh.position.set(x, game.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
     };
 }
 Tree.prototype = new Obj; 
@@ -3447,12 +3423,12 @@ function UfoSign() {
         this.chunk = game.modelLoader.getModel("ufo_sign", 0.2, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
-        this.chunk.mesh.rotation.y = Math.PI/2;
+        this.chunk.mesh.rotation.y = Math.PI * 0.5;
    //     this.chunk.mesh.rotation.x = -Math.PI;
         // Check rotation depending on wall
         var res = game.world.checkExists(new THREE.Vector3(x-1,game.maps.ground+10,z));
         if(res.length > 0) {
-            this.chunk.mesh.rotation.y = -Math.PI/2;
+            this.chunk.mesh.rotation.y = -Math.PI * 0.5;
         }
         res = game.world.checkExists(new THREE.Vector3(x,game.maps.ground+10,z-1));
         if(res.length > 0) {
@@ -3485,12 +3461,12 @@ function RadiationSign() {
         this.chunk = game.modelLoader.getModel("radiation_sign", 0.2, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
-        this.chunk.mesh.rotation.y = Math.PI/2;
+        this.chunk.mesh.rotation.y = Math.PI * 0.5;
         this.chunk.mesh.rotation.x = -Math.PI;
         // Check rotation depending on wall
         var res = game.world.checkExists(new THREE.Vector3(x-1,game.maps.ground+10,z));
         if(res.length > 0) {
-            this.chunk.mesh.rotation.y = -Math.PI/2;
+            this.chunk.mesh.rotation.y = -Math.PI * 0.5;
         }
         res = game.world.checkExists(new THREE.Vector3(x,game.maps.ground+10,z-1));
         if(res.length > 0) {
@@ -3641,7 +3617,7 @@ function FBIHQ() {
     FBIHQ.prototype.create = function(x, y, z) {
         this.chunk = game.modelLoader.getModel("fbihq", 1, this);
         //this.chunk.mesh.rotation.y = -Math.PI;
-        this.chunk.mesh.position.set(x, game.maps.ground+this.chunk.chunk_size_y*this.chunk.blockSize/2, z);
+        this.chunk.mesh.position.set(x, game.maps.ground+this.chunk.chunk_size_y*this.chunk.blockSize * 0.5, z);
     };
 }
 FBIHQ.prototype = new Obj; 
@@ -5133,11 +5109,11 @@ function Particle() {
 
         var o = 1;
         for(var idx = 0; idx < game.cdList.length; idx++) {
-            if((game.cdList[idx].position.x - game.cdList[idx].owner.chunk.chunk_size_x*game.cdList[idx].owner.chunk.blockSize/2) <= this.mesh.position.x + o &&
-               (game.cdList[idx].position.x + game.cdList[idx].owner.chunk.chunk_size_x*game.cdList[idx].owner.chunk.blockSize/2) >= this.mesh.position.x - o )
+            if((game.cdList[idx].position.x - game.cdList[idx].owner.chunk.chunk_size_x*game.cdList[idx].owner.chunk.blockSize * 0.5) <= this.mesh.position.x + o &&
+               (game.cdList[idx].position.x + game.cdList[idx].owner.chunk.chunk_size_x*game.cdList[idx].owner.chunk.blockSize * 0.5) >= this.mesh.position.x - o )
             {
-                if((game.cdList[idx].position.z - game.cdList[idx].owner.chunk.chunk_size_z*game.cdList[idx].owner.chunk.blockSize/2) <= this.mesh.position.z + o &&
-                   (game.cdList[idx].position.z + game.cdList[idx].owner.chunk.chunk_size_z*game.cdList[idx].owner.chunk.blockSize/2) >= this.mesh.position.z - o)
+                if((game.cdList[idx].position.z - game.cdList[idx].owner.chunk.chunk_size_z*game.cdList[idx].owner.chunk.blockSize * 0.5) <= this.mesh.position.z + o &&
+                   (game.cdList[idx].position.z + game.cdList[idx].owner.chunk.chunk_size_z*game.cdList[idx].owner.chunk.blockSize * 0.5) >= this.mesh.position.z - o)
                 {
                     if (game.cdList[idx].owner.base_type == "object") {
                         if(game.cdList[idx].owner.hit) {
