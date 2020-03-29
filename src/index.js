@@ -55,7 +55,7 @@ class Char {
       }
     }
   }
-  sound_hit() {
+  sound_hit(store) {
     var r = Math.random();
     if (r < 0.4) {
       r = "blood1";
@@ -64,11 +64,11 @@ class Char {
     } else {
       r = "blood3";
     }
-    game.sounds.PlaySound(r, this.chunk.mesh.position, 300);
+    store.sounds.PlaySound(r, this.chunk.mesh.position, 300);
     if (this.alive) {
       if (Math.random() > 0.8) {
         // TODO: Something really interesting going here.
-        game.sounds.PlaySound("hit" + (1 + Math.random() * 2 | 0), this.chunk.mesh.position, 500);
+        store.sounds.PlaySound("hit" + (1 + Math.random() * 2 | 0), this.chunk.mesh.position, 500);
       }
     }
   }
@@ -118,7 +118,7 @@ class Char {
       this.weapon.shoot(this.chunk.mesh.quaternion, this.chunk.mesh.id, this.chunk.mesh, this.speed / 30);
     }
   }
-  update(time, delta) {
+  update(store, time, delta) {
     // open wound.
     if (this.dying != 0) {
       this.dying_counter++;
@@ -177,7 +177,7 @@ class Char {
       }
 
       if (this.bleed_timer < 0) {
-        this.hit(4, new THREE.Vector3(0, -3, 0), null);
+        this.hit(game, 4, new THREE.Vector3(0, -3, 0), null);
         this.bleed_timer = 10;
         return;
       }
@@ -230,7 +230,7 @@ class Char {
             this.chunk.mesh.position.z + (2 - Math.random() * 4)
           );
           if(this.radiation_poisoned > 5) {
-            this.chunk.hit(new THREE.Vector3(0,0,0), 1, null);
+            this.chunk.hit(game, new THREE.Vector3(0,0,0), 1, null);
           }
         }
       }
@@ -279,14 +279,15 @@ class Char {
     return res;
   }
   onHit() { /* do nothing */ }
-  hit(damage, direction, type, pos) {
+  hit(store, damage, direction, type, pos) {
     this.bleed_timer = this.chunk.health / 100 * 10;
 
     var die = false;
 
-    this.sound_hit();
+    this.sound_hit(store);
 
-    this.chunk.hit(direction, damage, pos);
+    this.chunk.hit(store, direction, damage, pos);
+
     die = this.chunk.health < 90? true: false;
     if (die && this.alive) {
       this.dropWeapon();
@@ -325,8 +326,8 @@ class Enemy extends Char {
   die() {
     this.chunk.mesh.position.y = game.maps.ground + 1;
   }
-  hit(damage, dir, type, pos) {
-    var die = super.hit(damage, dir, type, pos);
+  hit(store, damage, dir, type, pos) {
+    var die = super.hit(store, damage, dir, type, pos);
     if (die & this.moving) {
       this.moving = false;
       //game.objects["heart"].add(this.chunk.mesh.position.x, this.chunk.mesh.position.y, this.chunk.mesh.position.z);
@@ -352,8 +353,8 @@ class Enemy extends Char {
     this.run_speed = 20; //+Math.random()*50;
     this.moving = true;
   }
-  update(time, delta) {
-    super.update(time, delta);
+  update(store, time, delta) {
+    super.update(store, time, delta);
     if (!this.alive) { return; }
     this.speed = this.walk_speed;
     if (this.flee) {
@@ -835,14 +836,14 @@ class Player extends Char {
       game.camera.rotation.x = -Math.PI / 1.4;
     }
   }
-  update(time, delta) {
+  update(store, time, delta) {
     if (!this.alive) {
       game.sounds.StopSound("footsteps");
       game.sounds.StopSound("heartbeat");
       return;
     }
     this.speed = this.run_speed;
-    super.update(time, delta);
+    super.update(store, time, delta);
     if (this.shooting && this.weapon.obj_type != "sniper") {
       this.shoot();
     } else if (this.shooting && this.weapon.obj_type == "sniper") {
@@ -1800,7 +1801,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
         return false;
     };
 
-    Chunk.prototype.hit = function (dir, power, pos) {
+    Chunk.prototype.hit = function (store, dir, power, pos) {
         if (this.blocks == null) {
             return;
         }
@@ -2499,23 +2500,23 @@ function Main() {
         for(var f in this.update_objects) {
             if(this.update_objects[f] == null) { continue; }
             if(this.update_objects[f].update) {
-                this.update_objects[f].update(time, delta);
+                this.update_objects[f].update(this, time, delta);
             } else {
                 this.update_objects[f] = null;
             }
         }
 
         for(var f in this.objects) {
-            this.objects[f].update(time, delta);
+            this.objects[f].update(this, time, delta);
         }
 
         //this.controls.update(delta);
 
         this.stats.update();
-        this.particles.update(time, delta);
-        this.particles_box.update(time, delta);
-        this.world.update(time, delta);
-        this.maps.update(time, delta);
+        this.particles.update(this, time, delta);
+        this.particles_box.update(this, time, delta);
+        this.world.update(this, time, delta);
+        this.maps.update(this, time, delta);
         this.renderer.render(this.scene, this.camera);
     };
 }
@@ -2570,7 +2571,7 @@ function Maps() {
         game.scene.remove(this.ambient_light);
     };
 
-    Maps.prototype.update = function (time, delta) {
+    Maps.prototype.update = function (store, time, delta) {
         var t1 = 0;
         for (var i = 0; i < this.loaded.length; i++) {
             if(this.loaded[i].chunk && this.loaded[i].chunk.dirty) {
@@ -2584,14 +2585,14 @@ function Maps() {
             if (this.loaded[i].alive) {
                 if(this.loaded[i].chunk) {
                     if (this.loaded[i].chunk.mesh.position.distanceTo(game.player.chunk.mesh.position) < game.visible_distance) {
-                        this.loaded[i].update(time, delta);
+                        this.loaded[i].update(store, time, delta);
                     }
                 } else if(this.loaded[i].x) {
                     if (new THREE.Vector3(this.loaded[i].x, this.loaded[i].y, this.loaded[i].z).distanceTo(game.player.chunk.mesh.position) < game.visible_distance) {
-                        this.loaded[i].update(time, delta);
+                        this.loaded[i].update(store, time, delta);
                     }
                 } else {
-                    this.loaded[i].update(time, delta);
+                    this.loaded[i].update(store, time, delta);
                 }
             }
             if((Date.now() - t1) > 3) {
@@ -2923,8 +2924,8 @@ function Level1() {
     this.map_file = require("../assets/maps/map3_ground.png").default;
     this.obj_file = require("../assets/maps/map3_objects.png").default;
     
-    Level1.prototype.update = function(time, delta) {
-        Maps.prototype.update.call(this, time, delta);
+    Level1.prototype.update = function(store, time, delta) {
+        Maps.prototype.update.call(this, store, time, delta);
         for(var i= 0; i < 2; i++) {
             game.particles.rain();
         }
@@ -3115,7 +3116,7 @@ function Obj() {
         this.chunk.mesh.rotation.set(Math.PI, 0, 0);
     };
 
-    Obj.prototype.update = function(time, delta) {
+    Obj.prototype.update = function(store, time, delta) {
     };
 
     Obj.prototype.destroy = function() {
@@ -3128,7 +3129,7 @@ function FFChunk() {
     this.base_type = "";
     this.type = "ff_chunk";
 
-    FFChunk.prototype.hit = function(dmg, dir, type, pos) {
+    FFChunk.prototype.hit = function(store, dmg, dir, type, pos) {
         dir.x += (1-Math.random()*2);
         dir.y += (1-Math.random()*2);
         dir.z += (1-Math.random()*2);
@@ -3166,7 +3167,7 @@ function Portal() {
         this.z = z;
     };
 
-    Portal.prototype.update = function(time, delta) {
+    Portal.prototype.update = function(store, time, delta) {
         var x = 0; 
         var r = 10;
         for(var a = 0; a < Math.PI*2; a+=Math.PI/4) {
@@ -3206,8 +3207,8 @@ function PainKillers() {
         game.addToCD(this.chunk.mesh);
     };
 
-    PainKillers.prototype.update = function(time, delta) {
-        Obj.prototype.update.call();
+    PainKillers.prototype.update = function(store, time, delta) {
+        Obj.prototype.update.call(this, store, time, delta);
         if(!this.taken) {
             this.chunk.mesh.rotation.y += Math.sin(delta);
             this.chunk.mesh.position.y = game.maps.ground+6 + Math.sin(time * 2.5);
@@ -3230,8 +3231,8 @@ function PaperPoliceCar() {
     this.type = "paperpolicecar";
     this.alive = true;
 
-    PaperPoliceCar.prototype.hit = function(dmg, dir, type, pos) {
-        this.chunk.hit(dir, dmg, pos);
+    PaperPoliceCar.prototype.hit = function(store, dmg, dir, type, pos) {
+        this.chunk.hit(store, dir, dmg, pos);
     };
 
     PaperPoliceCar.prototype.create = function(x, y, z) {
@@ -3250,8 +3251,8 @@ function PaperAgent() {
     this.type = "paperagent";
     this.alive = true;
 
-    PaperAgent.prototype.hit = function(dmg, dir, type, pos) {
-        this.chunk.hit(dir, dmg, pos);
+    PaperAgent.prototype.hit = function(store, dmg, dir, type, pos) {
+        this.chunk.hit(store, dir, dmg, pos);
     };
 
     PaperAgent.prototype.create = function(x, y, z) {
@@ -3271,8 +3272,8 @@ function Tree() {
     this.alive = true;
     this.light = 0;
 
-    Tree.prototype.hit = function(dmg, dir, type, pos) {
-        this.chunk.hit(dir, dmg, pos);
+    Tree.prototype.hit = function(store, dmg, dir, type, pos) {
+        this.chunk.hit(store, dir, dmg, pos);
     };
 
     Tree.prototype.create = function(x, y, z) {
@@ -3292,10 +3293,10 @@ function StreetLamp() {
     this.alive = true;
     this.light = 0;
 
-    StreetLamp.prototype.hit = function(dmg, dir, type, pos) {
-        if(this.chunk.hit(dir, dmg, pos)) {
+    StreetLamp.prototype.hit = function(store, dmg, dir, type, pos) {
+        if(this.chunk.hit(store, dir, dmg, pos)) {
             if(type != "missile" && type != "grenade") {
-                game.sounds.PlaySound("bullet_metal", pos, 300);
+                store.sounds.PlaySound("bullet_metal", pos, 300);
             }
            // if(this.light.intensity > 0) {
            //     this.light.intensity -= 0.5*dmg;
@@ -3362,7 +3363,7 @@ function StreetLamp() {
         }
     };
 
-    StreetLamp.prototype.update = function(time, delta) {
+    StreetLamp.prototype.update = function(store, time, delta) {
       //  if (Math.random() < this.light.intensity) {
       //      game.particles_box.fire(
       //          this.chunk.mesh.position.x,
@@ -3383,8 +3384,8 @@ function UfoSign() {
     this.alive = true;
     this.light = 0;
 
-    UfoSign.prototype.hit = function(dmg, dir, type, pos) {
-       return this.chunk.hit(dir, dmg, pos);
+    UfoSign.prototype.hit = function(store, dmg, dir, type, pos) {
+       return this.chunk.hit(store, dir, dmg, pos);
     };
 
     UfoSign.prototype.create = function(x, y, z) {
@@ -3421,8 +3422,8 @@ function RadiationSign() {
     this.alive = true;
     this.light = 0;
 
-    RadiationSign.prototype.hit = function(dmg, dir, type, pos) {
-        this.chunk.hit(dir, dmg, pos);
+    RadiationSign.prototype.hit = function(store, dmg, dir, type, pos) {
+        this.chunk.hit(store, dir, dmg, pos);
     };
 
     RadiationSign.prototype.create = function(x, y, z) {
@@ -3461,13 +3462,13 @@ function DeadHearty() {
     this.radioactive = true;
     this.radioactive_leak = true;
 
-    DeadHearty.prototype.hit = function(dmg, dir, type, pos) {
+    DeadHearty.prototype.hit = function(store, dmg, dir, type, pos) {
         //this.chunk.explode(dir, dmg);
-        this.chunk.hit(dir, dmg, pos);
+        this.chunk.hit(store, dir, dmg, pos);
         this.alive = false;
     };
 
-    DeadHearty.prototype.update = function(time, delta) {
+    DeadHearty.prototype.update = function(store, time, delta) {
         var pos = this.chunk.mesh.position;
         game.particles.radiation(pos.x+(2-Math.random()*4), pos.y, pos.z+(2-Math.random()*4));
         if(Math.random() > 0.9) {
@@ -3496,10 +3497,10 @@ function BarrelFire() {
     this.alive = true;
     this.light = 0;
 
-    BarrelFire.prototype.hit = function(dmg, dir, type, pos) {
-        if(this.chunk.hit(dir, dmg, pos)) {
+    BarrelFire.prototype.hit = function(store, dmg, dir, type, pos) {
+        if(this.chunk.hit(store, dir, dmg, pos)) {
             if(type != "missile" && type != "grenade") {
-                game.sounds.PlaySound("bullet_metal", pos, 300);
+                store.sounds.PlaySound("bullet_metal", pos, 300);
             }
             this.alive = false;
             return true;
@@ -3507,7 +3508,7 @@ function BarrelFire() {
         return false;
     };
 
-    BarrelFire.prototype.update = function(time, delta) {
+    BarrelFire.prototype.update = function(store, time, delta) {
         var pos = this.chunk.mesh.position;
         game.particles.fire(pos.x+(4-Math.random()*8), game.maps.ground+6+this.chunk.to_y*2, pos.z+(4-Math.random()*8));
         if(Math.random() > 0.9) {
@@ -3536,11 +3537,11 @@ function Barrel() {
     this.radioactive = true;
     this.radioactive_leak = true;
 
-    Barrel.prototype.hit = function(dmg, dir, type, pos) {
+    Barrel.prototype.hit = function(store, dmg, dir, type, pos) {
         //this.chunk.explode(dir, dmg);
-        if(this.chunk.hit(dir, dmg, pos)) {
+        if(this.chunk.hit(store, dir, dmg, pos)) {
             if(type != "missile" && type != "grenade") {
-                game.sounds.PlaySound("bullet_metal", pos, 300);
+                store.sounds.PlaySound("bullet_metal", pos, 300);
             }
             this.alive = false;
             return true;
@@ -3548,7 +3549,7 @@ function Barrel() {
         return false;
     };
 
-    Barrel.prototype.update = function(time, delta) {
+    Barrel.prototype.update = function(store, time, delta) {
         var pos = this.chunk.mesh.position;
         game.particles.radiation(pos.x+(1-Math.random()*2), game.maps.ground+4+this.chunk.to_y*2, pos.z+(1-Math.random()*2));
         if(Math.random() > 0.9) {
@@ -3578,8 +3579,8 @@ function FBIHQ() {
     this.type = "fbihq";
     this.alive = true;
 
-    FBIHQ.prototype.hit = function(dmg, dir, type, pos) {
-        this.chunk.hit(dir, dmg, pos);
+    FBIHQ.prototype.hit = function(store, dmg, dir, type, pos) {
+        this.chunk.hit(store, dir, dmg, pos);
     };
 
     FBIHQ.prototype.create = function(x, y, z) {
@@ -3599,7 +3600,7 @@ function SpiderWeb() {
     this.alive = true;
     this.light = 0;
 
-    SpiderWeb.prototype.hit = function(dmg, dir, type) {
+    SpiderWeb.prototype.hit = function(store, dmg, dir, type) {
         this.chunk.explode(dir, dmg);
         this.alive = false;
     };
@@ -3622,8 +3623,8 @@ function Lamp1() {
     this.alive = true;
     this.light = 0;
 
-    Lamp1.prototype.hit = function(dmg, dir, type, pos) {
-        this.chunk.hit(dir, dmg, pos)
+    Lamp1.prototype.hit = function(store, dmg, dir, type, pos) {
+        this.chunk.hit(store, dir, dmg, pos)
         if(this.light.intensity > 0) {
             this.light.intensity -= 0.5*dmg;
             if(this.light.intensity < 0) {
@@ -3646,9 +3647,9 @@ function Lamp1() {
         this.chunk.mesh.add(this.light);
     };
 
-    Lamp1.prototype.update = function(time, delta) {
+    Lamp1.prototype.update = function(store, time, delta) {
         if (Math.random() < this.light.intensity) {
-            game.particles_box.fire(
+            store.particles_box.fire(
                 this.chunk.mesh.position.x,
                 this.chunk.mesh.position.y + 8,
                 this.chunk.mesh.position.z
@@ -3795,27 +3796,27 @@ function Heart() {
         }
     };
 
-    Heart.prototype.update = function(time, delta) {
-        Obj.prototype.update.call();
+    Heart.prototype.update = function(store, time, delta) {
+        Obj.prototype.update.call(this, store, time, delta);
         for(var i = 0; i < this.active.length; i++) {
             if (this.active[i].alive) {
                 this.active[i].rotation.y += Math.sin(delta);
-                this.active[i].position.y = game.maps.ground+6 + Math.sin(time * 2.5);
+                this.active[i].position.y = store.maps.ground+6 + Math.sin(time * 2.5);
                 if(Math.random() > 0.5) {
-                    game.particles.blueMagic(
+                    store.particles.blueMagic(
                                              this.active[i].position.x,
                                              this.active[i].position.y,
                                              this.active[i].position.z
                     );
                 }
             } else {
-                if (this.active[i].position.y < game.maps.ground+20) {
+                if (this.active[i].position.y < store.maps.ground+20) {
                     //this.active[i].rotation.y += time*10;
                     this.active[i].position.y += 0.3;
                 } else {
                     this.active[i].rotation.y = 0;
                     this.chunk.virtual_explode(this.active[i].position);
-                    game.scene.remove(this.active[i]);
+                    store.scene.remove(this.active[i]);
                     this.active.splice(i, 1);
                 }
             }
@@ -3868,7 +3869,7 @@ function ParticlePool(size, type) {
         }
     };
 
-    ParticlePool.prototype.update = function (time, delta) {
+    ParticlePool.prototype.update = function (store, time, delta) {
         // Dim lights 
         for(var i = 0; i < this.lights.length; i++) {
             this.lights[i].intensity -= 0.5;
@@ -3876,7 +3877,7 @@ function ParticlePool(size, type) {
                 if (this.lights[i].parent != null) {
                     this.lights[i].parent.remove(this.lights[i]);
                 } else {
-                    game.scene.remove(this.lights[i]);
+                    store.scene.remove(this.lights[i]);
                 }
             }
         }
@@ -3919,11 +3920,11 @@ function ParticlePool(size, type) {
             this.update_cnt = i;
             if (this.particles[i].active) {
                 if(this.particles[i].type == "grenade" || this.particles[i].type == "missile" || this.particles[i].type == "minigun" || this.particles[i].type == "shell") {
-                    this.particles[i].update(time, delta);
+                    this.particles[i].update(store, time, delta);
                 } else {
                     if(tot < 5) {
                         ts = Date.now();
-                        this.particles[i].update(time, delta);
+                        this.particles[i].update(store, time, delta);
                         tot += (Date.now() - ts);
                     }
                 }
@@ -4819,7 +4820,7 @@ function Particle() {
         return true;
     };
 
-    Particle.prototype.update = function (time, delta) {
+    Particle.prototype.update = function (store, time, delta) {
         this.life -= delta;
         this.checkLife();
 
@@ -5085,7 +5086,7 @@ function Particle() {
                 {
                     if (game.cdList[idx].owner.base_type == "object") {
                         if(game.cdList[idx].owner.hit) {
-                            if(game.cdList[idx].owner.hit(this.damage, directionVector, this.type, this.mesh.position)) {
+                            if(game.cdList[idx].owner.hit(game, this.damage, directionVector, this.type, this.mesh.position)) {
                                 this.active = 0;
                                 this.hit = true;
                                 return;
@@ -5093,7 +5094,7 @@ function Particle() {
                         }
                     } else if (game.cdList[idx].owner.base_type == "player" || game.cdList[idx].owner.base_type == "enemy") {
                         if (game.cdList[idx].owner.chunk.mesh.id != this.owner) {
-                            game.cdList[idx].owner.hit(this.damage, directionVector, this.type, this.mesh.position);
+                            game.cdList[idx].owner.hit(game, this.damage, directionVector, this.type, this.mesh.position);
                             this.active = 0;
                             this.hit = true;
                             return;
@@ -5722,7 +5723,7 @@ function Weapon() {
         }
     };
 
-    Weapon.prototype.update = function(time, delta) {
+    Weapon.prototype.update = function(store, time, delta) {
         if(!this.attached) {
             if(this.timeout > 60) { // Remove after 1min.
                 this.destroy();
@@ -5735,7 +5736,7 @@ function Weapon() {
         }
         // Animate dropped weapon
         if(!this.attached) {
-            this.chunk.mesh.position.y = game.maps.ground+6+Math.sin(time*2.5);
+            this.chunk.mesh.position.y = store.maps.ground+6+Math.sin(time*2.5);
             this.chunk.mesh.rotation.y += Math.sin(delta);
         }
         if (this.shoot_light.visible) {
@@ -6087,7 +6088,7 @@ function World() {
         return [];
     };
 
-    World.prototype.hit = function(dmg, dir, type, pos) {
+    World.prototype.hit = function(store, dmg, dir, type, pos) {
         this.explode(pos.x, pos.y, pos.z, dmg, type);
     };
 
@@ -6135,7 +6136,7 @@ function World() {
               if (typeof hit === "function") {
                 pos = owner.chunk.mesh.position;
                 if (pos.x >= pxm && pos.x <= pxp && pos.z >= pzm && pos.z <= pzp) {
-                  owner.hit(power, new THREE.Vector3(0,0,0), "missile", new THREE.Vector3(x,y,z));
+                  owner.hit(game, power, new THREE.Vector3(0,0,0), "missile", new THREE.Vector3(x,y,z));
                 }
               }
             }
@@ -6262,8 +6263,8 @@ function World() {
         }
     };
 
-    World.prototype.update = function(time, delta) {
-        if(!game.player.chunk) {
+    World.prototype.update = function(store, time, delta) {
+        if(!store.player.chunk) {
             return;
         }
 
@@ -6285,7 +6286,7 @@ function World() {
                     if(this.checkExists(new THREE.Vector3(this.radioactive_blocks[v][0], this.radioactive_blocks[v][1], this.radioactive_blocks[v][2])).length == 0) {
                         this.radioactive_blocks[v] = 0;
                     } else {
-                        game.particles.radiation(
+                        store.particles.radiation(
                          this.radioactive_blocks[v][0]+(1-Math.random()*2),
                          this.radioactive_blocks[v][1]+(1-Math.random()*2),
                          this.radioactive_blocks[v][2]+(1-Math.random()*2),
