@@ -2447,7 +2447,7 @@ function Main() {
     this.p_light = new THREE.PointLight(0xFFAA00, 1, 10);
  
     Main.prototype.init = function() {
-        this.sounds.Add({name: "sniper", file: "assets/sounds/sniper.wav.mp3"});
+        this.sounds.Add({name: "sniper", file: require("../assets/sounds/sniper.wav.mp3")});
         this.sounds.Add({name: "take_heart", file: require("../assets/sounds/heart.wav.mp3")});
         this.sounds.Add({name: "walk1", file: require("../assets/sounds/walk1.wav.mp3")});
         this.sounds.Add({name: "blood1", file: require("../assets/sounds/blood1.wav.mp3")});
@@ -3132,8 +3132,8 @@ function Map1() {
     Maps.call(this);
     this.wall_texture = WALL2; // from textures class.
     this.wall2_texture = WALL2; // from textures class.
-    this.map_file = "assets/maps/map3_ground.png";
-    this.obj_file = "assets/maps/map3_objects.png";
+    this.map_file = require("../assets/maps/map3_ground.png").default;
+    this.obj_file = require("../assets/maps/map3_objects.png").default;
     
     
     Map1.prototype.init = function() {
@@ -3154,8 +3154,8 @@ function Level1() {
     Maps.call(this);
     this.wall_texture = WALL2; // from textures class.
     this.wall2_texture = WOOD_WALL; // from textures class.
-    this.map_file = "assets/maps/map3_ground.png";
-    this.obj_file = "assets/maps/map3_objects.png";
+    this.map_file = require("../assets/maps/map3_ground.png").default;
+    this.obj_file = require("../assets/maps/map3_objects.png").default;
     
     Level1.prototype.update = function(time, delta) {
         Maps.prototype.update.call(this, time, delta);
@@ -5500,19 +5500,19 @@ const HEIGHT_MAP = 1;
 
 function Textures() {
     this.files = [
-        ["map1.png", IMAGE],
-        ["wall.jpg", IMAGE],
-        ["road.jpg", IMAGE], 
-        ["grass1.jpg", IMAGE], 
-        ["tree1.jpg", IMAGE],
-        ["dirt.jpg", IMAGE],
-        ["stone_wall.jpg", IMAGE],
-        ["wall2.png", IMAGE],
-        ["floor1.png", IMAGE],
-        ["radioactive.png", IMAGE],
-        ["wall_level1.png", IMAGE],
-        ["wood_fence.png", IMAGE],
-        ["wall2_level1.png", IMAGE],
+        [require("../assets/textures/map1.png").default, IMAGE],
+        [require("../assets/textures/wall.jpg").default, IMAGE],
+        [require("../assets/textures/road.jpg").default, IMAGE], 
+        [require("../assets/textures/grass1.jpg").default, IMAGE], 
+        [require("../assets/textures/tree1.jpg").default, IMAGE],
+        [require("../assets/textures/dirt.jpg").default, IMAGE],
+        [require("../assets/textures/stone_wall.jpg").default, IMAGE],
+        [require("../assets/textures/wall2.png").default, IMAGE],
+        [require("../assets/textures/floor1.png").default, IMAGE],
+        [require("../assets/textures/radioactive.png").default, IMAGE],
+        [require("../assets/textures/wall_level1.png").default, IMAGE],
+        [require("../assets/textures/wood_fence.png").default, IMAGE],
+        [require("../assets/textures/wall2_level1.png").default, IMAGE],
     ];
     this.tex = [];
     this.loaded = 0;
@@ -5570,7 +5570,7 @@ function Textures() {
 
     Textures.prototype.loadHeightMap = function(filename, id) {
         var image = new Image();
-        image.src = "assets/textures/"+filename;
+        image.src = filename;
         image.id = id;
         var ctx = document.createElement('canvas').getContext('2d');
         var that = this;
@@ -5613,7 +5613,7 @@ function Textures() {
 
     Textures.prototype.load = function(filename, id) {
         var image = new Image();
-        image.src = "assets/textures/"+filename;
+        image.src = filename;
         image.id = id;
         var ctx = document.createElement('canvas').getContext('2d');
         var that = this;

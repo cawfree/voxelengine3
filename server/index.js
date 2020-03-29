@@ -88,7 +88,7 @@ function Handler(req, res)
         res.end("Wizard killed the requested file with a Fireball! R.I.P "+file);
     }
   } else if (legacyExists) {
-    console.log("Serve file: "+file);
+    console.log("Legacy file: "+file);
     fs.readFile(file,function(err,data) {
         console.log("CONTENT: ",contentType);
         if(contentType != undefined) {
@@ -99,7 +99,7 @@ function Handler(req, res)
         res.end(data);
     });
   } else if (bundledExists) {
-    console.log("Serve file: "+file);
+    console.log("Bundled file: "+file);
     fs.readFile(file2,function(err,data) {
         console.log("CONTENT: ",contentType);
         if(contentType != undefined) {
