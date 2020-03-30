@@ -687,10 +687,10 @@ class Player extends Char {
     store.camera.rotation.x = Math.PI * -0.5;
     setTimeout(() => store.reset(), 3000);
   }
-  reset() {
+  reset(store) {
     this.removeBindings();
     this.weapons = [];
-    game.scene.remove(this.flashlight);
+    store.scene.remove(this.flashlight);
     this.keyboard = null;
   }
   create(store, x, y, z) {
@@ -1081,8 +1081,8 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
         return false;
     };
 
-    Chunk.prototype.init = function () {
-        this.material = game.chunk_material;
+    Chunk.prototype.init = function (store) {
+        this.material = store.chunk_material;
         //this.material = new THREE.MeshLambertMaterial({vertexColors: THREE.VertexColors, wireframe: this.wireframe});
         //        this.material = new THREE.MeshPhongMaterial({bumpMap: bump, vertexColors: THREE.VertexColors, wireframe: this.wireframe});
         this.blocks = new Array(this.chunk_size_x);
@@ -2035,7 +2035,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
         if (result.length > 0 && result.length != this.current_blocks) {
            // console.log("CHUNK GND:", ground, "RES:",result.length, "CUR:", this.current_blocks);
             var chunk = new Chunk(0, 0, 0, max_x, max_y, max_z, "ff_object", this.blockSize, false);
-            chunk.init();
+            chunk.init(game);
             for (var i = 0; i < result.length; i++) {
                 var p = result[i][0];
                 chunk.addBlock(p.x, p.y, p.z, (result[i][1] >> 24) & 0xFF, (result[i][1] >> 16) & 0xFF, (result[i][1] >> 8) & 0xFF);
@@ -2348,18 +2348,18 @@ function Main() {
         window.addEventListener( 'resize', this.onWindowResize.bind(this), false );
 
         // Load models
-        this.modelLoader.init();
-        this.modelLoader.loadFiles();
+        this.modelLoader.init(this);
+        this.modelLoader.loadFiles(this);
 
         // Init world.
-        this.world.init();
+        this.world.init(this);
 
 
         // Init particle engine
         this.particles = new ParticlePool();
-        this.particles.init(2000, 0);
+        this.particles.init(this, 2000, 0);
         this.particles_box = new ParticlePool();
-        this.particles_box.init(1000, 1);
+        this.particles_box.init(this, 1000, 1);
         
         // DEBUG STUFF
        // var gridHelper = new THREE.GridHelper( 5000, 100);
@@ -2373,13 +2373,13 @@ function Main() {
     };
 
     Main.prototype.waitForLoadTextures = function() {
-        if(!game.textures.isLoaded()) {
-            setTimeout(function() {
-                console.log("waiting for load of textures...");
-                game.waitForLoadTextures();
-            }, 100);
+        if (!game.textures.isLoaded()) {
+            setTimeout(
+              () => game.waitForLoadTextures(),
+              10,
+            );
         } else {
-            game.waitForLoadMap();
+          game.waitForLoadMap();
         }
     };
 
@@ -2391,8 +2391,8 @@ function Main() {
             }, 500);
         } else {
             this.maps = new Level1();
-            this.maps.init();
-            //game.maps.init("Level 1", "assets/maps/map3_ground.png", "assets/maps/map3_objects.png");
+            this.maps.init(this);
+
             // Load objects here to reduce overhead of multiple objects of same type.
             this.objects["shell"] = new Shell();
             this.objects["shell"].create(this);
@@ -2409,11 +2409,12 @@ function Main() {
         }
     };
 
+    // XXX: Note: Does accept an instance. (It _is_ the instance.)
     Main.prototype.reset = function() {
         this.camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, this.visible_distance );
-        this.world.reset();
-        this.maps.reset();
-        this.player.reset();
+        this.world.reset(this);
+        this.maps.reset(this);
+        this.player.reset(this);
         this.cdList = [];
         for(var i = 0; i < this.update_objects.length; i++) {
             if(this.update_objects[i].chunk) {
@@ -2421,7 +2422,7 @@ function Main() {
             }
         }
         this.update_objects = [];
-        this.maps.init();
+        this.maps.init(this);
     };
 
     Main.prototype.onWindowResize = function() {
@@ -2543,15 +2544,15 @@ function Maps() {
 
     this.ambient_light = 0;
 
-    Maps.prototype.reset = function() {
+    Maps.prototype.reset = function(store) {
         for(var i = 0; i < this.loaded.length; i++) {
             if(this.loaded[i].chunk) {
-                game.scene.remove(this.loaded[i].chunk.mesh);
+                store.scene.remove(this.loaded[i].chunk.mesh);
             }
         }
         this.loaded = [];
         this.walls = [];
-        game.scene.remove(this.ambient_light);
+        store.scene.remove(this.ambient_light);
     };
 
     Maps.prototype.update = function (store, time, delta) {
@@ -2584,7 +2585,7 @@ function Maps() {
         }
     };
 
-    Maps.prototype.init = function (name, ground, objects) {
+    Maps.prototype.init = function (store, name, ground, objects) {
         this.name = name;
 
         // Load ground
@@ -2726,7 +2727,7 @@ function Maps() {
 
                 // Now find all blocks within the range.
                 var chunk = new Chunk(x, 0, z, max_x, game.maps.ground, max_z, "floor", 1, "world");
-                chunk.init();
+                chunk.init(store);
                 for (var i = 0; i < floor.length; i++) {
                     if (floor[i].x >= x && floor[i].x < x + max_x &&
                         floor[i].z >= z && floor[i].z < z + max_z) {
@@ -2796,7 +2797,7 @@ function Maps() {
                 } else {
                     chunk = new Chunk(x - wall_thickness, this.ground, z, max_x + wall_thickness, wall_height, max_z + wall_thickness, "x", 1, "world");
                 }
-                chunk.init();
+                chunk.init(store);
                 for (var i = 0; i < walls.length; i++) {
                     if (walls[i].x >= x && walls[i].x <= x + max_x &&
                         walls[i].z >= z && walls[i].z <= z + max_z) {
@@ -2886,10 +2887,10 @@ function Map1() {
     this.obj_file = require("../assets/maps/map3_objects.png").default;
     
     
-    Map1.prototype.init = function() {
-        Maps.prototype.init.call(this, "Level1", this.map_file, this.obj_file);
+    Map1.prototype.init = function(store) {
+        Maps.prototype.init.call(this, store, "Level1", this.map_file, this.obj_file);
         this.set_lightning();
-        game.sounds.PlaySound("ambient_horror", null, 800, true);
+        store.sounds.PlaySound("ambient_horror", null, 800, true);
     };
 
     Map1.prototype.set_lightning = function() {
@@ -2914,15 +2915,15 @@ function Level1() {
         }
     };
 
-    Level1.prototype.reset = function() {
-        Maps.prototype.reset.call(this);
-        game.sounds.StopSound("ambient_horror");
+    Level1.prototype.reset = function(store) {
+        Maps.prototype.reset.call(this, store);
+        store.sounds.StopSound("ambient_horror");
     };
     
-    Level1.prototype.init = function() {
-        Maps.prototype.init.call(this, "Level1", this.map_file, this.obj_file);
+    Level1.prototype.init = function(store) {
+        Maps.prototype.init.call(this, store, "Level1", this.map_file, this.obj_file);
         this.set_lightning();
-        game.sounds.PlaySound("ambient_horror", null, 800, true);
+        store.sounds.PlaySound("ambient_horror", null, 800, true);
     };
 
     Level1.prototype.set_lightning = function() {
@@ -2976,13 +2977,13 @@ function ModelLoader() {
 
     this.files = [];
 
-    ModelLoader.prototype.init = function() {
+    ModelLoader.prototype.init = function(store) {
         for(var k in this.models) {
             this.files.push(k);
         }
     };
 
-    ModelLoader.prototype.loadFiles = function() {
+    ModelLoader.prototype.loadFiles = function(store) {
         if(this.files.length > 0) {
             key = this.files.pop();   
         } else {
@@ -2992,28 +2993,23 @@ function ModelLoader() {
         if (typeof (this.models[key][0].default) === 'string') { 
             loadImageFile(this.models[key][0].default, (data, width, height) => {
                 var chunk = new Chunk(0, 0, 0, width, height, this.models[key][1], key, 1, this.models[key][2]);
-                chunk.init();
-               // var data2 = [];
+                chunk.init(store);
                 for(var i = 0; i < data.length; i++) {
                     for(var y = 0; y < this.models[key][1]; y++) {
-                        //data2.push({x: data[i].x, y: data[i].y, z: y, r: data[i].r, g: data[i].g, b: data[i].b});
                         chunk.addBlock(data[i].x, data[i].y, y, data[i].r, data[i].g, data[i].b);
                     }
                 }
                 chunk.blockSize = 1;
                 chunk.build();
-                //chunk.batch_points = data2;
-                //chunk.bp = data2.length;
-                //chunk.addBatch();
                 this.models[key] = chunk;
                 // Remove mesh from scene (cloned later)
                 chunk.mesh.visible = false;
-                this.loadFiles();
+                this.loadFiles(store);
             });
         } else {
           // XXX: This is already loaded due to webpack.
           this.loadModel(key);
-          this.loadFiles();
+          this.loadFiles(store);
         }
     };
 
@@ -3023,7 +3019,7 @@ function ModelLoader() {
         var p = 0, r = 0, g = 0, b = 0;
         var chunk = new Chunk(0, 0, 0, model.sx, model.sz, model.sy, name, this.models[name][1], this.models[key][2]);
         chunk.blockSize = this.models[name][1];
-        chunk.init();
+        chunk.init(game);
         for(var i = 0; i < model.data.length; i++) {
             p = model.data[i];
             r = (p.val >> 24) & 0xFF;
@@ -3822,11 +3818,11 @@ function ParticlePool(size, type) {
     this.update_cnt = 0;
     this.lights = [];
 
-    ParticlePool.prototype.init = function (size, type) {
+    ParticlePool.prototype.init = function (store, size, type) {
         this.size = size;
         for (var i = 0; i < this.size; i++) {
             var p = new Particle();
-            p.init(type);
+            p.init(store, type);
             this.particles.push(p);
         }
     };
@@ -4677,20 +4673,20 @@ function Particle() {
         this.active = 1;
     };
 
-    Particle.prototype.reset = function () {
+    Particle.prototype.reset = function (store) {
         if (this.type == "chunk_debris" || this.type == "empty_shell") {
             if (this.type == "empty_shell") {
                 var found = -1;
                 for (var i = 0; i < game.particles.old_shells.length; i++) {
-                    if (game.particles.old_shells[i] == null) {
+                    if (store.particles.old_shells[i] == null) {
                         found = i;
                         break;
                     }
                 }
                 if (found == -1) {
-                    game.particles.old_shells.push(this.mesh);
+                    store.particles.old_shells.push(this.mesh);
                 } else {
-                    game.particles.old_shells[found] = this.mesh;
+                    store.particles.old_shells[found] = this.mesh;
                 }
             }
             this.mesh = this.old_mesh;
@@ -4723,7 +4719,6 @@ function Particle() {
 
         this.newPos = 0;
         this.ticks = 0;
-       // this.flip = 0.5;
 
         this.r = 0;
         this.g = 0;
@@ -4735,7 +4730,7 @@ function Particle() {
         this.stay = true;
     };
 
-    Particle.prototype.init = function (particle_type) {
+    Particle.prototype.init = function (store, particle_type) {
         this.particle_type = particle_type;
         if (particle_type == 0) {
             this.mesh = new THREE.Sprite(game.sprite_material.clone());
@@ -4743,7 +4738,7 @@ function Particle() {
             this.mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), game.box_material.clone());
         }
 
-        game.scene.add(this.mesh);
+        store.scene.add(this.mesh);
         this.mesh.visible = false;
         this.mesh.castShadow = false;
     };
@@ -4940,7 +4935,7 @@ function Particle() {
                     //store.particles.explosion(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.power);
              //       break;
             }
-            this.reset();
+            this.reset(store);
         }
     };
 
@@ -5970,21 +5965,21 @@ function World() {
     this.obj_type = "world";
     this.base_type = "world";
 
-    World.prototype.reset = function() {
-        for(var i = 0; i < this.chunks.length; i++) {
-            if(this.chunks[i].mesh) {
-                game.scene.remove(this.chunks[i].mesh);
-            }
-        }
-        this.radioactive_blocks = [];
-        this.chunks = [];
-        this.cid = 0;
-        this.rebuild_idx = 0;
-        this.rpc = 0;
-        this.rpc_max = 0;
-    };
+  World.prototype.reset = function(store) {
+    for (var i = 0; i < this.chunks.length; i++) {
+      if(this.chunks[i].mesh) {
+        store.scene.remove(this.chunks[i].mesh);
+      }
+    }
+    this.radioactive_blocks = [];
+    this.chunks = [];
+    this.cid = 0;
+    this.rebuild_idx = 0;
+    this.rpc = 0;
+    this.rpc_max = 0;
+  };
 
-    World.prototype.init = function() {
+    World.prototype.init = function(store) {
         this.textures = new Textures();
         this.textures.prepare();
     };
@@ -6021,7 +6016,7 @@ function World() {
                pos_z * this.obj_size_z,
                this.obj_size_x, this.obj_size_y, this.obj_size_z,
                "CREATED", 1, "world");
-           chunk.init();
+           chunk.init(game);
            var i = this.addChunk(chunk);
            return [i];
        }
