@@ -75,7 +75,7 @@ class Char {
   create(store, model, x, y, z, size) {
     if(!size) { size = 1; }
 
-    this.chunk = store.modelLoader.getModel(model, size, this);
+    this.chunk = store.modelLoader.getModel(store, model, size, this);
 
     this.init_pos.x = x;
     this.init_pos.y = y;
@@ -945,8 +945,9 @@ class Player extends Char {
         for (var idx = 0; idx < store.cdList.length; idx++) {
           const item = store.cdList[idx];
           if (this.chunk.checkCD(item.position, 5)) {
+            // TODO: Need to determine if object is grabbable via class
             if (item.owner.obj_type == "heart" || item.owner.obj_type == "painkillers") {
-              item.owner.grab(item.id);
+              item.owner.grab(store, item.id);
             } else if (item.owner.base_type == "weapon") {
               if (this.weapons.length <= 2) {
                 this.addWeapon(item.owner);
@@ -1096,7 +1097,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
         }
     };
 
-    Chunk.prototype.build = function () {
+    Chunk.prototype.build = function (store) {
         var vertices = [];
         var colors = [];
         var cc = 0; // Color counter
@@ -1137,7 +1138,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                     } else {
                         if (this.type == "world") {
                             // Check hit towards other chunks.
-                            if (game.world.checkExists(
+                            if (store.world.checkExists(
                                 new THREE.Vector3(
                                     (x + this.from_x * this.chunk_size_x) | 0,
                                     (y + this.from_y * this.chunk_size_y) | 0,
@@ -1156,7 +1157,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                     } else {
                         if (this.type == "world") {
                             // Check hit towards other chunks.
-                            if (game.world.checkExists(
+                            if (store.world.checkExists(
                                 new THREE.Vector3(
                                     ((x - 1) + this.from_x * this.chunk_size_x) | 0,
                                     (y + this.from_y * this.chunk_size_y) | 0,
@@ -1174,7 +1175,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                         }
                     } else {
                         if (this.type == "world") {
-                            if (game.world.checkExists(
+                            if (store.world.checkExists(
                                 new THREE.Vector3(
                                     (x + 1 + this.from_x * this.chunk_size_x) | 0,
                                     (y + this.from_y * this.chunk_size_y) | 0,
@@ -1203,7 +1204,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                     } else {
                         if (this.type == "world") {
                             // Check hit towards other chunks.
-                            if (game.world.checkExists(
+                            if (store.world.checkExists(
                                 new THREE.Vector3(
                                     (x + this.from_x * this.chunk_size_x) | 0,
                                     ((y + 1) + this.from_y * this.chunk_size_y) | 0,
@@ -1222,7 +1223,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                     } else {
                         if (this.type == "world") {
                             // Check hit towards other chunks.
-                            if (game.world.checkExists(
+                            if (store.world.checkExists(
                                 new THREE.Vector3(
                                     (x + this.from_x * this.chunk_size_x) | 0,
                                     (y + this.from_y * this.chunk_size_y) | 0,
@@ -1622,13 +1623,13 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                                        this.from_z
                 );
 
-                game.scene.add(this.mesh);
+                store.scene.add(this.mesh);
 
                 if(this.type != "world") {
                     this.offset = this.geometry.center();
                     this.mesh.owner = this.owner;
                     if(this.owner) {
-                        game.addToCD(this.mesh);
+                        store.addToCD(this.mesh);
                     }
                 }
             } else {
@@ -1641,7 +1642,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
         this.dirty = false;
     };
 
-    Chunk.prototype.rmBlock = function (x, y, z, dir, dmg, local) {
+    Chunk.prototype.rmBlock = function (store, x, y, z, dir, dmg, local) {
         //this.batch_points[this.bp++] = { x: x, y: y, z: z};
         var wx = x;
         var wy = y;
@@ -1671,7 +1672,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
             if (c != 0) {
                 if (this.type == "world") {
                     if (Math.random() > 0.4) {
-                        game.particles_box.world_debris(wx, wy, wz, this.blockSize, (c >> 24) & 0xFF, (c >> 16) & 0xFF, (c >> 8) & 0xFF);
+                        store.particles_box.world_debris(wx, wy, wz, this.blockSize, (c >> 24) & 0xFF, (c >> 16) & 0xFF, (c >> 8) & 0xFF);
                     }
                 } else {
                     if (Math.random() > max) {
@@ -1682,7 +1683,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                         if(Math.random() > 0.5) {
                             size = 1;
                         }
-                        game.particles_box.debris(
+                        store.particles_box.debris(
                                mp_x + x * this.blockSize,
                                mp_y + y * this.blockSize,
                                mp_z + z * this.blockSize,
@@ -1696,7 +1697,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                             var mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x * 0.5);
                             var mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y * 0.5);
                             var mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z * 0.5);
-                            game.particles.radioactive_leak(
+                            store.particles.radioactive_leak(
                                                              mp_x + x * this.blockSize,
                                                              mp_y + y * this.blockSize,
                                                              mp_z + z * this.blockSize,
@@ -1709,7 +1710,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                             var mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x * 0.5);
                             var mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y * 0.5);
                             var mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z * 0.5);
-                            game.particles.radioactive_splat(
+                            store.particles.radioactive_splat(
                                                              mp_x + x * this.blockSize,
                                                              mp_y + y * this.blockSize,
                                                              mp_z + z * this.blockSize,
@@ -1730,7 +1731,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                             var mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y * 0.5);
                             var mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z * 0.5);
                             //for (var t = 0; t < 2; t++) {
-                            game.particles.blood(
+                            store.particles.blood(
                                 mp_x + x * this.blockSize,
                                 mp_y + y * this.blockSize,
                                 mp_z + z * this.blockSize,
@@ -1900,7 +1901,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                             if ((this.blocks[rx][ry][rz] >> 8) != 0) {
                                 if (this.owner.base_type == "enemy" || this.owner.base_type == "player") {
                                     if(Math.random() > max) {
-                                        game.particles.blood(
+                                        store.particles.blood(
                        //                            this.mesh.position.x + rx * this.blockSize,
                        //                            this.mesh.position.y + ry * this.blockSize,
                        //                            this.mesh.position.z + rz * this.blockSize,
@@ -1914,7 +1915,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                                         );
                                     }
                                 }
-                                this.rmBlock(rx, ry, rz, dir, power, true);
+                                this.rmBlock(store, rx, ry, rz, dir, power, true);
                                 isHit = true;
                             }
                         }
@@ -1955,14 +1956,13 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                 }
 
                 for (var i = 0; i < ff.length; i++) {
-                    this.floodFill(ff[i], dir, power);
+                    this.floodFill(store, ff[i], dir, power);
                 }
-                //this.build();
-                // Recalc health after flood fill
+
                 this.health = (this.current_blocks / this.starting_blocks) * 100;
                 this.dirty = true;
                 if(this.health < 20) {
-                    game.removeFromCD(this.mesh);
+                    store.removeFromCD(this.mesh);
                 }
             }
             return true;
@@ -1970,7 +1970,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
         return false;
     };
 
-    Chunk.prototype.floodFill = function (start, dir, power) {
+    Chunk.prototype.floodFill = function (store, start, dir, power) {
         var ground = 1; //this.mesh.position.y - (this.chunk_size_y*this.blockSize / 2);
         var stack = new Array();
         var result = new Array();
@@ -2032,27 +2032,24 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
 
 
         if (result.length > 0 && result.length != this.current_blocks) {
-           // console.log("CHUNK GND:", ground, "RES:",result.length, "CUR:", this.current_blocks);
             var chunk = new Chunk(0, 0, 0, max_x, max_y, max_z, "ff_object", this.blockSize, false);
-            chunk.init(game);
+            chunk.init(store);
             for (var i = 0; i < result.length; i++) {
                 var p = result[i][0];
                 chunk.addBlock(p.x, p.y, p.z, (result[i][1] >> 24) & 0xFF, (result[i][1] >> 16) & 0xFF, (result[i][1] >> 8) & 0xFF);
-                //chunk.addBlock(p.x, p.y, p.z, 255 , 0, 200);
                 this.blocks[p.x][p.y][p.z] = 0;
                 this.current_blocks--;
-                //this.rmBlock(p.x, p.y, p.z, dir, 1, true);
             }
             this.dirty = true;
 
             ffc = new FFChunk();
-            ffc.create(game, chunk);
+            ffc.create(store, chunk);
             ffc.base_type = this.owner.base_type;
-            chunk.build();
+            chunk.build(store);
 
-            game.particles.chunkDebris(
+            store.particles.chunkDebris(
                 this.mesh.position.x,
-                game.maps.ground+max_y*this.blockSize,
+                store.maps.ground+max_y*this.blockSize,
                 this.mesh.position.z,
                 ffc.chunk,
                 dir.x,
@@ -2069,32 +2066,12 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
             for (var y = 0; y < this.chunk_size_y; y++) {
                 for (var z = 0; z < this.chunk_size_z; z++) {
                     if ((this.blocks[x][y][z] >> 8) != 0) {
-                        this.rmBlock(x, y, z, dir, damage);
+                        this.rmBlock(store, x, y, z, dir, damage);
                     }
                 }
             }
         }
         this.mesh.visible = false;
-    };
-
-    Chunk.prototype.placeInWorld = function () {
-        for (var x = 0; x < this.chunk_size_x; x++) {
-            for (var y = 0; y < this.chunk_size_y; y++) {
-                for (var z = 0; z < this.chunk_size_z; z++) {
-                    if (this.blocks[x][y][z] != 0) {
-                        var c = this.blocks[x][y][z];
-                        game.world.addBlock(
-                            this.mesh.position.x + x,
-                            this.mesh.position.y + y,
-                            this.mesh.position.z + z,
-                            (c >> 24) & 0xFF,
-                            (c >> 16) & 0xFF,
-                            (c >> 8) & 0xFF
-                        );
-                    }
-                }
-            }
-        }
     };
 
     Chunk.prototype.virtual_explode = function (store, pos) {
@@ -2344,7 +2321,7 @@ function Main() {
         this.stats = new Stats();
         container.appendChild( this.stats.dom );
 
-        window.addEventListener( 'resize', this.onWindowResize.bind(this), false );
+        window.addEventListener('resize', this.onWindowResize.bind(this), false);
 
         // Load models
         this.modelLoader.init(this);
@@ -2363,7 +2340,7 @@ function Main() {
         // DEBUG STUFF
        // var gridHelper = new THREE.GridHelper( 5000, 100);
        // gridHelper.position.set(0,0,0);
-       // game.scene.add( gridHelper );
+       // store.scene.add( gridHelper );
         
         // Wait for all resources to be loaded before loading map.
         this.textures.prepare();
@@ -2372,22 +2349,22 @@ function Main() {
     };
 
     Main.prototype.waitForLoadTextures = function() {
-        if (!game.textures.isLoaded()) {
+        if (!this.textures.isLoaded()) {
             setTimeout(
-              () => game.waitForLoadTextures(),
+              () => this.waitForLoadTextures(),
               10,
             );
         } else {
-          game.waitForLoadMap();
+          this.waitForLoadMap();
         }
     };
 
     Main.prototype.waitForLoadMap = function() {
         if(this.modelLoader.files.length > 0) {
-            setTimeout(() => {
-                console.log("waiting for load of files...");
-                this.waitForLoadMap();
-            }, 500);
+            setTimeout(
+              () => this.waitForLoadMap(),
+              10,
+            );
         } else {
             this.maps = new Level1();
             this.maps.init(this);
@@ -2442,12 +2419,12 @@ function Main() {
     };
 
     Main.prototype.addToCD = function(obj) {
-        if(obj.owner == null || obj.owner == "") {
-            var err =  new Error();
-            console.log( err.stack);
+        if (obj.owner == null || obj.owner == "") {
+          var err = new Error();
+          console.log(err.stack);
         }
-        if(obj != undefined) {
-            this.cdList.push(obj);
+        if (obj != undefined) {
+          this.cdList.push(obj);
         }
     };
 
@@ -2558,7 +2535,7 @@ function Maps() {
         var t1 = 0;
         for (var i = 0; i < this.loaded.length; i++) {
             if(this.loaded[i].chunk && this.loaded[i].chunk.dirty) {
-                this.loaded[i].chunk.build();
+                this.loaded[i].chunk.build(store);
                 t1 = Date.now();
                 if((Date.now() - t1) > 3) {
                     break;
@@ -2734,7 +2711,6 @@ function Maps() {
                     }
                 }
 
-                //chunk.addBatch();
                 store.world.addChunk(chunk);
             }
 
@@ -2855,16 +2831,13 @@ function Maps() {
                               PaperPoliceCar,
                               PainKillers,
                             };
-                          console.log(k);
 
                             var o = new entityTypes[k]();
-                            //var o = new window[k]();
 
-                            o.create(game, data[i].y, 0, data[i].x);
+                            o.create(store, data[i].y, 0, data[i].x);
                             this.loaded.push(o);
                             if (k == "Player") {
-                              console.log('assigning player');
-                                game.player = o;
+                              store.player = o;
                             }
                             found = 0;
                         }
@@ -2887,13 +2860,13 @@ function Map1() {
     
     Map1.prototype.init = function(store) {
         Maps.prototype.init.call(this, store, "Level1", this.map_file, this.obj_file);
-        this.set_lightning();
+        this.set_lightning(store);
         store.sounds.PlaySound("ambient_horror", null, 800, true);
     };
 
-    Map1.prototype.set_lightning = function() {
+    Map1.prototype.set_lightning = function(store) {
         this.ambient_light = new THREE.AmbientLight( 0xFFFFFF, 0.9);
-        game.scene.add( this.ambient_light );
+        store.scene.add(this.ambient_light);
     };
 }
 Map1.prototype = new Maps;
@@ -2909,7 +2882,7 @@ function Level1() {
     Level1.prototype.update = function(store, time, delta) {
         Maps.prototype.update.call(this, store, time, delta);
         for(var i= 0; i < 2; i++) {
-            game.particles.rain();
+            store.particles.rain();
         }
     };
 
@@ -2920,13 +2893,13 @@ function Level1() {
     
     Level1.prototype.init = function(store) {
         Maps.prototype.init.call(this, store, "Level1", this.map_file, this.obj_file);
-        this.set_lightning();
+        this.set_lightning(store);
         store.sounds.PlaySound("ambient_horror", null, 800, true);
     };
 
-    Level1.prototype.set_lightning = function() {
+    Level1.prototype.set_lightning = function(store) {
         this.ambient_light = new THREE.AmbientLight( 0xFFFFFF, 0.8);
-        game.scene.add( this.ambient_light );
+        store.scene.add(this.ambient_light);
     };
 }
 Level1.prototype = new Maps;
@@ -2998,7 +2971,7 @@ function ModelLoader() {
                     }
                 }
                 chunk.blockSize = 1;
-                chunk.build();
+                chunk.build(store);
                 this.models[key] = chunk;
                 // Remove mesh from scene (cloned later)
                 chunk.mesh.visible = false;
@@ -3006,18 +2979,18 @@ function ModelLoader() {
             });
         } else {
           // XXX: This is already loaded due to webpack.
-          this.loadModel(key);
+          this.loadModel(store, key);
           this.loadFiles(store);
         }
     };
 
-    ModelLoader.prototype.loadModel = function(name) {
+    ModelLoader.prototype.loadModel = function(store, name) {
         var vox = new Vox();
         var model = vox.LoadModel(this.models[name][0], name);
         var p = 0, r = 0, g = 0, b = 0;
         var chunk = new Chunk(0, 0, 0, model.sx, model.sz, model.sy, name, this.models[name][1], this.models[key][2]);
         chunk.blockSize = this.models[name][1];
-        chunk.init(game);
+        chunk.init(store);
         for(var i = 0; i < model.data.length; i++) {
             p = model.data[i];
             r = (p.val >> 24) & 0xFF;
@@ -3028,14 +3001,12 @@ function ModelLoader() {
             }
             chunk.addBlock(p.x, p.z, p.y, r, g, b);
         }
-        //chunk.addBatch();
-        // Remove mesh from scene (cloned later)
-        chunk.build();
+        chunk.build(store);
         chunk.mesh.visible = false;
         this.models[name] = chunk;
     };
 
-    ModelLoader.prototype.getModel = function(name, size, obj, only_mesh) {
+    ModelLoader.prototype.getModel = function(store, name, size, obj, only_mesh) {
         if(size == null) { size = 1; }
         if(only_mesh == null) { only_mesh = false; }
         // Depp copy chunk
@@ -3045,28 +3016,21 @@ function ModelLoader() {
             new_obj.owner = obj;
             new_obj.mesh = this.models[name].mesh.clone();
             new_obj.mesh.owner = obj;
-         //   new_obj.bb = this.models[name].bb.clone();
-           // new_obj.bb.owner = obj;
-            //new_obj.mesh.add(new_obj.bb);
+
             new_obj.mesh.visible = true;
             new_obj.mesh.scale.set(size, size, size);
-            game.scene.add(new_obj.mesh);
-            game.addToCD(new_obj.mesh);
+            store.scene.add(new_obj.mesh);
+            store.addToCD(new_obj.mesh);
         } else {
             var new_obj = jQuery.extend(true, {}, this.models[name]);
             new_obj.owner = obj;
             new_obj.blockSize = size;
-           // new_obj.bb = undefined;
+
             new_obj.mesh = undefined;
-            new_obj.build();
-            // clone mesh and add to scene.
-            // new_obj.mesh = this.models[name].mesh.clone();
-            // new_obj.bb = this.models[name].bb.clone();
-            
-           // new_obj.mesh.geometry.computeBoundingBox();
-           // new_obj.mesh.geometry.center();
+            new_obj.build(store);
+
             new_obj.mesh.visible = true;
-            game.scene.add(new_obj.mesh);
+            store.scene.add(new_obj.mesh);
         }
         return new_obj;
     };
@@ -3088,7 +3052,7 @@ function Obj() {
     this.max = 20;
 
     Obj.prototype.create = function(store, model, size) {
-        this.chunk = store.modelLoader.getModel(model, size, this);
+        this.chunk = store.modelLoader.getModel(store, model, size, this);
         this.chunk.mesh.visible = false;
         this.chunk.mesh.rotation.set(Math.PI, 0, 0);
     };
@@ -3113,14 +3077,14 @@ function FFChunk() {
         dir.z += (1-Math.random()*2);
         this.chunk.explode(store, dir, dmg);
         this.alive = false;
-        game.removeFromCD(this.chunk.mesh);
+        store.removeFromCD(this.chunk.mesh);
     };
 
     FFChunk.prototype.create = function(store, chunk) {
         this.chunk = chunk;
         this.base_type = chunk.owner.base_type;
         this.chunk.owner = this;
-        this.chunk.build();
+        this.chunk.build(store);
         store.maps.loaded.push(this);
         store.addToCD(this.chunk.mesh);
     };
@@ -3149,7 +3113,7 @@ function Portal() {
         for(var a = 0; a < Math.PI*2; a+=Math.PI/4) {
             x = this.x + r * Math.cos(a)
             z = this.z + r * Math.sin(a)
-            game.particles.portalMagic(x, game.maps.ground, z);
+            store.particles.portalMagic(x, store.maps.ground, z);
         }
     };
 }
@@ -3165,17 +3129,17 @@ function PainKillers() {
     this.light = 0;
     this.taken = false;
 
-    PainKillers.prototype.grab = function (mesh_id) {
+    PainKillers.prototype.grab = function (store, mesh_id) {
         if(!this.taken) {
-            game.sounds.PlaySound("painkillers", this.chunk.mesh.position, 250);
-            game.removeFromCD(this.chunk.mesh);
-            game.player.bleed_timer += 60; // add 60 sec.
+            store.sounds.PlaySound("painkillers", this.chunk.mesh.position, 250);
+            store.removeFromCD(this.chunk.mesh);
+            store.player.bleed_timer += 60; // add 60 sec.
             this.taken = true;
         }
     };
 
     PainKillers.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel("painkillers", 0.2, this);
+        this.chunk = store.modelLoader.getModel(store, "painkillers", 0.2, this);
         this.chunk.owner = this;
         this.chunk.mesh.owner = this;
         this.chunk.mesh.visible = true;
@@ -3212,7 +3176,7 @@ function PaperPoliceCar() {
     };
 
     PaperPoliceCar.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel("paperpolicecar", 0.6, this);
+        this.chunk = store.modelLoader.getModel(store, "paperpolicecar", 0.6, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
         this.chunk.mesh.position.set(x, store.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
@@ -3232,7 +3196,7 @@ function PaperAgent() {
     };
 
     PaperAgent.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel("paperagent", 0.2, this);
+        this.chunk = store.modelLoader.getModel(store, "paperagent", 0.2, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
         this.chunk.mesh.position.set(x, store.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
@@ -3253,7 +3217,7 @@ function Tree() {
     };
 
     Tree.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel("tree", 0.5, this);
+        this.chunk = store.modelLoader.getModel(store, "tree", 0.5, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
         this.chunk.mesh.position.set(x, store.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
@@ -3289,30 +3253,13 @@ function StreetLamp() {
     };
 
     StreetLamp.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel("streetlamp", 0.4, this);
+        this.chunk = store.modelLoader.getModel(store, "streetlamp", 0.4, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
-      //  this.light = this.streetlight.clone();
-      //  var targetObject = new THREE.Object3D();
-      //  targetObject.position.set(0, 0, 0);
-      //  game.scene.add(targetObject);
-      //  this.light.target = targetObject;
-      //  this.light.decay = 1;
-      //  this.light.intensity = 2.4;
-      //  this.light.distance = 80;
-      //  this.light.angle = Math.PI;
-       // this.chunk.mesh.add(targetObject);
-       // this.chunk.mesh.add(this.light);
-        // DEBUG
-      //  var m = new THREE.Mesh(new THREE.BoxGeometry(2,2,2),
-      //                         new THREE.MeshBasicMaterial({color: 0xFF0000}));
-      //  this.light.add(m);
 
-       // this.light.position.set(0, 15, 0);
-   //     this.chunk.mesh.rotation.x = -Math.PI;
         // Check rotation depending on wall
         this.chunk.mesh.position.set(x, store.maps.ground+10, z);
-        //this.chunk.mesh.position.set(x, game.maps.ground+this.chunk.to_y*(1/this.chunk.blockSize), z);
+
         var res = store.world.checkExists(new THREE.Vector3(x-1,store.maps.ground+10,z));
         if(res.length > 0) {
        //     this.chunk.mesh.rotation.y = -Math.PI*2;
@@ -3348,7 +3295,7 @@ function UfoSign() {
     };
 
     UfoSign.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel("ufo_sign", 0.2, this);
+        this.chunk = store.modelLoader.getModel(store, "ufo_sign", 0.2, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
         this.chunk.mesh.rotation.y = Math.PI * 0.5;
@@ -3386,7 +3333,7 @@ function RadiationSign() {
     };
 
     RadiationSign.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel("radiation_sign", 0.2, this);
+        this.chunk = store.modelLoader.getModel(store, "radiation_sign", 0.2, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
         this.chunk.mesh.rotation.y = Math.PI * 0.5;
@@ -3435,7 +3382,7 @@ function DeadHearty() {
     };
 
     DeadHearty.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel("dead_hearty", 1, this);
+        this.chunk = store.modelLoader.getModel(store, "dead_hearty", 1, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
         this.chunk.mesh.rotation.y = Math.random()*Math.PI*2;
@@ -3476,7 +3423,7 @@ function BarrelFire() {
     };
 
     BarrelFire.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel("barrel_fire", 0.5, this);
+        this.chunk = store.modelLoader.getModel(store, "barrel_fire", 0.5, this);
         this.chunk.mesh.position.set(x, store.maps.ground+this.chunk.to_y*(1/this.chunk.blockSize), z);
         this.light = this.yellow_light.clone();
         this.light.position.set(0, 10, 0);
@@ -3516,7 +3463,7 @@ function Barrel() {
     };
 
     Barrel.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel("barrel", 0.5, this);
+        this.chunk = store.modelLoader.getModel(store, "barrel", 0.5, this);
         //this.chunk.owner = this;
         //this.chunk.mesh.visible = true;
       //  this.chunk.mesh.rotation.y = Math.random()*Math.PI*2;
@@ -3541,7 +3488,7 @@ function FBIHQ() {
     };
 
     FBIHQ.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel("fbihq", 1, this);
+        this.chunk = store.modelLoader.getModel(store, "fbihq", 1, this);
         //this.chunk.mesh.rotation.y = -Math.PI;
         this.chunk.mesh.position.set(x, store.maps.ground+this.chunk.chunk_size_y*this.chunk.blockSize * 0.5, z);
     };
@@ -3563,7 +3510,7 @@ function SpiderWeb() {
     };
 
     SpiderWeb.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel("spiderweb", 0.2, this);
+        this.chunk = store.modelLoader.getModel(store, "spiderweb", 0.2, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
         this.chunk.mesh.position.set(x, store.maps.ground+1, z);
@@ -3594,7 +3541,7 @@ function Lamp1() {
     };
 
     Lamp1.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel("lamp1", 1, this);
+        this.chunk = store.modelLoader.getModel(store, "lamp1", 1, this);
         this.chunk.type = "object";
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
@@ -3623,7 +3570,7 @@ function AmmoCrate() {
     this.sides = [];
 
     AmmoCrate.prototype.create = function(store) {
-        var up = store.modelLoader.getModel("crate", 1, this);
+        var up = store.modelLoader.getModel(store, "crate", 1, this);
         up.mesh.visible = false;
         up.mesh.rotation.set(Math.PI, 0, 0);
         up.mesh.position.set(200, 8, 300);
@@ -3647,11 +3594,11 @@ function AmmoSniper() {
         }
     };
 
-    AmmoSniper.prototype.add = function(x,y,z) {
+    AmmoSniper.prototype.add = function(store, x,y,z) {
         if(this.ptr++ >= this.max - 1) {
             this.ptr = 0;
         }
-        game.particles.empty_shell(x,y,z, this.active[this.ptr]);
+        store.particles.empty_shell(x,y,z, this.active[this.ptr]);
     };
 }
 AmmoSniper.prototype = new Obj; 
@@ -3672,12 +3619,12 @@ function AmmoP90() {
         }
     };
 
-    AmmoP90.prototype.add = function(x,y,z) {
+    AmmoP90.prototype.add = function(store, x,y,z) {
         if(this.ptr == this.max - 1) {
             this.ptr = 0;
         }
         this.ptr++;
-        game.particles.empty_shell(x,y,z, this.active[this.ptr]);
+        store.particles.empty_shell(x,y,z, this.active[this.ptr]);
     };
 }
 AmmoP90.prototype = new Obj; 
@@ -3697,12 +3644,12 @@ function Ammo() {
         }
     };
 
-    Ammo.prototype.add = function(x,y,z) {
+    Ammo.prototype.add = function(store, x,y,z) {
         if(this.ptr == this.max - 1) {
             this.ptr = 0;
         }
         this.ptr++;
-        game.particles.empty_shell(x,y,z, this.active[this.ptr]);
+        store.particles.empty_shell(x,y,z, this.active[this.ptr]);
     };
 }
 Ammo.prototype = new Obj; 
@@ -3722,11 +3669,11 @@ function Shell() {
         }
     };
 
-    Shell.prototype.add = function(x,y,z) {
+    Shell.prototype.add = function(store, x,y,z) {
         if(this.ptr++ >= this.max - 1) {
             this.ptr = 0;
         }
-        game.particles.empty_shell(x,y,z, this.active[this.ptr]);
+        store.particles.empty_shell(x,y,z, this.active[this.ptr]);
     };
 }
 Shell.prototype = new Obj; 
@@ -3741,11 +3688,11 @@ function Heart() {
         Obj.prototype.create.call(this, store, "heart", 0.2);
     };
 
-    Heart.prototype.grab = function (mesh_id) {
+    Heart.prototype.grab = function (store, mesh_id) {
         for(var i = 0; i < this.active.length; i++) {
             if(this.active[i].id == mesh_id) {
-                game.sounds.PlaySound("take_heart", this.active[i].position, 250);
-                game.removeFromCD(this.active[i]);
+                store.sounds.PlaySound("take_heart", this.active[i].position, 250);
+                store.removeFromCD(this.active[i]);
                 this.active[i].alive = false;
             }
         }
@@ -3778,9 +3725,9 @@ function Heart() {
         }
     };
 
-    Heart.prototype.add = function(x,y,z) {
+    Heart.prototype.add = function(store, x,y,z) {
         var m = this.chunk.mesh.clone();
-        game.scene.add(m);
+        store.scene.add(m);
         m.position.set(x,y,z);
         m.visible = true;
         this.active.push(m);
@@ -3794,9 +3741,7 @@ function Heart() {
         l1.position.z = -2;
         l2.position.y = 2;
         l2.position.z = 2;
-        game.addToCD(m);
-      //  var light1 = new THREE.PointLight( 0xFF00AA, 2, 20 );
-      //  m.add( light1 );
+        store.addToCD(m);
     };
 }
 Heart.prototype = new Obj; 
@@ -5583,7 +5528,7 @@ function Weapon() {
 
     Weapon.prototype.create = function(store, model, size) {
         store.scene.add(this.shoot_light);
-        this.chunk = store.modelLoader.getModel(model, size, this, true);
+        this.chunk = store.modelLoader.getModel(store, model, size, this, true);
         store.removeFromCD(this.chunk.mesh);
         store.addObject(this);
     };
@@ -5703,7 +5648,7 @@ function Shotgun() {
         }
        // shooter.translateZ(-this.recoil);
         game.particles.ammoShell(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
-        game.objects["shell"].add(point.x, point.y, point.z);
+        game.objects["shell"].add(game, point.x, point.y, point.z);
         game.sounds.PlaySound("shotgun_reload", game.player.chunk.mesh.position, 300);
     };
 
@@ -5738,7 +5683,7 @@ function Sniper() {
         }
        // shooter.translateZ(-this.recoil);
         game.particles.ammoSniper(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
-        game.objects["ammo_sniper"].add(point.x, point.y, point.z);
+        game.objects["ammo_sniper"].add(game, point.x, point.y, point.z);
     };
 
 }
@@ -5771,7 +5716,7 @@ function Pistol() {
         }
        // shooter.translateZ(-this.recoil);
         game.particles.ammoP90(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
-        game.objects["ammo_p90"].add(point.x, point.y, point.z);
+        game.objects["ammo_p90"].add(game, point.x, point.y, point.z);
     };
 
 }
@@ -5836,7 +5781,7 @@ function P90() {
         }
        // shooter.translateZ(-this.recoil);
         game.particles.ammoP90(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
-        game.objects["ammo_p90"].add(point.x, point.y, point.z);
+        game.objects["ammo_p90"].add(game, point.x, point.y, point.z);
     };
 
 }
@@ -5869,7 +5814,7 @@ function Minigun() {
         }
        // shooter.translateZ(-this.recoil);
         game.particles.ammoMinigun(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
-        game.objects["ammo"].add(point.x, point.y, point.z);
+        game.objects["ammo"].add(game, point.x, point.y, point.z);
     };
 
 }
@@ -5904,7 +5849,7 @@ function Ak47() {
         }
        // shooter.translateZ(-this.recoil);
         game.particles.ammoAk47(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
-        game.objects["ammo"].add(point.x, point.y, point.z);
+        game.objects["ammo"].add(game, point.x, point.y, point.z);
     };
 
 }
@@ -6119,7 +6064,7 @@ function World() {
                 continue; 
             }
             for (var n = 0; n < c.length; n++) {
-                this.chunks[c[n]].rmBlock(points[i].x, points[i].y, points[i].z);
+                this.chunks[c[n]].rmBlock(game, points[i].x, points[i].y, points[i].z);
             }
         }
         //for(var i in list) {
@@ -6190,7 +6135,7 @@ function World() {
         var c = this.getChunkId(x,y,z, false); 
         if(c.length != 0) {
             for(var i = 0; i < c.length; i++) {
-                this.chunks[c[i]].rmBlock(x, y, z);
+                this.chunks[c[i]].rmBlock(game, x, y, z);
             }
         }
     };
@@ -6203,7 +6148,7 @@ function World() {
         for(var i = 0; i < this.chunks.length; i++) {
            if(this.chunks[i].dirty) {
                var t1 = Date.now();
-               this.chunks[i].build();
+               this.chunks[i].build(store);
                if((Date.now() - t1) > 5) {
                    break;
                }
