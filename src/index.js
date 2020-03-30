@@ -72,10 +72,10 @@ class Char {
       }
     }
   }
-  create(model, x, y, z, size) {
+  create(store, model, x, y, z, size) {
     if(!size) { size = 1; }
 
-    this.chunk = game.modelLoader.getModel(model, size, this);
+    this.chunk = store.modelLoader.getModel(model, size, this);
 
     this.init_pos.x = x;
     this.init_pos.y = y;
@@ -347,9 +347,9 @@ class Enemy extends Char {
     }
     return die;
   }
-  create(model, x, y, z, size) {
+  create(store, model, x, y, z, size) {
     if(!size) { size = 1; }
-    super.create(model, x, y, z, size);
+    super.create(store, model, x, y, z, size);
     this.run_speed = 20; //+Math.random()*50;
     this.moving = true;
   }
@@ -486,8 +486,8 @@ class Dudo extends Enemy {
     this.walk_speed = 15;
     this.y_offset = 5;
   }
-  create(x, y, z) {
-    super.create(this.obj_type, x, game.maps.ground + this.y_offset, z);
+  create(store, x, y, z) {
+    super.create(store, this.obj_type, x, store.maps.ground + this.y_offset, z);
     this.chunk.mesh.rotation.order = 'YXZ';
     if (Math.random() > 0.4) {
       this.addWeapon(new Shotgun());
@@ -523,8 +523,8 @@ class AgentBlack extends Enemy {
   die() {
     this.chunk.mesh.position.y = game.maps.ground + 1;
   }
-  create(x, y, z) {
-    super.create(this.obj_type, x, game.maps.ground + this.y_offset, z, 0.5);
+  create(store, x, y, z) {
+    super.create(store, this.obj_type, x, store.maps.ground + this.y_offset, z, 0.5);
     this.chunk.mesh.rotation.order = 'YXZ';
     if (Math.random() > 0.8) {
       this.addWeapon(new Shotgun());
@@ -564,8 +564,8 @@ class Agent extends Enemy {
   die() {
     this.chunk.mesh.position.y = game.maps.ground + 1;
   }
-  create(x, y, z) {
-    super.create(this.obj_type, x, game.maps.ground + this.y_offset, z, 0.5);
+  create(store, x, y, z) {
+    super.create(store, this.obj_type, x, store.maps.ground + this.y_offset, z, 0.5);
     this.chunk.mesh.rotation.order = 'YXZ';
     if (Math.random() > 0.8) {
       this.addWeapon(new Pistol());
@@ -601,8 +601,8 @@ class Greenie extends Enemy {
     this.walk_speed = 15;
     this.obj_type = "greenie";
   }
-  create(x, y, z) {
-    super.create(this.obj_type, x, game.maps.ground + this.y_offset, z, 1);
+  create(store, x, y, z) {
+    super.create(store, this.obj_type, x, store.maps.ground + this.y_offset, z, 1);
     this.chunk.mesh.rotation.order = 'YXZ';
     if (Math.random() > 0.4) {
       this.addWeapon(new P90());
@@ -638,8 +638,8 @@ class Hearty extends Enemy {
     this.walk_speed = 15;
     this.y_offset = 6;
   }
-  create (x, y, z) {
-    super.create(this.obj_type, x, game.maps.ground + this.y_offset, z);
+  create (store, x, y, z) {
+    super.create(store, this.obj_type, x, store.maps.ground + this.y_offset, z);
     this.chunk.mesh.rotation.order = 'YXZ';
     if (Math.random() > 0.4) {
       this.addWeapon(new Sniper());
@@ -697,14 +697,14 @@ class Player extends Char {
     game.scene.remove(this.flashlight);
     this.keyboard = null;
   }
-  create (x, y, z) {
-    super.create(this.obj_type, x, game.maps.ground + this.y_offset, z);
+  create(store, x, y, z) {
+    super.create(store, this.obj_type, x, store.maps.ground + this.y_offset, z);
     this.keyboard = new THREEx.KeyboardState();
     this.chunk.mesh.rotation.order = 'YXZ';
-    game.player = this;
+    store.player = this;
     var targetObject = new THREE.Object3D();
     targetObject.position.set(1, 1, 10);
-    game.scene.add(targetObject);
+    store.scene.add(targetObject);
     this.flashlight.target = targetObject;
     this.flashlight.decay = 1;
     this.flashlight.intensity = 2;
@@ -716,14 +716,14 @@ class Player extends Char {
     this.addWeapon(new RocketLauncher());
     this.addWeapon(new Shotgun());
     this.addBindings();
-    this.chunk.mesh.add(game.camera);
+    this.chunk.mesh.add(store.camera);
     var pos = this.chunk.mesh.position.clone();
     var point = this.chunk.mesh.localToWorld(new THREE.Vector3(0, 0, 0));
-    game.camera.lookAt(point);
-    game.camera.rotation.z = Math.PI;
-    game.camera.rotation.x =-Math.PI/1.4;
-    game.camera.position.y = 150;
-    game.camera.position.z = -120;
+    store.camera.lookAt(point);
+    store.camera.rotation.z = Math.PI;
+    store.camera.rotation.x =-Math.PI/1.4;
+    store.camera.position.y = 150;
+    store.camera.position.z = -120;
   }
   shiftWeapon() {
     if (this.weapons.length == 0) {
@@ -2061,7 +2061,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
             this.dirty = true;
 
             ffc = new FFChunk();
-            ffc.create(chunk);
+            ffc.create(game, chunk);
             ffc.base_type = this.owner.base_type;
             chunk.build();
 
@@ -2398,10 +2398,10 @@ function Main() {
     };
 
     Main.prototype.waitForLoadMap = function() {
-        if(game.modelLoader.files.length > 0) {
-            setTimeout(function() {
+        if(this.modelLoader.files.length > 0) {
+            setTimeout(() => {
                 console.log("waiting for load of files...");
-                game.waitForLoadMap();
+                this.waitForLoadMap();
             }, 500);
         } else {
             this.maps = new Level1();
@@ -2409,15 +2409,15 @@ function Main() {
             //game.maps.init("Level 1", "assets/maps/map3_ground.png", "assets/maps/map3_objects.png");
             // Load objects here to reduce overhead of multiple objects of same type.
             this.objects["shell"] = new Shell();
-            this.objects["shell"].create();
+            this.objects["shell"].create(this);
             this.objects["ammo"] = new Ammo();
-            this.objects["ammo"].create();
+            this.objects["ammo"].create(this);
             this.objects["ammo_p90"] = new AmmoP90();
-            this.objects["ammo_p90"].create();
+            this.objects["ammo_p90"].create(this);
             this.objects["ammo_sniper"] = new AmmoSniper();
-            this.objects["ammo_sniper"].create();
-            this.objects["heart"] = new Heart();
-            this.objects["heart"].create();
+            this.objects["ammo_sniper"].create(this);
+            this.objects["heart"] = new Heart(this);
+            this.objects["heart"].create(this);
 
             this.render();
         }
@@ -2878,7 +2878,7 @@ function Maps() {
                             var o = new entityTypes[k]();
                             //var o = new window[k]();
 
-                            o.create(data[i].y, 0, data[i].x);
+                            o.create(game, data[i].y, 0, data[i].x);
                             this.loaded.push(o);
                             if (k == "Player") {
                               console.log('assigning player');
@@ -3110,8 +3110,8 @@ function Obj() {
     this.streetlight = new THREE.SpotLight(0xFFAA00);
     this.max = 20;
 
-    Obj.prototype.create = function(model, size) {
-        this.chunk = game.modelLoader.getModel(model, size, this);
+    Obj.prototype.create = function(store, model, size) {
+        this.chunk = store.modelLoader.getModel(model, size, this);
         this.chunk.mesh.visible = false;
         this.chunk.mesh.rotation.set(Math.PI, 0, 0);
     };
@@ -3138,15 +3138,13 @@ function FFChunk() {
         game.removeFromCD(this.chunk.mesh);
     };
 
-    FFChunk.prototype.create = function(chunk) {
+    FFChunk.prototype.create = function(store, chunk) {
         this.chunk = chunk;
         this.base_type = chunk.owner.base_type;
         this.chunk.owner = this;
         this.chunk.build();
-        game.maps.loaded.push(this);
-        game.addToCD(this.chunk.mesh);
-        //game.addToCD(this.chunk.bb);
-
+        store.maps.loaded.push(this);
+        store.addToCD(this.chunk.mesh);
     };
 };
 FFChunk.prototype = new Obj; 
@@ -3161,7 +3159,7 @@ function Portal() {
     this.y = 0;
     this.z = 0;
 
-    Portal.prototype.create = function(x, y, z) {
+    Portal.prototype.create = function(store, x, y, z) {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -3198,13 +3196,13 @@ function PainKillers() {
         }
     };
 
-    PainKillers.prototype.create = function(x, y, z) {
-        this.chunk = game.modelLoader.getModel("painkillers", 0.2, this);
+    PainKillers.prototype.create = function(store, x, y, z) {
+        this.chunk = store.modelLoader.getModel("painkillers", 0.2, this);
         this.chunk.owner = this;
         this.chunk.mesh.owner = this;
         this.chunk.mesh.visible = true;
-        this.chunk.mesh.position.set(x, game.maps.ground+1, z);
-        game.addToCD(this.chunk.mesh);
+        this.chunk.mesh.position.set(x, store.maps.ground+1, z);
+        store.addToCD(this.chunk.mesh);
     };
 
     PainKillers.prototype.update = function(store, time, delta) {
@@ -3235,11 +3233,11 @@ function PaperPoliceCar() {
         this.chunk.hit(store, dir, dmg, pos);
     };
 
-    PaperPoliceCar.prototype.create = function(x, y, z) {
-        this.chunk = game.modelLoader.getModel("paperpolicecar", 0.6, this);
+    PaperPoliceCar.prototype.create = function(store, x, y, z) {
+        this.chunk = store.modelLoader.getModel("paperpolicecar", 0.6, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
-        this.chunk.mesh.position.set(x, game.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
+        this.chunk.mesh.position.set(x, store.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
     };
 }
 PaperPoliceCar.prototype = new Obj; 
@@ -3255,11 +3253,11 @@ function PaperAgent() {
         this.chunk.hit(store, dir, dmg, pos);
     };
 
-    PaperAgent.prototype.create = function(x, y, z) {
-        this.chunk = game.modelLoader.getModel("paperagent", 0.2, this);
+    PaperAgent.prototype.create = function(store, x, y, z) {
+        this.chunk = store.modelLoader.getModel("paperagent", 0.2, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
-        this.chunk.mesh.position.set(x, game.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
+        this.chunk.mesh.position.set(x, store.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
     };
 }
 PaperAgent.prototype = new Obj; 
@@ -3276,11 +3274,11 @@ function Tree() {
         this.chunk.hit(store, dir, dmg, pos);
     };
 
-    Tree.prototype.create = function(x, y, z) {
-        this.chunk = game.modelLoader.getModel("tree", 0.5, this);
+    Tree.prototype.create = function(store, x, y, z) {
+        this.chunk = store.modelLoader.getModel("tree", 0.5, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
-        this.chunk.mesh.position.set(x, game.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
+        this.chunk.mesh.position.set(x, store.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
     };
 }
 Tree.prototype = new Obj; 
@@ -3312,8 +3310,8 @@ function StreetLamp() {
         return false;
     };
 
-    StreetLamp.prototype.create = function(x, y, z) {
-        this.chunk = game.modelLoader.getModel("streetlamp", 0.4, this);
+    StreetLamp.prototype.create = function(store, x, y, z) {
+        this.chunk = store.modelLoader.getModel("streetlamp", 0.4, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
       //  this.light = this.streetlight.clone();
@@ -3335,29 +3333,20 @@ function StreetLamp() {
        // this.light.position.set(0, 15, 0);
    //     this.chunk.mesh.rotation.x = -Math.PI;
         // Check rotation depending on wall
-        this.chunk.mesh.position.set(x, game.maps.ground+10, z);
+        this.chunk.mesh.position.set(x, store.maps.ground+10, z);
         //this.chunk.mesh.position.set(x, game.maps.ground+this.chunk.to_y*(1/this.chunk.blockSize), z);
-        var res = game.world.checkExists(new THREE.Vector3(x-1,game.maps.ground+10,z));
+        var res = store.world.checkExists(new THREE.Vector3(x-1,store.maps.ground+10,z));
         if(res.length > 0) {
        //     this.chunk.mesh.rotation.y = -Math.PI*2;
             this.chunk.mesh.position.x += 10;
         //    this.light.position.set(7, 18, 0);
         }
-        res = game.world.checkExists(new THREE.Vector3(x,game.maps.ground+10,z-1));
-        //if(res.length > 0) {
-        //    this.chunk.mesh.rotation.y = -Math.PI;
-        //}
-        //res = game.world.checkExists(new THREE.Vector3(x+1,game.maps.ground+10,z+2));
-        //if(res.length > 0) {
-        //    this.chunk.mesh.rotation.y = -Math.PI;
-        //   // this.chunk.mesh.position.x -= 10;
-        //}
+        res = store.world.checkExists(new THREE.Vector3(x,store.maps.ground+10,z-1));
+        
         for(var i = 0; i < 10; i++) {
-            res = game.world.checkExists(new THREE.Vector3(x+i,game.maps.ground+10,z));
+            res = store.world.checkExists(new THREE.Vector3(x+i,store.maps.ground+10,z));
             if(res.length > 0) {
-        //        this.chunk.mesh.rotation.y = Math.PI;
                 this.chunk.mesh.position.x -= 10;
-                //this.light.position.set(7, 18, 0);
                 break;
             }
         }
@@ -3388,27 +3377,27 @@ function UfoSign() {
        return this.chunk.hit(store, dir, dmg, pos);
     };
 
-    UfoSign.prototype.create = function(x, y, z) {
-        this.chunk = game.modelLoader.getModel("ufo_sign", 0.2, this);
+    UfoSign.prototype.create = function(store, x, y, z) {
+        this.chunk = store.modelLoader.getModel("ufo_sign", 0.2, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
         this.chunk.mesh.rotation.y = Math.PI * 0.5;
    //     this.chunk.mesh.rotation.x = -Math.PI;
         // Check rotation depending on wall
-        var res = game.world.checkExists(new THREE.Vector3(x-1,game.maps.ground+10,z));
+        var res = store.world.checkExists(new THREE.Vector3(x-1,store.maps.ground+10,z));
         if(res.length > 0) {
             this.chunk.mesh.rotation.y = -Math.PI * 0.5;
         }
-        res = game.world.checkExists(new THREE.Vector3(x,game.maps.ground+10,z-1));
+        res = store.world.checkExists(new THREE.Vector3(x,store.maps.ground+10,z-1));
         if(res.length > 0) {
             this.chunk.mesh.rotation.y = 2*Math.PI;
         }
-        res = game.world.checkExists(new THREE.Vector3(x,game.maps.ground+10,z+2));
+        res = store.world.checkExists(new THREE.Vector3(x,store.maps.ground+10,z+2));
         if(res.length > 0) {
             this.chunk.mesh.rotation.y = -Math.PI;
         }
 
-        this.chunk.mesh.position.set(x, game.maps.ground+10, z);
+        this.chunk.mesh.position.set(x, store.maps.ground+10, z);
     };
 }
 UfoSign.prototype = new Obj; 
@@ -3426,27 +3415,27 @@ function RadiationSign() {
         this.chunk.hit(store, dir, dmg, pos);
     };
 
-    RadiationSign.prototype.create = function(x, y, z) {
-        this.chunk = game.modelLoader.getModel("radiation_sign", 0.2, this);
+    RadiationSign.prototype.create = function(store, x, y, z) {
+        this.chunk = store.modelLoader.getModel("radiation_sign", 0.2, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
         this.chunk.mesh.rotation.y = Math.PI * 0.5;
         this.chunk.mesh.rotation.x = -Math.PI;
         // Check rotation depending on wall
-        var res = game.world.checkExists(new THREE.Vector3(x-1,game.maps.ground+10,z));
+        var res = store.world.checkExists(new THREE.Vector3(x-1,store.maps.ground+10,z));
         if(res.length > 0) {
             this.chunk.mesh.rotation.y = -Math.PI * 0.5;
         }
-        res = game.world.checkExists(new THREE.Vector3(x,game.maps.ground+10,z-1));
+        res = store.world.checkExists(new THREE.Vector3(x,store.maps.ground+10,z-1));
         if(res.length > 0) {
             this.chunk.mesh.rotation.y = 2*Math.PI;
         }
-        res = game.world.checkExists(new THREE.Vector3(x,game.maps.ground+10,z+2));
+        res = store.world.checkExists(new THREE.Vector3(x,store.maps.ground+10,z+2));
         if(res.length > 0) {
             this.chunk.mesh.rotation.y = Math.PI;
         }
 
-        this.chunk.mesh.position.set(x, game.maps.ground+10, z);
+        this.chunk.mesh.position.set(x, store.maps.ground+10, z);
     };
 }
 RadiationSign.prototype = new Obj; 
@@ -3476,12 +3465,12 @@ function DeadHearty() {
         }
     };
 
-    DeadHearty.prototype.create = function(x, y, z) {
-        this.chunk = game.modelLoader.getModel("dead_hearty", 1, this);
+    DeadHearty.prototype.create = function(store, x, y, z) {
+        this.chunk = store.modelLoader.getModel("dead_hearty", 1, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
         this.chunk.mesh.rotation.y = Math.random()*Math.PI*2;
-        this.chunk.mesh.position.set(x, game.maps.ground+1, z);
+        this.chunk.mesh.position.set(x, store.maps.ground+1, z);
         this.light = this.green_light.clone();
         this.light.position.set(0, 3, 0);
         this.chunk.mesh.add(this.light);
@@ -3517,9 +3506,9 @@ function BarrelFire() {
         }
     };
 
-    BarrelFire.prototype.create = function(x, y, z) {
-        this.chunk = game.modelLoader.getModel("barrel_fire", 0.5, this);
-        this.chunk.mesh.position.set(x, game.maps.ground+this.chunk.to_y*(1/this.chunk.blockSize), z);
+    BarrelFire.prototype.create = function(store, x, y, z) {
+        this.chunk = store.modelLoader.getModel("barrel_fire", 0.5, this);
+        this.chunk.mesh.position.set(x, store.maps.ground+this.chunk.to_y*(1/this.chunk.blockSize), z);
         this.light = this.yellow_light.clone();
         this.light.position.set(0, 10, 0);
         this.chunk.mesh.add(this.light);
@@ -3558,13 +3547,13 @@ function Barrel() {
         }
     };
 
-    Barrel.prototype.create = function(x, y, z) {
-        this.chunk = game.modelLoader.getModel("barrel", 0.5, this);
+    Barrel.prototype.create = function(store, x, y, z) {
+        this.chunk = store.modelLoader.getModel("barrel", 0.5, this);
         //this.chunk.owner = this;
         //this.chunk.mesh.visible = true;
       //  this.chunk.mesh.rotation.y = Math.random()*Math.PI*2;
        // this.chunk.mesh.rotation.y = -Math.PI;
-        this.chunk.mesh.position.set(x, game.maps.ground+this.chunk.to_y*(1/this.chunk.blockSize), z);
+        this.chunk.mesh.position.set(x, store.maps.ground+this.chunk.to_y*(1/this.chunk.blockSize), z);
         this.light = this.green_light.clone();
         this.light.position.set(0, 10, 0);
         this.chunk.mesh.add(this.light);
@@ -3583,10 +3572,10 @@ function FBIHQ() {
         this.chunk.hit(store, dir, dmg, pos);
     };
 
-    FBIHQ.prototype.create = function(x, y, z) {
-        this.chunk = game.modelLoader.getModel("fbihq", 1, this);
+    FBIHQ.prototype.create = function(store, x, y, z) {
+        this.chunk = store.modelLoader.getModel("fbihq", 1, this);
         //this.chunk.mesh.rotation.y = -Math.PI;
-        this.chunk.mesh.position.set(x, game.maps.ground+this.chunk.chunk_size_y*this.chunk.blockSize * 0.5, z);
+        this.chunk.mesh.position.set(x, store.maps.ground+this.chunk.chunk_size_y*this.chunk.blockSize * 0.5, z);
     };
 }
 FBIHQ.prototype = new Obj; 
@@ -3605,11 +3594,11 @@ function SpiderWeb() {
         this.alive = false;
     };
 
-    SpiderWeb.prototype.create = function(x, y, z) {
-        this.chunk = game.modelLoader.getModel("spiderweb", 0.2, this);
+    SpiderWeb.prototype.create = function(store, x, y, z) {
+        this.chunk = store.modelLoader.getModel("spiderweb", 0.2, this);
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
-        this.chunk.mesh.position.set(x, game.maps.ground+1, z);
+        this.chunk.mesh.position.set(x, store.maps.ground+1, z);
     };
 }
 SpiderWeb.prototype = new Obj; 
@@ -3636,12 +3625,12 @@ function Lamp1() {
         }
     };
 
-    Lamp1.prototype.create = function(x, y, z) {
-        this.chunk = game.modelLoader.getModel("lamp1", 1, this);
+    Lamp1.prototype.create = function(store, x, y, z) {
+        this.chunk = store.modelLoader.getModel("lamp1", 1, this);
         this.chunk.type = "object";
         this.chunk.owner = this;
         this.chunk.mesh.visible = true;
-        this.chunk.mesh.position.set(x, game.maps.ground+7, z);
+        this.chunk.mesh.position.set(x, store.maps.ground+7, z);
         this.light = this.yellow_light.clone();
         this.light.position.set(0, 12, 0);
         this.chunk.mesh.add(this.light);
@@ -3665,8 +3654,8 @@ function AmmoCrate() {
     Obj.call(this);
     this.sides = [];
 
-    AmmoCrate.prototype.create = function() {
-        var up = game.modelLoader.getModel("crate", 1, this);
+    AmmoCrate.prototype.create = function(store) {
+        var up = store.modelLoader.getModel("crate", 1, this);
         up.mesh.visible = false;
         up.mesh.rotation.set(Math.PI, 0, 0);
         up.mesh.position.set(200, 8, 300);
@@ -3680,14 +3669,13 @@ AmmoCrate.prototype.constructor = AmmoCrate;
 function AmmoSniper() {
     Obj.call(this);
 
-    AmmoSniper.prototype.create = function() {
-        Obj.prototype.create.call(this, "ammo", 0.02);
+    AmmoSniper.prototype.create = function(store) {
+        Obj.prototype.create.call(this, store, "ammo", 0.02);
         for(var i = 0; i < this.max; i++) {
             var c = this.chunk.mesh.clone();
             c.visible = false;
-            game.scene.add(c);
+            store.scene.add(c);
             this.active.push(c);
-
         }
     };
 
@@ -3705,12 +3693,12 @@ AmmoSniper.prototype.constructor = AmmoSniper;
 function AmmoP90() {
     Obj.call(this);
 
-    AmmoP90.prototype.create = function() {
-        Obj.prototype.create.call(this, "ammo", 0.009);
+    AmmoP90.prototype.create = function(store) {
+        Obj.prototype.create.call(this, store, "ammo", 0.009);
         for(var i = 0; i < this.max; i++) {
             var c = this.chunk.mesh.clone();
             c.visible = false;
-            game.scene.add(c);
+            store.scene.add(c);
             this.active.push(c);
 
         }
@@ -3731,12 +3719,12 @@ AmmoP90.prototype.constructor = AmmoP90;
 function Ammo() {
     Obj.call(this);
 
-    Ammo.prototype.create = function() {
-        Obj.prototype.create.call(this, "ammo", 0.015);
+    Ammo.prototype.create = function(store) {
+        Obj.prototype.create.call(this, store, "ammo", 0.015);
         for(var i = 0; i < this.max; i++) {
             var c = this.chunk.mesh.clone();
             c.visible = false;
-            game.scene.add(c);
+            store.scene.add(c);
             this.active.push(c);
         }
     };
@@ -3756,12 +3744,12 @@ Ammo.prototype.constructor = Ammo;
 function Shell() {
     Obj.call(this);
 
-    Shell.prototype.create = function() {
-        Obj.prototype.create.call(this, "shell", 0.025);
+    Shell.prototype.create = function(store) {
+        Obj.prototype.create.call(this, store, "shell", 0.025);
         for(var i = 0; i < this.max; i++) {
             var c = this.chunk.mesh.clone();
             c.visible = false;
-            game.scene.add(c);
+            store.scene.add(c);
             this.active.push(c);
         }
     };
@@ -3782,8 +3770,8 @@ function Heart() {
     Obj.call(this);
     this.obj_type = "heart";
 
-    Heart.prototype.create = function() {
-        Obj.prototype.create.call(this, "heart", 0.2);
+    Heart.prototype.create = function(store) {
+        Obj.prototype.create.call(this, store, "heart", 0.2);
     };
 
     Heart.prototype.grab = function (mesh_id) {
@@ -3908,7 +3896,7 @@ function ParticlePool(size, type) {
                 break;
             }
             var p = this.queue.pop();
-            if (this.create(p) == -1) {
+            if (this.create(store, p) == -1) {
                 this.queue.push(p);
                 break;
             }
@@ -3935,7 +3923,7 @@ function ParticlePool(size, type) {
         }
     };
 
-    ParticlePool.prototype.create = function (opts) {
+    ParticlePool.prototype.create = function (store, opts) {
         for (var i = 0; i < this.particles.length; i++) {
             if (!this.particles[i].active) {
                 this.particles[i].set(opts);
@@ -5647,11 +5635,11 @@ function Weapon() {
     this.shoot_light = new THREE.PointLight( 0xFFAA00, 3, 10 );
     this.damage = 1;
 
-    Weapon.prototype.create = function(model, size) {
-        game.scene.add(this.shoot_light);
-        this.chunk = game.modelLoader.getModel(model, size, this, true);
-        game.removeFromCD(this.chunk.mesh);
-        game.addObject(this);
+    Weapon.prototype.create = function(store, model, size) {
+        store.scene.add(this.shoot_light);
+        this.chunk = store.modelLoader.getModel(model, size, this, true);
+        store.removeFromCD(this.chunk.mesh);
+        store.addObject(this);
     };
 
     Weapon.prototype.destroy = function() {
@@ -5752,12 +5740,12 @@ function Shotgun() {
     Weapon.call(this);
     this.obj_type = "shotgun";
     this.fire_rate = 0.5;
-    this.create("shotgun", 0.1);
+    this.create(game, "shotgun", 0.1);
     this.recoil = 1;
     this.damage = 1;
 
-    Shotgun.prototype.create = function(model, size) {
-        Weapon.prototype.create.call(this, model, size);
+    Shotgun.prototype.create = function(store, model, size) {
+        Weapon.prototype.create.call(this, store, model, size);
     };
 
     Shotgun.prototype.fire = function(q, id, shooter, speed) {
@@ -5786,12 +5774,12 @@ function Sniper() {
     Weapon.call(this);
     this.obj_type = "sniper";
     this.fire_rate = 1.5;
-    this.create("sniper", 0.1);
+    this.create(game, "sniper", 0.1);
     this.recoil = 5;
     this.damage = 5;
 
-    Sniper.prototype.create = function(model, size) {
-        Weapon.prototype.create.call(this, model, size);
+    Sniper.prototype.create = function(store, model, size) {
+        Weapon.prototype.create.call(this, store, model, size);
     };
 
     Sniper.prototype.fire = function(q, id, shooter, speed) {
@@ -5820,12 +5808,12 @@ function Pistol() {
     Weapon.call(this);
     this.obj_type = "pistol";
     this.fire_rate = 0.5;
-    this.create("pistol", 0.1);
+    this.create(game, "pistol", 0.1);
     this.recoil = 0.2;
     this.damage = 1;
 
-    Pistol.prototype.create = function(model, size) {
-        Weapon.prototype.create.call(this, model, size);
+    Pistol.prototype.create = function(store, model, size) {
+        Weapon.prototype.create.call(this, store, model, size);
     };
 
     Pistol.prototype.fire = function(q, id, shooter, speed) {
@@ -5853,12 +5841,12 @@ function GrenadeLauncher() {
     Weapon.call(this);
     this.obj_type = "grenadelauncher";
     this.fire_rate = 1;
-    this.create("grenadelauncher", 0.1);
+    this.create(game, "grenadelauncher", 0.1);
     this.recoil = 0.2;
     this.damage = 8;
 
-    GrenadeLauncher.prototype.create = function(model, size) {
-        Weapon.prototype.create.call(this, model, size);
+    GrenadeLauncher.prototype.create = function(store, model, size) {
+        Weapon.prototype.create.call(this, store, model, size);
     };
 
     GrenadeLauncher.prototype.fire = function(q, id, shooter, speed) {
@@ -5885,12 +5873,12 @@ function P90() {
     Weapon.call(this);
     this.obj_type = "p90";
     this.fire_rate = 0.07;
-    this.create("p90", 0.1);
+    this.create(game, "p90", 0.1);
     this.recoil = 0.2;
     this.damage = 1;
 
-    P90.prototype.create = function(model, size) {
-        Weapon.prototype.create.call(this, model, size);
+    P90.prototype.create = function(store, model, size) {
+        Weapon.prototype.create.call(this, store, model, size);
     };
 
     P90.prototype.fire = function(q, id, shooter, speed) {
@@ -5918,12 +5906,12 @@ function Minigun() {
     Weapon.call(this);
     this.obj_type = "minigun";
     this.fire_rate = 0.1;
-    this.create("minigun", 0.1);
+    this.create(game, "minigun", 0.1);
     this.recoil = 0.2;
     this.damage = 2;
 
-    Minigun.prototype.create = function(model, size) {
-        Weapon.prototype.create.call(this, model, size);
+    Minigun.prototype.create = function(store, model, size) {
+        Weapon.prototype.create.call(this, store, model, size);
     };
 
     Minigun.prototype.fire = function(q, id, shooter, speed) {
@@ -5952,12 +5940,12 @@ function Ak47() {
     Weapon.call(this);
     this.obj_type = "ak47";
     this.fire_rate = 0.15;
-    this.create("ak47", 0.1);
+    this.create(game, "ak47", 0.1);
     this.recoil = 1;
     this.damage = 2;
 
-    Ak47.prototype.create = function(model, size) {
-        Weapon.prototype.create.call(this, model, size);
+    Ak47.prototype.create = function(store, model, size) {
+        Weapon.prototype.create.call(this, store, model, size);
     };
 
     Ak47.prototype.fire = function(q, id, shooter, speed) {
@@ -5986,12 +5974,12 @@ function RocketLauncher() {
     Weapon.call(this);
     this.obj_type = "rocketlauncher";
     this.fire_rate = 1;
-    this.create("rocketlauncher", 0.1);
+    this.create(game, "rocketlauncher", 0.1);
     this.recoil = 4;
     this.damage = 6;
 
-    RocketLauncher.prototype.create = function(model, size) {
-        Weapon.prototype.create.call(this, model, size);
+    RocketLauncher.prototype.create = function(store, model, size) {
+        Weapon.prototype.create.call(this, store, model, size);
     };
 
     RocketLauncher.prototype.fire = function(q, id, shooter, speed) {
