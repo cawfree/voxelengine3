@@ -23,7 +23,7 @@ class Char {
     this.green_light = new THREE.PointLight(0x00FF00, 2, 10);
     this.radiation_light = 0;
   }
-  shouldBleedOrGlow(res) {
+  shouldBleedOrGlow(store, res) {
     for (var i = 0; i < res.length; i++) {
       if (((res[i] >> 24) & 0xFF) > 100 && ((res[i] >> 16) & 0xFF) < 25 && ((res[i] >> 8) & 0xFF) < 25) {
         if (this.add_blood == 0 && Math.random() > 0.5) {
@@ -44,6 +44,7 @@ class Char {
 
           // Add random radiation 
           this.chunk.addBlock(
+            store,
             Math.random()*this.chunk.chunk_size_x|0,
             Math.random()*this.chunk.chunk_size_y|0,
             Math.random()*this.chunk.chunk_size_z|0,
@@ -195,6 +196,7 @@ class Char {
       if (this.add_blood > 0 && this.moving) {
         this.add_blood--;
         store.world.addColorBlock(
+          store,
           this.chunk.mesh.position.x + (2 - Math.random() * 4),
           store.maps.ground-1,
           this.chunk.mesh.position.z + (2 - Math.random() * 4),
@@ -207,6 +209,7 @@ class Char {
         this.add_radioactive--;
         // Add radioactive footsteps
         store.world.addColorBlock(
+          store,
           this.chunk.mesh.position.x + (2 - Math.random() * 4),
           store.maps.ground - 1,
           this.chunk.mesh.position.z + (2 - Math.random() * 4),
@@ -258,7 +261,7 @@ class Char {
 
     var res = true;
     for (var i = 0; i < points.length && res; i++) {
-      if (store.world.checkExists(points[i]).length > 0) {
+      if (store.world.checkExists(store, points[i]).length > 0) {
         res = false;
       }
     }
@@ -443,7 +446,7 @@ class Enemy extends Char {
       var pos = this.chunk.mesh.position.clone();
       pos.y = store.maps.ground;
 
-      const res = store.world.checkExists(pos);
+      const res = store.world.checkExists(store, pos);
 
       if (res.length != 0) {
         this.chunk.mesh.translateZ(delta * this.speed);
@@ -460,7 +463,7 @@ class Enemy extends Char {
       }
       this.chunk.mesh.rotation.z = 0.2 * Math.sin(time * this.speed);
       
-      this.shouldBleedOrGlow(res);
+      this.shouldBleedOrGlow(store, res);
 
       if (Math.random() < 0.4) {
         store.particles.walkSmoke(this.chunk.mesh.position.x, store.maps.ground + 1, this.chunk.mesh.position.z);
@@ -486,7 +489,7 @@ class Dudo extends Enemy {
     super.create(store, this.obj_type, x, store.maps.ground + this.y_offset, z);
     this.chunk.mesh.rotation.order = 'YXZ';
     if (Math.random() > 0.4) {
-      this.addWeapon(store, new Shotgun());
+      this.addWeapon(store, new Shotgun(store));
       this.weapon.attach(store, this.chunk.mesh);
       this.unloadWeapon();
     }
@@ -523,11 +526,11 @@ class AgentBlack extends Enemy {
     super.create(store, this.obj_type, x, store.maps.ground + this.y_offset, z, 0.5);
     this.chunk.mesh.rotation.order = 'YXZ';
     if (Math.random() > 0.8) {
-      this.addWeapon(store, new Shotgun());
+      this.addWeapon(store, new Shotgun(store));
     } else if(Math.random() > 0.5) {
-      this.addWeapon(store, new Sniper());
+      this.addWeapon(store, new Sniper(store));
     } else {
-      this.addWeapon(store, new Pistol());
+      this.addWeapon(store, new Pistol(store));
     }
     this.weapon.attach(store, this.chunk.mesh);
     this.unloadWeapon();
@@ -564,11 +567,11 @@ class Agent extends Enemy {
     super.create(store, this.obj_type, x, store.maps.ground + this.y_offset, z, 0.5);
     this.chunk.mesh.rotation.order = 'YXZ';
     if (Math.random() > 0.8) {
-      this.addWeapon(store, new Pistol());
+      this.addWeapon(store, new Pistol(store));
     } else if(Math.random() > 0.5) {
-      this.addWeapon(store, new Minigun());
+      this.addWeapon(store, new Minigun(store));
     } else {
-      this.addWeapon(store, new Shotgun());
+      this.addWeapon(store, new Shotgun(store));
     }
     this.weapon.attach(store, this.chunk.mesh);
     this.unloadWeapon();
@@ -601,11 +604,11 @@ class Greenie extends Enemy {
     super.create(store, this.obj_type, x, store.maps.ground + this.y_offset, z, 1);
     this.chunk.mesh.rotation.order = 'YXZ';
     if (Math.random() > 0.4) {
-      this.addWeapon(store, new P90());
+      this.addWeapon(store, new P90(store));
       this.weapon.attach(store, this.chunk.mesh);
       this.unloadWeapon();
     } else {
-      this.addWeapon(store, new Shotgun());
+      this.addWeapon(store, new Shotgun(store));
       this.weapon.attach(store, this.chunk.mesh);
       this.unloadWeapon();
     }
@@ -638,9 +641,9 @@ class Hearty extends Enemy {
     super.create(store, this.obj_type, x, store.maps.ground + this.y_offset, z);
     this.chunk.mesh.rotation.order = 'YXZ';
     if (Math.random() > 0.4) {
-      this.addWeapon(store, new Sniper());
+      this.addWeapon(store, new Sniper(store));
     } else {
-      this.addWeapon(store, new RocketLauncher());
+      this.addWeapon(store, new RocketLauncher(store));
     }
     this.weapon.attach(store, this.chunk.mesh);
     this.unloadWeapon();
@@ -709,8 +712,8 @@ class Player extends Char {
     this.chunk.mesh.add(targetObject);
     this.chunk.mesh.add(this.flashlight);
     this.flashlight.position.set(0, 3, 0);
-    this.addWeapon(store, new RocketLauncher());
-    this.addWeapon(store, new Shotgun());
+    this.addWeapon(store, new RocketLauncher(store));
+    this.addWeapon(store, new Shotgun(store));
     this.addBindings(store);
     this.chunk.mesh.add(store.camera);
     var pos = this.chunk.mesh.position.clone();
@@ -903,9 +906,9 @@ class Player extends Char {
         this.cd_check = 0;
         var pos = this.chunk.mesh.position.clone();
         pos.y = store.maps.ground;
-        const res = store.world.checkExists(pos);
+        const res = store.world.checkExists(store, pos);
 
-        this.shouldBleedOrGlow(res);
+        this.shouldBleedOrGlow(store, res);
         
         if (res.length == 0) {
           this.falling = true;
@@ -917,7 +920,7 @@ class Player extends Char {
                 post.x += ofx;
                 post.y = ofy;
                 post.z += ofz;
-                var r = store.world.checkExists(post);
+                var r = store.world.checkExists(store, post);
                 this.falling = !(r.length !== 0);
               }
             }
@@ -1138,6 +1141,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                         if (this.type == "world") {
                             // Check hit towards other chunks.
                             if (store.world.checkExists(
+                                store,
                                 new THREE.Vector3(
                                     (x + this.from_x * this.chunk_size_x) | 0,
                                     (y + this.from_y * this.chunk_size_y) | 0,
@@ -1157,6 +1161,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                         if (this.type == "world") {
                             // Check hit towards other chunks.
                             if (store.world.checkExists(
+                                store,
                                 new THREE.Vector3(
                                     ((x - 1) + this.from_x * this.chunk_size_x) | 0,
                                     (y + this.from_y * this.chunk_size_y) | 0,
@@ -1175,6 +1180,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                     } else {
                         if (this.type == "world") {
                             if (store.world.checkExists(
+                                store,
                                 new THREE.Vector3(
                                     (x + 1 + this.from_x * this.chunk_size_x) | 0,
                                     (y + this.from_y * this.chunk_size_y) | 0,
@@ -1204,6 +1210,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                         if (this.type == "world") {
                             // Check hit towards other chunks.
                             if (store.world.checkExists(
+                                store,
                                 new THREE.Vector3(
                                     (x + this.from_x * this.chunk_size_x) | 0,
                                     ((y + 1) + this.from_y * this.chunk_size_y) | 0,
@@ -1223,6 +1230,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
                         if (this.type == "world") {
                             // Check hit towards other chunks.
                             if (store.world.checkExists(
+                                store,
                                 new THREE.Vector3(
                                     (x + this.from_x * this.chunk_size_x) | 0,
                                     (y + this.from_y * this.chunk_size_y) | 0,
@@ -1750,7 +1758,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
         }
     };
 
-    Chunk.prototype.addBlock = function (x, y, z, r, g, b) {
+    Chunk.prototype.addBlock = function (store, x, y, z, r, g, b) {
         x -= this.from_x * this.blockSize;
         y -= this.from_y * this.blockSize;
         z -= this.from_z * this.blockSize;
@@ -2035,7 +2043,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
             chunk.init(store);
             for (var i = 0; i < result.length; i++) {
                 var p = result[i][0];
-                chunk.addBlock(p.x, p.y, p.z, (result[i][1] >> 24) & 0xFF, (result[i][1] >> 16) & 0xFF, (result[i][1] >> 8) & 0xFF);
+                chunk.addBlock(store, p.x, p.y, p.z, (result[i][1] >> 24) & 0xFF, (result[i][1] >> 16) & 0xFF, (result[i][1] >> 8) & 0xFF);
                 this.blocks[p.x][p.y][p.z] = 0;
                 this.current_blocks--;
             }
@@ -2109,7 +2117,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
     };
 
 
-    Chunk.prototype.checkExists = function (x, y, z) {
+    Chunk.prototype.checkExists = function (store, x, y, z) {
         x -= this.from_x * this.blockSize + this.blockSize;
         y -= this.from_y * this.blockSize + this.blockSize;
         z -= this.from_z * this.blockSize + this.blockSize;
@@ -2706,7 +2714,7 @@ function Maps() {
                 for (var i = 0; i < floor.length; i++) {
                     if (floor[i].x >= x && floor[i].x < x + max_x &&
                         floor[i].z >= z && floor[i].z < z + max_z) {
-                        chunk.addBlock(floor[i].x, floor[i].y, floor[i].z, floor[i].r, floor[i].g, floor[i].b);
+                        chunk.addBlock(store, floor[i].x, floor[i].y, floor[i].z, floor[i].r, floor[i].g, floor[i].b);
                     }
                 }
 
@@ -2775,7 +2783,7 @@ function Maps() {
                 for (var i = 0; i < walls.length; i++) {
                     if (walls[i].x >= x && walls[i].x <= x + max_x &&
                         walls[i].z >= z && walls[i].z <= z + max_z) {
-                        chunk.addBlock(walls[i].x, walls[i].y + this.ground, walls[i].z, walls[i].r, walls[i].g, walls[i].b);
+                        chunk.addBlock(store, walls[i].x, walls[i].y + this.ground, walls[i].z, walls[i].r, walls[i].g, walls[i].b);
                     }
                 }
                 store.world.addChunk(chunk);
@@ -2966,7 +2974,7 @@ function ModelLoader() {
                 chunk.init(store);
                 for(var i = 0; i < data.length; i++) {
                     for(var y = 0; y < this.models[key][1]; y++) {
-                        chunk.addBlock(data[i].x, data[i].y, y, data[i].r, data[i].g, data[i].b);
+                        chunk.addBlock(store, data[i].x, data[i].y, y, data[i].r, data[i].g, data[i].b);
                     }
                 }
                 chunk.blockSize = 1;
@@ -2998,7 +3006,7 @@ function ModelLoader() {
             if(p.y > model.sy || p.x > model.sx || p.z > model.sz) {
                 continue;
             }
-            chunk.addBlock(p.x, p.z, p.y, r, g, b);
+            chunk.addBlock(store, p.x, p.z, p.y, r, g, b);
         }
         chunk.build(store);
         chunk.mesh.visible = false;
@@ -3253,16 +3261,16 @@ function StreetLamp() {
         // Check rotation depending on wall
         this.chunk.mesh.position.set(x, store.maps.ground+10, z);
 
-        var res = store.world.checkExists(new THREE.Vector3(x-1,store.maps.ground+10,z));
+        var res = store.world.checkExists(store, new THREE.Vector3(x-1,store.maps.ground+10,z));
         if(res.length > 0) {
        //     this.chunk.mesh.rotation.y = -Math.PI*2;
             this.chunk.mesh.position.x += 10;
         //    this.light.position.set(7, 18, 0);
         }
-        res = store.world.checkExists(new THREE.Vector3(x,store.maps.ground+10,z-1));
+        res = store.world.checkExists(store, new THREE.Vector3(x,store.maps.ground+10,z-1));
         
         for(var i = 0; i < 10; i++) {
-            res = store.world.checkExists(new THREE.Vector3(x+i,store.maps.ground+10,z));
+            res = store.world.checkExists(store, new THREE.Vector3(x+i,store.maps.ground+10,z));
             if(res.length > 0) {
                 this.chunk.mesh.position.x -= 10;
                 break;
@@ -3294,15 +3302,15 @@ function UfoSign() {
         this.chunk.mesh.rotation.y = Math.PI * 0.5;
    //     this.chunk.mesh.rotation.x = -Math.PI;
         // Check rotation depending on wall
-        var res = store.world.checkExists(new THREE.Vector3(x-1,store.maps.ground+10,z));
+        var res = store.world.checkExists(store, new THREE.Vector3(x-1,store.maps.ground+10,z));
         if(res.length > 0) {
             this.chunk.mesh.rotation.y = -Math.PI * 0.5;
         }
-        res = store.world.checkExists(new THREE.Vector3(x,store.maps.ground+10,z-1));
+        res = store.world.checkExists(store, new THREE.Vector3(x,store.maps.ground+10,z-1));
         if(res.length > 0) {
             this.chunk.mesh.rotation.y = 2*Math.PI;
         }
-        res = store.world.checkExists(new THREE.Vector3(x,store.maps.ground+10,z+2));
+        res = store.world.checkExists(store, new THREE.Vector3(x,store.maps.ground+10,z+2));
         if(res.length > 0) {
             this.chunk.mesh.rotation.y = -Math.PI;
         }
@@ -3332,15 +3340,15 @@ function RadiationSign() {
         this.chunk.mesh.rotation.y = Math.PI * 0.5;
         this.chunk.mesh.rotation.x = -Math.PI;
         // Check rotation depending on wall
-        var res = store.world.checkExists(new THREE.Vector3(x-1,store.maps.ground+10,z));
+        var res = store.world.checkExists(store, new THREE.Vector3(x-1,store.maps.ground+10,z));
         if(res.length > 0) {
             this.chunk.mesh.rotation.y = -Math.PI * 0.5;
         }
-        res = store.world.checkExists(new THREE.Vector3(x,store.maps.ground+10,z-1));
+        res = store.world.checkExists(store, new THREE.Vector3(x,store.maps.ground+10,z-1));
         if(res.length > 0) {
             this.chunk.mesh.rotation.y = 2*Math.PI;
         }
-        res = store.world.checkExists(new THREE.Vector3(x,store.maps.ground+10,z+2));
+        res = store.world.checkExists(store, new THREE.Vector3(x,store.maps.ground+10,z+2));
         if(res.length > 0) {
             this.chunk.mesh.rotation.y = Math.PI;
         }
@@ -3650,7 +3658,7 @@ Ammo.prototype = new Obj;
 Ammo.prototype.constructor = Ammo;
 
 // Shotgun shell
-function Shell() {
+function Shell(store) {
     Obj.call(this);
 
     Shell.prototype.create = function(store) {
@@ -4823,12 +4831,12 @@ function Particle() {
 
             // Add blocks to ground
             if ((this.type == "snow" || this.type == "virtual_debris" || this.type == "debris" || this.type == "world_debris") && this.stay == true) {
-                if (store.world.checkExists(this.mesh.position.clone()).length != 0) {
+                if (store.world.checkExists(store, this.mesh.position.clone()).length != 0) {
                     if ((this.type == "debris" && this.bounces == 0) || this.type == "world_debris") {
-                        store.world.addBlock(this.mesh.position.x, this.mesh.position.y + 1, this.mesh.position.z, this.r, this.g, this.b);
+                        store.world.addBlock(store, this.mesh.position.x, this.mesh.position.y + 1, this.mesh.position.z, this.r, this.g, this.b);
                         this.active = 0;
                     }else if(this.type == "snow") {
-                        store.world.addBlock(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.r, this.g, this.b);
+                        store.world.addBlock(store, this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.r, this.g, this.b);
                     }
                 }
             } else if (this.type == "empty_shell" || this.type == "chunk_debris") {
@@ -4885,58 +4893,58 @@ function Particle() {
     };
 
     Particle.prototype.keepOnGround = function (store) {
-        if (store.world.checkExists(this.mesh.position.clone()).length != 0) {
+        if (store.world.checkExists(store, this.mesh.position.clone()).length != 0) {
             this.active = 0;
             this.mesh.position.y = store.maps.ground;
         }
     };
 
     Particle.prototype.addRadiationToGround = function (store) {
-        if (store.world.checkExists(this.mesh.position.clone()).length != 0) {
-            store.world.addColorBlock(this.mesh.position.x, this.mesh.position.y-1, this.mesh.position.z, this.r, this.g, this.b);
+        if (store.world.checkExists(store, this.mesh.position.clone()).length != 0) {
+            store.world.addColorBlock(store, this.mesh.position.x, this.mesh.position.y-1, this.mesh.position.z, this.r, this.g, this.b);
             if (Math.random() > 0.5) {
-                store.world.addColorBlock(this.mesh.position.x + 1, this.mesh.position.y-1, this.mesh.position.z + 1, this.r, this.g, this.b);
+                store.world.addColorBlock(store, this.mesh.position.x + 1, this.mesh.position.y-1, this.mesh.position.z + 1, this.r, this.g, this.b);
             }
             if (Math.random() > 0.5) {
-                store.world.addColorBlock(this.mesh.position.x - 1, this.mesh.position.y-1, this.mesh.position.z + 1,this.r, this.g, this.b);
+                store.world.addColorBlock(store, this.mesh.position.x - 1, this.mesh.position.y-1, this.mesh.position.z + 1,this.r, this.g, this.b);
             }
             if (Math.random() > 0.5) {
-                store.world.addColorBlock(this.mesh.position.x, this.mesh.position.y-1, this.mesh.position.z + 1, this.r, this.g, this.b);
+                store.world.addColorBlock(store,this.mesh.position.x, this.mesh.position.y-1, this.mesh.position.z + 1, this.r, this.g, this.b);
             }
             if (Math.random() > 0.5) {
-                store.world.addColorBlock(this.mesh.position.x, this.mesh.position.y-1, this.mesh.position.z - 1, this.r, this.g, this.b);
+                store.world.addColorBlock(store, this.mesh.position.x, this.mesh.position.y-1, this.mesh.position.z - 1, this.r, this.g, this.b);
             }
             if (Math.random() > 0.5) {
-                store.world.addColorBlock(this.mesh.position.x - 1, this.mesh.position.y-1, this.mesh.position.z - 1, this.r, this.g, this.b);
+                store.world.addColorBlock(store, this.mesh.position.x - 1, this.mesh.position.y-1, this.mesh.position.z - 1, this.r, this.g, this.b);
             }
             this.active = 0;
         }
     };
 
     Particle.prototype.addBloodToGround = function (store) {
-        if (store.world.checkExists(this.mesh.position.clone()).length != 0) {
-            store.world.addColorBlock(this.mesh.position.x, this.mesh.position.y-1, this.mesh.position.z, 138, 7, 7);
+        if (store.world.checkExists(store, this.mesh.position.clone()).length != 0) {
+            store.world.addColorBlock(store, this.mesh.position.x, this.mesh.position.y-1, this.mesh.position.z, 138, 7, 7);
             if (Math.random() > 0.5) {
-                store.world.addColorBlock(this.mesh.position.x + 1, this.mesh.position.y-1, this.mesh.position.z + 1, 128, 7, 7);
+                store.world.addColorBlock(store, this.mesh.position.x + 1, this.mesh.position.y-1, this.mesh.position.z + 1, 128, 7, 7);
             }
             if (Math.random() > 0.5) {
-                store.world.addColorBlock(this.mesh.position.x - 1, this.mesh.position.y-1, this.mesh.position.z + 1, 158, 7, 7);
+                store.world.addColorBlock(store, this.mesh.position.x - 1, this.mesh.position.y-1, this.mesh.position.z + 1, 158, 7, 7);
             }
             if (Math.random() > 0.5) {
-                store.world.addColorBlock(this.mesh.position.x, this.mesh.position.y-1, this.mesh.position.z + 1, 158, 7, 7);
+                store.world.addColorBlock(store, this.mesh.position.x, this.mesh.position.y-1, this.mesh.position.z + 1, 158, 7, 7);
             }
             if (Math.random() > 0.5) {
-                store.world.addColorBlock(this.mesh.position.x, this.mesh.position.y-1, this.mesh.position.z - 1, 158, 20, 20);
+                store.world.addColorBlock(store, this.mesh.position.x, this.mesh.position.y-1, this.mesh.position.z - 1, 158, 20, 20);
             }
             if (Math.random() > 0.5) {
-                store.world.addColorBlock(this.mesh.position.x - 1, this.mesh.position.y-1, this.mesh.position.z - 1, 128, 20, 20);
+                store.world.addColorBlock(store, this.mesh.position.x - 1, this.mesh.position.y-1, this.mesh.position.z - 1, 128, 20, 20);
             }
             this.active = 0;
         }
     };
 
     Particle.prototype.splatterRain = function (store) {
-        if (store.world.checkExists(this.mesh.position.clone()).length != 0) {
+        if (store.world.checkExists(store, this.mesh.position.clone()).length != 0) {
             store.particles.debris(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, 0.2, this.r, this.g, this.b, false,null,null,null,false);
             store.particles.debris(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, 0.2, this.r, this.g, this.b, false,null,null,null,false);
             this.active = 0;
@@ -4974,7 +4982,7 @@ function Particle() {
                 }
             }
         }
-        if(store.world.checkExists(this.mesh.position.clone()).length > 0) {
+        if(store.world.checkExists(store, this.mesh.position.clone()).length > 0) {
             store.world.explode(store, this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.damage, this.type);
             if(this.type == "missile") {
                 store.particles.explosion(store, this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.power, this.type);
@@ -5607,11 +5615,11 @@ function Weapon() {
 //////////////////////////////////////////////////////////////////////
 // Shotgun class
 //////////////////////////////////////////////////////////////////////
-function Shotgun() {
+function Shotgun(store) {
     Weapon.call(this);
     this.obj_type = "shotgun";
     this.fire_rate = 0.5;
-    this.create(game, "shotgun", 0.1);
+    this.create(store, "shotgun", 0.1);
     this.recoil = 1;
     this.damage = 1;
 
@@ -5620,18 +5628,18 @@ function Shotgun() {
     };
 
     Shotgun.prototype.fire = function(store, q, id, shooter, speed) {
-        game.sounds.PlaySound(store, "shotgun", game.player.chunk.mesh.position, 250);
+        store.sounds.PlaySound(store, "shotgun", store.player.chunk.mesh.position, 250);
         var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
         var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
 
         for (var i = 0; i < 10; i++) {
-            game.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
-            game.particles.smoke(point.x + (1 - Math.random() * 2), point.y + (1 - Math.random() * 2), point.z + (1 - Math.random() * 2), 0.5);
+            store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
+            store.particles.smoke(point.x + (1 - Math.random() * 2), point.y + (1 - Math.random() * 2), point.z + (1 - Math.random() * 2), 0.5);
         }
        // shooter.translateZ(-this.recoil);
-        game.particles.ammoShell(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
-        game.objects["shell"].add(store, point.x, point.y, point.z);
-        game.sounds.PlaySound(store, "shotgun_reload", game.player.chunk.mesh.position, 300);
+        store.particles.ammoShell(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
+        store.objects["shell"].add(store, point.x, point.y, point.z);
+        store.sounds.PlaySound(store, "shotgun_reload", store.player.chunk.mesh.position, 300);
     };
 
 }
@@ -5641,11 +5649,11 @@ Shotgun.prototype.constructor = Shotgun;
 //////////////////////////////////////////////////////////////////////
 // Sniper class
 //////////////////////////////////////////////////////////////////////
-function Sniper() {
+function Sniper(store) {
     Weapon.call(this);
     this.obj_type = "sniper";
     this.fire_rate = 1.5;
-    this.create(game, "sniper", 0.1);
+    this.create(store, "sniper", 0.1);
     this.recoil = 5;
     this.damage = 5;
 
@@ -5654,18 +5662,18 @@ function Sniper() {
     };
 
     Sniper.prototype.fire = function(store, q, id, shooter, speed) {
-        game.sounds.PlaySound(store, "sniper", game.player.chunk.mesh.position, 300);
+        store.sounds.PlaySound(store, "sniper", store.player.chunk.mesh.position, 300);
 
         var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
         var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
 
         for(var i = 0; i < 2; i++) {
-            game.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
-            game.particles.smoke(point.x, point.y, point.z, 0.4);
+            store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
+            store.particles.smoke(point.x, point.y, point.z, 0.4);
         }
        // shooter.translateZ(-this.recoil);
-        game.particles.ammoSniper(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
-        game.objects["ammo_sniper"].add(game, point.x, point.y, point.z);
+        store.particles.ammoSniper(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
+        store.objects["ammo_sniper"].add(store, point.x, point.y, point.z);
     };
 
 }
@@ -5675,11 +5683,11 @@ Sniper.prototype.constructor = Sniper;
 //////////////////////////////////////////////////////////////////////
 // Pistol class
 //////////////////////////////////////////////////////////////////////
-function Pistol() {
+function Pistol(store) {
     Weapon.call(this);
     this.obj_type = "pistol";
     this.fire_rate = 0.5;
-    this.create(game, "pistol", 0.1);
+    this.create(store, "pistol", 0.1);
     this.recoil = 0.2;
     this.damage = 1;
 
@@ -5688,17 +5696,17 @@ function Pistol() {
     };
 
     Pistol.prototype.fire = function(store, q, id, shooter, speed) {
-        game.sounds.PlaySound(store, "pistol", game.player.chunk.mesh.position, 450);
+        store.sounds.PlaySound(store, "pistol", store.player.chunk.mesh.position, 450);
         var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
         var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
 
         for(var i = 0; i < 2; i++) {
-            game.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
-            game.particles.smoke(point.x, point.y, point.z, 0.4);
+            store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
+            store.particles.smoke(point.x, point.y, point.z, 0.4);
         }
        // shooter.translateZ(-this.recoil);
-        game.particles.ammoP90(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
-        game.objects["ammo_p90"].add(game, point.x, point.y, point.z);
+        store.particles.ammoP90(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
+        store.objects["ammo_p90"].add(store, point.x, point.y, point.z);
     };
 
 }
@@ -5708,11 +5716,11 @@ Pistol.prototype.constructor = Pistol;
 //////////////////////////////////////////////////////////////////////
 // Grenade Launcher class
 //////////////////////////////////////////////////////////////////////
-function GrenadeLauncher() {
+function GrenadeLauncher(store) {
     Weapon.call(this);
     this.obj_type = "grenadelauncher";
     this.fire_rate = 1;
-    this.create(game, "grenadelauncher", 0.1);
+    this.create(store, "grenadelauncher", 0.1);
     this.recoil = 0.2;
     this.damage = 8;
 
@@ -5721,16 +5729,16 @@ function GrenadeLauncher() {
     };
 
     GrenadeLauncher.prototype.fire = function(store, q, id, shooter, speed) {
-        game.sounds.PlaySound(store, "grenadelauncher", game.player.chunk.mesh.position, 450);
+        store.sounds.PlaySound(store, "grenadelauncher", store.player.chunk.mesh.position, 450);
         var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
         var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
 
         for(var i = 0; i < 2; i++) {
-            game.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
-            game.particles.smoke(point.x, point.y, point.z, 0.4);
+            store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
+            store.particles.smoke(point.x, point.y, point.z, 0.4);
         }
        // shooter.translateZ(-this.recoil);
-        game.particles.ammoGrenadeLauncher(point.x, point.y, point.z, dir.x, dir.y, dir.z, speed, this.damage);
+        store.particles.ammoGrenadeLauncher(point.x, point.y, point.z, dir.x, dir.y, dir.z, speed, this.damage);
     };
 
 }
@@ -5740,11 +5748,11 @@ GrenadeLauncher.prototype.constructor = GrenadeLauncher;
 //////////////////////////////////////////////////////////////////////
 // P90 class
 //////////////////////////////////////////////////////////////////////
-function P90() {
+function P90(store) {
     Weapon.call(this);
     this.obj_type = "p90";
     this.fire_rate = 0.07;
-    this.create(game, "p90", 0.1);
+    this.create(store, "p90", 0.1);
     this.recoil = 0.2;
     this.damage = 1;
 
@@ -5753,16 +5761,16 @@ function P90() {
     };
 
     P90.prototype.fire = function(store, q, id, shooter, speed) {
-        game.sounds.PlaySound(store, "p90", game.player.chunk.mesh.position, 350);
+        store.sounds.PlaySound(store, "p90", store.player.chunk.mesh.position, 350);
         var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
         var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
 
         for(var i = 0; i < 2; i++) {
-            game.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
-            game.particles.smoke(point.x, point.y, point.z, 0.4);
+            store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
+            store.particles.smoke(point.x, point.y, point.z, 0.4);
         }
-        game.particles.ammoP90(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
-        game.objects["ammo_p90"].add(game, point.x, point.y, point.z);
+        store.particles.ammoP90(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
+        store.objects["ammo_p90"].add(store, point.x, point.y, point.z);
     };
 
 }
@@ -5772,11 +5780,11 @@ P90.prototype.constructor = P90;
 //////////////////////////////////////////////////////////////////////
 // Minigun class
 //////////////////////////////////////////////////////////////////////
-function Minigun() {
+function Minigun(store) {
     Weapon.call(this);
     this.obj_type = "minigun";
     this.fire_rate = 0.1;
-    this.create(game, "minigun", 0.1);
+    this.create(store, "minigun", 0.1);
     this.recoil = 0.2;
     this.damage = 2;
 
@@ -5785,16 +5793,16 @@ function Minigun() {
     };
 
     Minigun.prototype.fire = function(store, q, id, shooter, speed) {
-        game.sounds.PlaySound(store, "minigun", game.player.chunk.mesh.position, 250);
+        store.sounds.PlaySound(store, "minigun", store.player.chunk.mesh.position, 250);
         var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
         var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
 
         for(var i = 0; i < 5; i++) {
-            game.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
-            game.particles.smoke(point.x, point.y, point.z, 0.4);
+            store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
+            store.particles.smoke(point.x, point.y, point.z, 0.4);
         }
-        game.particles.ammoMinigun(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
-        game.objects["ammo"].add(game, point.x, point.y, point.z);
+        store.particles.ammoMinigun(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
+        store.objects["ammo"].add(store, point.x, point.y, point.z);
     };
 
 }
@@ -5805,11 +5813,11 @@ Minigun.prototype.constructor = Minigun;
 //////////////////////////////////////////////////////////////////////
 // Ak47 class
 //////////////////////////////////////////////////////////////////////
-function Ak47() {
+function Ak47(store) {
     Weapon.call(this);
     this.obj_type = "ak47";
     this.fire_rate = 0.15;
-    this.create(game, "ak47", 0.1);
+    this.create(store, "ak47", 0.1);
     this.recoil = 1;
     this.damage = 2;
 
@@ -5818,17 +5826,17 @@ function Ak47() {
     };
 
     Ak47.prototype.fire = function(store, q, id, shooter, speed) {
-        game.sounds.PlaySound(store, "ak47", game.player.chunk.mesh.position, 350);
+        store.sounds.PlaySound(store, "ak47", store.player.chunk.mesh.position, 350);
 
         var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
         var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
 
         for(var i = 0; i < 5; i++) {
-            game.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
-            game.particles.smoke(point.x, point.y, point.z, 0.4);
+            store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
+            store.particles.smoke(point.x, point.y, point.z, 0.4);
         }
-        game.particles.ammoAk47(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
-        game.objects["ammo"].add(game, point.x, point.y, point.z);
+        store.particles.ammoAk47(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
+        store.objects["ammo"].add(store, point.x, point.y, point.z);
     };
 
 }
@@ -5838,11 +5846,11 @@ Ak47.prototype.constructor = Ak47;
 //////////////////////////////////////////////////////////////////////
 // RocketLauncher class
 //////////////////////////////////////////////////////////////////////
-function RocketLauncher() {
+function RocketLauncher(store) {
     Weapon.call(this);
     this.obj_type = "rocketlauncher";
     this.fire_rate = 1;
-    this.create(game, "rocketlauncher", 0.1);
+    this.create(store, "rocketlauncher", 0.1);
     this.recoil = 4;
     this.damage = 6;
 
@@ -5851,14 +5859,14 @@ function RocketLauncher() {
     };
 
     RocketLauncher.prototype.fire = function(store, q, id, shooter, speed) {
-        game.sounds.PlaySound(store, "rocket", game.player.chunk.mesh.position, 350);
+        store.sounds.PlaySound(store, "rocket", store.player.chunk.mesh.position, 350);
         var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
         var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
-        game.particles.ammoMissile(point.x, point.y, point.z, dir.x, dir.y, dir.z, this, null, speed, this.damage);
+        store.particles.ammoMissile(point.x, point.y, point.z, dir.x, dir.y, dir.z, this, null, speed, this.damage);
 
         for(var i = 0; i < 50; i++) {
-            game.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
-            game.particles.smoke(point.x+(1-Math.random()*2), point.y + (1-Math.random()*2), point.z+(1-Math.random()*2), 0.5);
+            store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
+            store.particles.smoke(point.x+(1-Math.random()*2), point.y + (1-Math.random()*2), point.z+(1-Math.random()*2), 0.5);
         }
     };
 
@@ -5904,7 +5912,19 @@ function World() {
         this.textures.prepare();
     };
 
-    World.prototype.getChunkId = function(x, y, z, create) {
+  World.prototype.removeBatch = function(store, points) {
+    for(var i = 0; i < points.length; i++) {
+      var c = this.getChunkId(store, points[i].x, points[i].y, points[i].z, false);
+      if(c.length == 0) { 
+        continue; 
+      }
+      for (var n = 0; n < c.length; n++) {
+        this.chunks[c[n]].rmBlock(store, points[i].x, points[i].y, points[i].z);
+      }
+    }
+  };
+
+    World.prototype.getChunkId = function(store, x, y, z, create) {
         x |= 0;
         y |= 0;
         z |= 0;
@@ -5936,7 +5956,7 @@ function World() {
                pos_z * this.obj_size_z,
                this.obj_size_x, this.obj_size_y, this.obj_size_z,
                "CREATED", 1, "world");
-           chunk.init(game);
+           chunk.init(store);
            var i = this.addChunk(chunk);
            return [i];
        }
@@ -5999,35 +6019,21 @@ function World() {
         } else {
           store.sounds.PlaySound(store, "bullet_wall", new THREE.Vector3(x,y,z), 500);
         }
-      this.removeBatch(list);
+      this.removeBatch(store, list);
     };
 
-    World.prototype.getColor = function(pos) {
+    World.prototype.checkExists = function(store, pos) {
         pos.x |= 0;
         pos.y |= 0;
         pos.z |= 0;
-        var c = this.getChunkId(pos.x, pos.y, pos.z, false);
-        if(c == -1) {
-            return  -1;
-        } 
-        // Return first color?
-        return this.chunks[c[0]].getColor(pos.x, pos.y, pos.z);
-    };
-
-    World.prototype.checkExists = function(pos) {
-        pos.x |= 0;
-        pos.y |= 0;
-        pos.z |= 0;
-       // console.log("CHECK:",pos);
-        var c = this.getChunkId(pos.x, pos.y, pos.z, false);
-       // console.log("ID: ",c);
+        var c = this.getChunkId(store, pos.x, pos.y, pos.z, false);
         if(c.length == 0) {
             return [];
         }
         
         var list = [];
         for(var i = 0; i < c.length; i++) {
-            var r = this.chunks[c[i]].checkExists(pos.x, pos.y, pos.z);
+            var r = this.chunks[c[i]].checkExists(store, pos.x, pos.y, pos.z);
             if(r != -1) {
                 list.push(r);
             }
@@ -6035,43 +6041,16 @@ function World() {
         return list;
     };
 
-    World.prototype.removeBatch = function(points) {
-        for(var i = 0; i < points.length; i++) {
-            var c = this.getChunkId(points[i].x, points[i].y, points[i].z, false);
-            if(c.length == 0) { 
-                continue; 
-            }
-            for (var n = 0; n < c.length; n++) {
-                this.chunks[c[n]].rmBlock(game, points[i].x, points[i].y, points[i].z);
-            }
-        }
-        //for(var i in list) {
-        //    this.chunks[i].removeBatch();
-        //}
-    };
-
-    World.prototype.addBatch = function(points) {
-        for(var i = 0; i < points.length; i++) {
-            var c = this.getChunkId(points[i].x, points[i].y, points[i].z, true);
-            if(c.length == 0) {
-                return;
-            }
-            for(var n = 0; n < c.length; n++) {
-                this.chunks[c[n]].addBlock(points[i].x,points[i].y, points[i].z, points[i].r,points[i].g, points[i].b);
-            }
-        }
-    };
-
-    World.prototype.addColorBlock = function(x, y, z, r, g, b) {
+    World.prototype.addColorBlock = function(store, x, y, z, r, g, b) {
         x |= 0;
         y |= 0;
         z |= 0;
-        var c = this.getChunkId(x,y,z, true);
+        var c = this.getChunkId(store, x,y,z, true);
         if(c.length != 0) {
             for (var i = 0; i < c.length; i++) {
                 // Do not add blood to non-existing blocks.
                 if(this.chunks[c[i]].blockExists(x, y, z)) {
-                    this.chunks[c[i]].addBlock(x, y, z, r, g, b);
+                    this.chunks[c[i]].addBlock(store, x, y, z, r, g, b);
                     if(r <= 50  && g >= 200 && b < 105 && b >= 50) {
                         for(var p = 0; p < this.radioactive_blocks.length; p++) {
                             if(this.radioactive_blocks[p].x == x &&
@@ -6097,23 +6076,14 @@ function World() {
         }
     };
 
-    World.prototype.addBlock = function(x, y, z, r, g, b) {
+    World.prototype.addBlock = function(store, x, y, z, r, g, b) {
         x |= 0;
         y |= 0;
         z |= 0;
-        var c = this.getChunkId(x,y,z, true);
+        var c = this.getChunkId(store, x,y,z, true);
         if(c.length != 0) {
             for (var i = 0; i < c.length; i++) {
-                this.chunks[c[i]].addBlock(x, y, z, r, g, b);
-            }
-        }
-    };
-
-    World.prototype.removeBlock = function(x, y, z) {
-        var c = this.getChunkId(x,y,z, false); 
-        if(c.length != 0) {
-            for(var i = 0; i < c.length; i++) {
-                this.chunks[c[i]].rmBlock(game, x, y, z);
+                this.chunks[c[i]].addBlock(store, x, y, z, r, g, b);
             }
         }
     };
@@ -6138,7 +6108,7 @@ function World() {
             for(var i = 0; i < 10; i++) {
                 v = Math.random()*this.radioactive_blocks.length|0;
                 if(this.radioactive_blocks[v] != 0) {
-                    if(this.checkExists(new THREE.Vector3(this.radioactive_blocks[v][0], this.radioactive_blocks[v][1], this.radioactive_blocks[v][2])).length == 0) {
+                    if(this.checkExists(store, new THREE.Vector3(this.radioactive_blocks[v][0], this.radioactive_blocks[v][1], this.radioactive_blocks[v][2])).length == 0) {
                         this.radioactive_blocks[v] = 0;
                     } else {
                         store.particles.radiation(
@@ -6153,6 +6123,4 @@ function World() {
     };
 }
 
-let game = new Main();
-
-game.init();
+new Main().init();
