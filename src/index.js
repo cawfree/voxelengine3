@@ -232,7 +232,7 @@ class Char {
       }
     }
   }
-  cd() {
+  cd(store) {
     var pos = this.chunk.mesh.position;
     var points = [];
     points[0] = new THREE.Vector3(
@@ -258,13 +258,14 @@ class Char {
 
     var res = true;
     for (var i = 0; i < points.length && res; i++) {
-      if (game.world.checkExists(points[i]).length > 0) {
+      if (store.world.checkExists(points[i]).length > 0) {
         res = false;
       }
     }
-    for (var idx = 0; idx < game.cdList.length && res; idx++) {
-      if (this.chunk.mesh.id != game.cdList[idx].id && game.cdList[idx].owner.alive && game.cdList[idx].owner.base_type != "weapon" && game.cdList[idx].owner.obj_type != "painkillers") {
-        if (this.chunk.checkCD(game.cdList[idx].position, 6)) {
+    for (var idx = 0; idx < store.cdList.length && res; idx++) {
+      const item = store.cdList[idx];
+      if (this.chunk.mesh.id != item.id && item.owner.alive && item.owner.base_type != "weapon" && item.owner.obj_type != "painkillers") {
+        if (this.chunk.checkCD(item.position, 6)) {
           res = false;
         }
       }
@@ -446,7 +447,7 @@ class Enemy extends Char {
 
       if (res.length != 0) {
         this.chunk.mesh.translateZ(delta * this.speed);
-        if (!this.cd()) {
+        if (!this.cd(store)) {
           this.chunk.mesh.translateZ(-delta * this.speed);
           this.chunk.mesh.rotation.y -= Math.sin(time / this.speed);
           this.target = 0;
@@ -930,12 +931,13 @@ class Player extends Char {
           }
         }
         for (var idx = 0; idx < store.cdList.length; idx++) {
-          if (this.chunk.checkCD(store.cdList[idx].position, 5)) {
-            if (store.cdList[idx].owner.obj_type == "heart" || store.cdList[idx].owner.obj_type == "painkillers") {
-              store.cdList[idx].owner.grab(store.cdList[idx].id);
-            } else if (store.cdList[idx].owner.base_type == "weapon") {
+          const item = store.cdList[idx];
+          if (this.chunk.checkCD(item.position, 5)) {
+            if (item.owner.obj_type == "heart" || item.owner.obj_type == "painkillers") {
+              item.owner.grab(item.id);
+            } else if (item.owner.base_type == "weapon") {
               if (this.weapons.length <= 2) {
-                this.addWeapon(store.cdList[idx].owner);
+                this.addWeapon(item.owner);
               }
             }
           }
@@ -967,7 +969,7 @@ class Player extends Char {
     }
     if (this.keyboard.pressed("w")) {
       this.chunk.mesh.translateZ(this.speed * delta);
-      if (this.cd()) {
+      if (this.cd(store)) {
         this.moving = true;
       } else {
         this.chunk.mesh.translateZ(-this.speed * delta);
@@ -975,7 +977,7 @@ class Player extends Char {
     }
     if (this.keyboard.pressed("S")) {
       this.chunk.mesh.translateZ(-this.speed * delta);
-      if (this.cd()) {
+      if (this.cd(store)) {
         this.moving = true;
       } else{
         this.chunk.mesh.translateZ(+this.speed * delta);
@@ -983,7 +985,7 @@ class Player extends Char {
     }
     if (this.keyboard.pressed("A")) {
       this.chunk.mesh.translateX(this.speed * delta);
-      if (this.cd()) {
+      if (this.cd(store)) {
         this.moving = true;
       } else {
         this.chunk.mesh.translateX(-this.speed * delta);
@@ -991,7 +993,7 @@ class Player extends Char {
     }
     if (this.keyboard.pressed("D")) {
       this.chunk.mesh.translateX(-this.speed * delta);
-      if (this.cd()) {
+      if (this.cd(store)) {
         this.moving = true;
       } else {
         this.chunk.mesh.translateX(this.speed * delta);
@@ -2453,25 +2455,22 @@ function Main() {
         var len = this.cdList.length;
         if (!len) { return; }
         while (index < len) {
-            this.cdList[index] = this.cdList[index + 1];
-            index++
+          this.cdList[index] = this.cdList[index + 1];
+          index++
         }
         this.cdList.length--;
     };
 
-    Main.prototype.removeFromCD = function(obj) {
-        for(var i = 0; i < this.cdList.length; i++) {
-            // if(this.cdList[i] == null) { continue; }
-            if(this.cdList[i] != undefined) {
-                if(this.cdList[i].id == obj.id) {
-                    //this.cdList.splice(i, 1);
-                    this.spliceCDList(i);
-                    //this.cdList[i].r ;
-                    return;
-                }
-            }
+  Main.prototype.removeFromCD = function(obj) {
+    for(var i = 0; i < this.cdList.length; i++) {
+      if(this.cdList[i] != undefined) {
+        if(this.cdList[i].id == obj.id) {
+          this.spliceCDList(i);
+          return;
         }
-    };
+      }
+    }
+  };
 
     Main.prototype.render = function() {
         requestAnimationFrame( this.render.bind(this) );
@@ -4860,10 +4859,10 @@ function Particle() {
                    // if (Math.random() > 0.9) {
                    //     store.particles.smoke(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, 0.3); //, this.mesh.rotation);
                    // }
-                    this.cd(time, delta);
+                    this.cd(store, time, delta);
                     break;
                 case "missile":
-                    this.cd(time, delta);
+                    this.cd(store, time, delta);
                     game.particles.smoke(
                         this.mesh.position.x - 0.5 + Math.random(),
                         this.mesh.position.y - 0.5 + Math.random(),
@@ -4871,7 +4870,7 @@ function Particle() {
                         0.3); //, this.mesh.rotation);
                     break;
                 case "shell":
-                    this.cd(time, delta);
+                    this.cd(store, time, delta);
                     break;
                 case "grenade":
                     store.particles.smoke(
@@ -4880,7 +4879,7 @@ function Particle() {
                         this.mesh.position.z - 0.5 + Math.random(),
                         0.3); //, this.mesh.rotation);
                     this.bounce();
-                    this.cd(time, delta);
+                    this.cd(store, time, delta);
                     break;
                 case "snow":
                     this.mesh.position.z += Math.random()*Math.cos(time/5);
@@ -5015,28 +5014,29 @@ function Particle() {
         }
     };
 
-    Particle.prototype.cd = function (time, delta) {
+    Particle.prototype.cd = function (store, time, delta) {
         var directionVector = new THREE.Vector3(this.vx, this.vy, this.vz);
 
         var o = 1;
-        for(var idx = 0; idx < game.cdList.length; idx++) {
-            if((game.cdList[idx].position.x - game.cdList[idx].owner.chunk.chunk_size_x*game.cdList[idx].owner.chunk.blockSize * 0.5) <= this.mesh.position.x + o &&
-               (game.cdList[idx].position.x + game.cdList[idx].owner.chunk.chunk_size_x*game.cdList[idx].owner.chunk.blockSize * 0.5) >= this.mesh.position.x - o )
+        for (var idx = 0; idx < store.cdList.length; idx++) {
+          const item = store.cdList[idx];
+            if((item.position.x - item.owner.chunk.chunk_size_x*item.owner.chunk.blockSize * 0.5) <= this.mesh.position.x + o &&
+               (item.position.x + item.owner.chunk.chunk_size_x*item.owner.chunk.blockSize * 0.5) >= this.mesh.position.x - o )
             {
-                if((game.cdList[idx].position.z - game.cdList[idx].owner.chunk.chunk_size_z*game.cdList[idx].owner.chunk.blockSize * 0.5) <= this.mesh.position.z + o &&
-                   (game.cdList[idx].position.z + game.cdList[idx].owner.chunk.chunk_size_z*game.cdList[idx].owner.chunk.blockSize * 0.5) >= this.mesh.position.z - o)
+                if((item.position.z - item.owner.chunk.chunk_size_z*item.owner.chunk.blockSize * 0.5) <= this.mesh.position.z + o &&
+                   (item.position.z + item.owner.chunk.chunk_size_z*item.owner.chunk.blockSize * 0.5) >= this.mesh.position.z - o)
                 {
-                    if (game.cdList[idx].owner.base_type == "object") {
-                        if(game.cdList[idx].owner.hit) {
-                            if(game.cdList[idx].owner.hit(game, this.damage, directionVector, this.type, this.mesh.position)) {
+                    if (item.owner.base_type == "object") {
+                        if(item.owner.hit) {
+                            if(item.owner.hit(game, this.damage, directionVector, this.type, this.mesh.position)) {
                                 this.active = 0;
                                 this.hit = true;
                                 return;
                             }
                         }
-                    } else if (game.cdList[idx].owner.base_type == "player" || game.cdList[idx].owner.base_type == "enemy") {
-                        if (game.cdList[idx].owner.chunk.mesh.id != this.owner) {
-                            game.cdList[idx].owner.hit(game, this.damage, directionVector, this.type, this.mesh.position);
+                    } else if (item.owner.base_type == "player" || item.owner.base_type == "enemy") {
+                        if (item.owner.chunk.mesh.id != this.owner) {
+                            item.owner.hit(store, this.damage, directionVector, this.type, this.mesh.position);
                             this.active = 0;
                             this.hit = true;
                             return;
@@ -5045,11 +5045,11 @@ function Particle() {
                 }
             }
         }
-        if(game.world.checkExists(this.mesh.position.clone()).length > 0) {
-            game.world.explode(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.damage, this.type);
+        if(store.world.checkExists(this.mesh.position.clone()).length > 0) {
+            store.world.explode(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.damage, this.type);
             if(this.type == "missile") {
-                game.particles.explosion(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.power, this.type);
-                game.sounds.PlaySound("rocket_explode", this.mesh.position, 800);
+                store.particles.explosion(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, this.power, this.type);
+                store.sounds.PlaySound("rocket_explode", this.mesh.position, 800);
             }
             this.active = 0;
             return;
