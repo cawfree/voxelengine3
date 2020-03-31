@@ -57,13 +57,75 @@ const loadImageFile = file => new Promise(
     };
   },
 );
-//function loadImageFile(file, callback) {
-//  
-//    //callback(map, image.width, image.height);
-//    callback(list, image.width, image.height, map);
-//  //}
-//}
 
+const loadAllModels =  (store, models) => Promise.all(
+  Object.entries(models)
+    .map(
+      ([key, modelData]) => {
+        const [{ default: url }] = modelData;
+        if ((typeof url) === 'string') {
+          return loadImageFile(url)
+            .then(
+              ([data, width, height]) => {
+                var chunk = new Chunk(store, 0, 0, 0, width, height, modelData[1], key, 1, modelData[2]);
+                for(var i = 0; i < data.length; i++) {
+                  for(var y = 0; y < modelData[1]; y++) {
+                    chunk.addBlock(store, data[i].x, data[i].y, y, data[i].r, data[i].g, data[i].b);
+                  }
+                }
+                chunk.blockSize = 1;
+                chunk.build(store);
+                // Remove mesh from scene (cloned later)
+                chunk.mesh.visible = false;
+                return chunk;
+              },
+            )
+            .then(model => ([key, model]));
+        }
+        return Promise
+          .resolve()
+          .then(
+            () => {
+              const modelData = models[key];
+              // XXX: This is already loaded due to webpack.
+              return loadModel(store, key, modelData);
+            },
+          )
+          .then(model => ([key, model]));
+      },
+    ),
+)
+  .then(Object.fromEntries);
+
+
+const getModel = (store, name, size, obj, only_mesh) => {
+  if(size == null) { size = 1; }
+  if(only_mesh == null) { only_mesh = false; }
+  // Depp copy chunk
+  var new_obj;
+  if(only_mesh) {
+    new_obj = {};
+    new_obj.owner = obj;
+    new_obj.mesh = store.models[name].mesh.clone();
+    new_obj.mesh.owner = obj;
+
+    new_obj.mesh.visible = true;
+    new_obj.mesh.scale.set(size, size, size);
+    store.scene.add(new_obj.mesh);
+    store.addToCD(new_obj.mesh);
+  } else {
+    var new_obj = jQuery.extend(true, {}, store.models[name]);
+    new_obj.owner = obj;
+    new_obj.blockSize = size;
+
+    new_obj.mesh = undefined;
+    new_obj.build(store);
+
+    new_obj.mesh.visible = true;
+    store.scene.add(new_obj.mesh);
+  }
+  return new_obj;
+}
 
 class Char {
   constructor() {
@@ -141,7 +203,7 @@ class Char {
   create(store, model, x, y, z, size) {
     if(!size) { size = 1; }
 
-    this.chunk = store.modelLoader.getModel(store, model, size, this);
+    this.chunk = getModel(store, model, size, this);
 
     this.init_pos.x = x;
     this.init_pos.y = y;
@@ -2211,7 +2273,6 @@ class Main {
     this.particles = 0;
     this.particles_box = 0;
     this.t_start = Date.now();
-    this.modelLoader = new ModelLoader();
     this.maps = 0;
     this.world = new World();
     this.update_objects = [];
@@ -2287,7 +2348,44 @@ class Main {
     container.appendChild( this.stats.dom );
     window.addEventListener('resize', this.onWindowResize.bind(this), false);
 
-    await this.modelLoader.init(this);
+    this.models = await loadAllModels(
+      this,
+      {
+        // vox
+        ['greenie']: [require("../assets/vox/greenie.vox"), 1, "object"],
+        ['agent']: [require("../assets/vox/agent.vox"), 0.1, "object"],
+        ['agentblack']: [require("../assets/vox/agent_black.vox"), 0.1, "object"],
+        ['hearty']: [require("../assets/vox/hearty.vox"), 1, "object"],
+        ['dead_hearty']: [require("../assets/vox/dead_hearty.vox"), 1, "object"],
+        ['player']: [require("../assets/vox/player.vox"), 1, "object"],
+        ['dudo']: [require("../assets/vox/dudo.vox"), 1, "object"],
+        ['lamp1']: [require("../assets/vox/lamp1.vox"), 1, "object"],
+        ['barrel']: [require("../assets/vox/barrel.vox"), 0.1, "object"],
+        ['barrel_fire']: [require("../assets/vox/barrel_fire.vox"), 0.1, "object"],
+        ['fbihq']: [require("../assets/vox/fbi_hq.vox"), 5, "object"],
+        ['tree']: [require("../assets/vox/tree.vox"), 1, "object"],
+        ['streetlamp']: [require("../assets/vox/StreetLamp.vox"), 1, "object"],
+        ['paperagent']: [require("../assets/vox/paperagent.vox"), 1, "object"],
+        ['paperpolicecar']: [require("../assets/vox/policecar.vox"), 1, "object"],
+        // png
+        ['shotgun']: [require("../assets/pixelart/shotgun.png"), 8, "object"],
+        ['shell']: [require("../assets/pixelart/shell.png"), 20, "object"],
+        ['heart']: [require("../assets/pixelart/heart.png"), 3, "object"],
+        ['ammo']: [require("../assets/pixelart/ammo.png"), 20, "object"],
+        ['ak47']: [require("../assets/pixelart/ak47.png"), 5, "object"],
+        ['p90']: [require("../assets/pixelart/p90.png"), 5, "object"],
+        ['pistol']: [require("../assets/pixelart/pistol.png"), 5, "object"],
+        ['sniper']: [require("../assets/pixelart/sniper.png"), 5, "object"],
+        ['minigun']: [require("../assets/pixelart/minigun.png"), 10, "object"],
+        ['rocketlauncher']: [require("../assets/pixelart/rocketlauncher.png"), 8, "object"],
+        ['grenadeLauncher']: [require("../assets/pixelart/grenadelauncher.png"), 8, "object"],
+        ['spiderweb']: [require("../assets/pixelart/spiderweb.png"), 1, "object"],
+        ['painkillers']: [require("../assets/pixelart/painkillers.jpg"), 1, "object"],
+        ['radiation_sign']: [require("../assets/pixelart/radiation_sign.png"), 1, "object"],
+        ['ufo_sign']: [require("../assets/pixelart/sign_ufo.png"), 1, "object"],
+      },
+    );
+
 
     this.world.init(this);
 
@@ -2787,120 +2885,6 @@ class Level1 extends Maps {
   }
 };
 
-//////////////////////////////////////////////////////////////////////
-// ModelLoader class (Loads both .vox and image files)
-//////////////////////////////////////////////////////////////////////
-  function ModelLoader() {
-    this.models = {};
-    this.models["greenie"] = [require("../assets/vox/greenie.vox"), 1, "object"];
-    this.models["agent"] = [require("../assets/vox/agent.vox"), 0.1, "object"];
-    this.models["agentblack"] = [require("../assets/vox/agent_black.vox"), 0.1, "object"];
-    this.models["hearty"] = [require("../assets/vox/hearty.vox"), 1, "object"];
-    this.models["dead_hearty"] = [require("../assets/vox/dead_hearty.vox"), 1, "object"];
-    this.models["player"] = [require("../assets/vox/player.vox"), 1, "object"];
-    this.models["dudo"] = [require("../assets/vox/dudo.vox"), 1, "object"];
-    this.models["lamp1"] = [require("../assets/vox/lamp1.vox"), 1, "object"];
-    this.models["barrel"] = [require("../assets/vox/barrel.vox"), 0.1, "object"];
-    this.models["barrel_fire"] = [require("../assets/vox/barrel_fire.vox"), 0.1, "object"];
-    this.models["fbihq"] = [require("../assets/vox/fbi_hq.vox"), 5, "object"];
-    this.models["tree"] = [require("../assets/vox/tree.vox"), 1, "object"];
-    this.models["streetlamp"] = [require("../assets/vox/StreetLamp.vox"), 1, "object"];
-    this.models["tree"] = [require("../assets/vox/test1.vox"), 1, "object"];
-    this.models["paperagent"] = [require("../assets/vox/paperagent.vox"), 1, "object"];
-    this.models["paperpolicecar"] = [require("../assets/vox/policecar.vox"), 1, "object"];
-
-    // TODO: Don't know how to load images yet.
-    this.models["shotgun"] = [require("../assets/pixelart/shotgun.png"), 8, "object"];
-    this.models["shell"] = [require("../assets/pixelart/shell.png"), 20, "object"];
-    this.models["heart"] = [require("../assets/pixelart/heart.png"), 3, "object"];
-    this.models["ammo"] = [require("../assets/pixelart/ammo.png"), 20, "object"];
-    this.models["ak47"] = [require("../assets/pixelart/ak47.png"), 5, "object"];
-    this.models["p90"] = [require("../assets/pixelart/p90.png"), 5, "object"];
-    this.models["pistol"] = [require("../assets/pixelart/pistol.png"), 5, "object"];
-    this.models["sniper"] = [require("../assets/pixelart/sniper.png"), 5, "object"];
-    this.models["minigun"] = [require("../assets/pixelart/minigun.png"), 10, "object"];
-    this.models["rocketlauncher"] = [require("../assets/pixelart/rocketlauncher.png"), 8, "object"];
-    this.models["grenadelauncher"] = [require("../assets/pixelart/grenadelauncher.png"), 8, "object"];
-    this.models["spiderweb"] = [require("../assets/pixelart/spiderweb.png"), 1, "object"];
-    this.models["painkillers"] = [require("../assets/pixelart/painkillers.jpg"), 1, "object"];
-    this.models["radiation_sign"] = [require("../assets/pixelart/radiation_sign.png"), 1, "object"];
-    this.models["ufo_sign"] = [require("../assets/pixelart/sign_ufo.png"), 1, "object"];
-
-    //this.models["fbihq"] = ["/assets/vox/demon.vox", 1, "object"];
-
-    //let key;
-    //this.files = [];
-
-    ModelLoader.prototype.init = function(store) {
-      // TODO: Return all the model/keys and re-assign
-      return Promise.all(
-        Object.entries(this.models)
-          .map(
-            ([key, modelData]) => {
-              const [{ default: url }] = modelData;
-              if ((typeof url) === 'string') {
-                return loadImageFile(url)
-                  .then(
-                    ([data, width, height]) => {
-                      var chunk = new Chunk(store, 0, 0, 0, width, height, modelData[1], key, 1, modelData[2]);
-                      for(var i = 0; i < data.length; i++) {
-                        for(var y = 0; y < modelData[1]; y++) {
-                          chunk.addBlock(store, data[i].x, data[i].y, y, data[i].r, data[i].g, data[i].b);
-                        }
-                      }
-                      chunk.blockSize = 1;
-                      chunk.build(store);
-                      // Remove mesh from scene (cloned later)
-                      chunk.mesh.visible = false;
-                      this.models[key] = chunk;
-                    },
-                  );
-              }
-              return Promise
-                .resolve()
-                .then(
-                  () => {
-                    const modelData = this.models[key];
-                    // XXX: This is already loaded due to webpack.
-                    this.models[key] = loadModel(store, key, modelData);
-                  },
-                );
-            },
-          ),
-      );
-    };
-
-    ModelLoader.prototype.getModel = function(store, name, size, obj, only_mesh) {
-      if(size == null) { size = 1; }
-      if(only_mesh == null) { only_mesh = false; }
-      // Depp copy chunk
-      var new_obj;
-      if(only_mesh) {
-        new_obj = {};
-        new_obj.owner = obj;
-        new_obj.mesh = this.models[name].mesh.clone();
-        new_obj.mesh.owner = obj;
-
-        new_obj.mesh.visible = true;
-        new_obj.mesh.scale.set(size, size, size);
-        store.scene.add(new_obj.mesh);
-        store.addToCD(new_obj.mesh);
-      } else {
-        var new_obj = jQuery.extend(true, {}, this.models[name]);
-        new_obj.owner = obj;
-        new_obj.blockSize = size;
-
-        new_obj.mesh = undefined;
-        new_obj.build(store);
-
-        new_obj.mesh.visible = true;
-        store.scene.add(new_obj.mesh);
-      }
-      return new_obj;
-    };
-  }
-
-
 class Obj {
   constructor() {
     this.chunk = 0;
@@ -2914,7 +2898,7 @@ class Obj {
     this.max = 20;
   }
   create(store, model, size) {
-    this.chunk = store.modelLoader.getModel(store, model, size, this);
+    this.chunk = getModel(store, model, size, this);
     this.chunk.mesh.visible = false;
     this.chunk.mesh.rotation.set(Math.PI, 0, 0);
   }
@@ -2992,7 +2976,7 @@ class PainKillers extends Obj {
     }
   }
   create(store, x, y, z) {
-    this.chunk = store.modelLoader.getModel(store, "painkillers", 0.2, this);
+    this.chunk = getModel(store, "painkillers", 0.2, this);
     this.chunk.owner = this;
     this.chunk.mesh.owner = this;
     this.chunk.mesh.visible = true;
@@ -3026,7 +3010,7 @@ class PaperPoliceCar extends Obj {
     this.chunk.hit(store, dir, dmg, pos);
   }
   create(store, x, y, z) {
-    this.chunk = store.modelLoader.getModel(store, "paperpolicecar", 0.6, this);
+    this.chunk = getModel(store, "paperpolicecar", 0.6, this);
     this.chunk.owner = this;
     this.chunk.mesh.visible = true;
     this.chunk.mesh.position.set(x, store.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
@@ -3044,7 +3028,7 @@ class PaperAgent extends Obj {
     this.chunk.hit(store, dir, dmg, pos);
   }
   create(store, x, y, z) {
-    this.chunk = store.modelLoader.getModel(store, "paperagent", 0.2, this);
+    this.chunk = getModel(store, "paperagent", 0.2, this);
     this.chunk.owner = this;
     this.chunk.mesh.visible = true;
     this.chunk.mesh.position.set(x, store.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
@@ -3063,7 +3047,7 @@ class Tree extends Obj {
     this.chunk.hit(store, dir, dmg, pos);
   }
   create(store, x, y, z) {
-    this.chunk = store.modelLoader.getModel(store, "tree", 0.5, this);
+    this.chunk = getModel(store, "tree", 0.5, this);
     this.chunk.owner = this;
     this.chunk.mesh.visible = true;
     this.chunk.mesh.position.set(x, store.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
@@ -3091,7 +3075,7 @@ class StreetLamp extends Obj {
     return false;
   }
   create(store, x, y, z) {
-    this.chunk = store.modelLoader.getModel(store, "streetlamp", 0.4, this);
+    this.chunk = getModel(store, "streetlamp", 0.4, this);
     this.chunk.owner = this;
     this.chunk.mesh.visible = true;
 
@@ -3132,7 +3116,7 @@ class UfoSign extends Obj {
     return this.chunk.hit(store, dir, dmg, pos);
   }
   create(store, x, y, z) {
-    this.chunk = store.modelLoader.getModel(store, "ufo_sign", 0.2, this);
+    this.chunk = getModel(store, "ufo_sign", 0.2, this);
     this.chunk.owner = this;
     this.chunk.mesh.visible = true;
     this.chunk.mesh.rotation.y = Math.PI * 0.5;
@@ -3167,7 +3151,7 @@ class RadiationSign extends Obj {
     this.chunk.hit(store, dir, dmg, pos);
   }
   create(store, x, y, z) {
-    this.chunk = store.modelLoader.getModel(store, "radiation_sign", 0.2, this);
+    this.chunk = getModel(store, "radiation_sign", 0.2, this);
     this.chunk.owner = this;
     this.chunk.mesh.visible = true;
     this.chunk.mesh.rotation.y = Math.PI * 0.5;
@@ -3212,7 +3196,7 @@ class DeadHearty extends Obj {
     }
   }
   create(store, x, y, z) {
-    this.chunk = store.modelLoader.getModel(store, "dead_hearty", 1, this);
+    this.chunk = getModel(store, "dead_hearty", 1, this);
     this.chunk.owner = this;
     this.chunk.mesh.visible = true;
     this.chunk.mesh.rotation.y = Math.random()*Math.PI*2;
@@ -3250,7 +3234,7 @@ class BarrelFire extends Obj {
     }
   }
   create(store, x, y, z) {
-    this.chunk = store.modelLoader.getModel(store, "barrel_fire", 0.5, this);
+    this.chunk = getModel(store, "barrel_fire", 0.5, this);
     this.chunk.mesh.position.set(x, store.maps.ground+this.chunk.to_y*(1/this.chunk.blockSize), z);
     this.light = this.yellow_light.clone();
     this.light.position.set(0, 10, 0);
@@ -3287,7 +3271,7 @@ class Barrel extends Obj {
     }
   }
   create(store, x, y, z) {
-    this.chunk = store.modelLoader.getModel(store, "barrel", 0.5, this);
+    this.chunk = getModel(store, "barrel", 0.5, this);
     this.chunk.mesh.position.set(x, store.maps.ground+this.chunk.to_y*(1/this.chunk.blockSize), z);
     this.light = this.green_light.clone();
     this.light.position.set(0, 10, 0);
@@ -3306,7 +3290,7 @@ class FBIHQ extends Obj {
     this.chunk.hit(store, dir, dmg, pos);
   }
   create(store, x, y, z) {
-    this.chunk = store.modelLoader.getModel(store, "fbihq", 1, this);
+    this.chunk = getModel(store, "fbihq", 1, this);
     this.chunk.mesh.position.set(x, store.maps.ground+this.chunk.chunk_size_y*this.chunk.blockSize * 0.5, z);
   }
 }
@@ -3324,7 +3308,7 @@ class SpiderWeb extends Obj {
     this.alive = false;
   }
   create(store, x, y, z) {
-    this.chunk = store.modelLoader.getModel(store, "spiderweb", 0.2, this);
+    this.chunk = getModel(store, "spiderweb", 0.2, this);
     this.chunk.owner = this;
     this.chunk.mesh.visible = true;
     this.chunk.mesh.position.set(x, store.maps.ground+1, z);
@@ -3352,7 +3336,7 @@ class Lamp1 extends Obj {
     }
   }
   create(store, x, y, z) {
-    this.chunk = store.modelLoader.getModel(store, "lamp1", 1, this);
+    this.chunk = getModel(store, "lamp1", 1, this);
     this.chunk.type = "object";
     this.chunk.owner = this;
     this.chunk.mesh.visible = true;
@@ -3379,7 +3363,7 @@ class AmmoCrate extends Obj {
     this.sides = [];
   }
   create(store) {
-    var up = store.modelLoader.getModel(store, "crate", 1, this);
+    var up = getModel(store, "crate", 1, this);
     up.mesh.visible = false;
     up.mesh.rotation.set(Math.PI, 0, 0);
     up.mesh.position.set(200, 8, 300);
@@ -5218,7 +5202,7 @@ class Weapon {
   }
   create(store, model, size) {
     store.scene.add(this.shoot_light);
-    this.chunk = store.modelLoader.getModel(store, model, size, this, true);
+    this.chunk = getModel(store, model, size, this, true);
     store.removeFromCD(this.chunk.mesh);
     store.addObject(this);
   }
