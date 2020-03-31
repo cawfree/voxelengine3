@@ -1030,7 +1030,7 @@ class Player extends Char {
 
 // TODO: Okay, so this isn't really a class, it's some weird mutatable object.
 //       Needs a heavy refactor about getModel.
-function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
+function Chunk(store, x, y, z, cx, cy, cz, id, bs, type) {
   this.type = type;
   this.id = id;
   this.from_x = x;
@@ -1063,6 +1063,20 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
   this.prev_len = 0;
   this.offset = 0;
 
+  this.material = store.chunk_material;
+  //this.material = new THREE.MeshLambertMaterial({vertexColors: THREE.VertexColors, wireframe: this.wireframe});
+  //        this.material = new THREE.MeshPhongMaterial({bumpMap: bump, vertexColors: THREE.VertexColors, wireframe: this.wireframe});
+  this.blocks = new Array(this.chunk_size_x);
+  for (var x = 0; x < this.chunk_size_x; x++) {
+    this.blocks[x] = new Array(this.chunk_size_y);
+    for (var y = 0; y < this.chunk_size_y; y++) {
+      this.blocks[x][y] = new Array(this.chunk_size_z);
+      for (var z = 0; z < this.chunk_size_z; z++) {
+        this.blocks[x][y][z] = 0;
+      }
+    }
+  }
+
   Chunk.prototype.destroy = function (store) {
     store.scene.remove(this.mesh);
     this.blocks = null;
@@ -1073,22 +1087,6 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
       return true;
     }
     return false;
-  };
-
-  Chunk.prototype.init = function (store) {
-    this.material = store.chunk_material;
-    //this.material = new THREE.MeshLambertMaterial({vertexColors: THREE.VertexColors, wireframe: this.wireframe});
-    //        this.material = new THREE.MeshPhongMaterial({bumpMap: bump, vertexColors: THREE.VertexColors, wireframe: this.wireframe});
-    this.blocks = new Array(this.chunk_size_x);
-    for (var x = 0; x < this.chunk_size_x; x++) {
-      this.blocks[x] = new Array(this.chunk_size_y);
-      for (var y = 0; y < this.chunk_size_y; y++) {
-        this.blocks[x][y] = new Array(this.chunk_size_z);
-        for (var z = 0; z < this.chunk_size_z; z++) {
-          this.blocks[x][y][z] = 0;
-        }
-      }
-    }
   };
 
   Chunk.prototype.build = function (store) {
@@ -2031,8 +2029,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
 
 
     if (result.length > 0 && result.length != this.current_blocks) {
-      var chunk = new Chunk(0, 0, 0, max_x, max_y, max_z, "ff_object", this.blockSize, false);
-      chunk.init(store);
+      var chunk = new Chunk(store, 0, 0, 0, max_x, max_y, max_z, "ff_object", this.blockSize, false);
       for (var i = 0; i < result.length; i++) {
         var p = result[i][0];
         chunk.addBlock(store, p.x, p.y, p.z, (result[i][1] >> 24) & 0xFF, (result[i][1] >> 16) & 0xFF, (result[i][1] >> 8) & 0xFF);
@@ -2573,8 +2570,7 @@ class Maps {
         }
 
         // Now find all blocks within the range.
-        var chunk = new Chunk(x, 0, z, max_x, store.maps.ground, max_z, "floor", 1, "world");
-        chunk.init(store);
+        var chunk = new Chunk(store, x, 0, z, max_x, store.maps.ground, max_z, "floor", 1, "world");
         for (var i = 0; i < floor.length; i++) {
           if (floor[i].x >= x && floor[i].x < x + max_x &&
             floor[i].z >= z && floor[i].z < z + max_z) {
@@ -2639,11 +2635,10 @@ class Maps {
         // 0.01 = offset so we don't see black borders on the floor.
         var chunk = 0;
         if (max_x > max_z) {
-          chunk = new Chunk(x - wall_thickness, this.ground, z - wall_thickness, max_x + wall_thickness, wall_height, max_z + wall_thickness, "x", 1, "world");
+          chunk = new Chunk(store, x - wall_thickness, this.ground, z - wall_thickness, max_x + wall_thickness, wall_height, max_z + wall_thickness, "x", 1, "world");
         } else {
-          chunk = new Chunk(x - wall_thickness, this.ground, z, max_x + wall_thickness, wall_height, max_z + wall_thickness, "x", 1, "world");
+          chunk = new Chunk(store, x - wall_thickness, this.ground, z, max_x + wall_thickness, wall_height, max_z + wall_thickness, "x", 1, "world");
         }
-        chunk.init(store);
         for (var i = 0; i < walls.length; i++) {
           if (walls[i].x >= x && walls[i].x <= x + max_x &&
             walls[i].z >= z && walls[i].z <= z + max_z) {
@@ -2809,8 +2804,7 @@ class Level1 extends Maps {
 
       if (typeof (this.models[key][0].default) === 'string') { 
         loadImageFile(this.models[key][0].default, (data, width, height) => {
-          var chunk = new Chunk(0, 0, 0, width, height, this.models[key][1], key, 1, this.models[key][2]);
-          chunk.init(store);
+          var chunk = new Chunk(store, 0, 0, 0, width, height, this.models[key][1], key, 1, this.models[key][2]);
           for(var i = 0; i < data.length; i++) {
             for(var y = 0; y < this.models[key][1]; y++) {
               chunk.addBlock(store, data[i].x, data[i].y, y, data[i].r, data[i].g, data[i].b);
@@ -2834,9 +2828,8 @@ class Level1 extends Maps {
       //var vox = new Vox();
       var model = Vox.LoadModel(this.models[name][0], name);
       var p = 0, r = 0, g = 0, b = 0;
-      var chunk = new Chunk(0, 0, 0, model.sx, model.sz, model.sy, name, this.models[name][1], this.models[key][2]);
+      var chunk = new Chunk(store, 0, 0, 0, model.sx, model.sz, model.sy, name, this.models[name][1], this.models[key][2]);
       chunk.blockSize = this.models[name][1];
-      chunk.init(store);
       for(var i = 0; i < model.data.length; i++) {
         p = model.data[i];
         r = (p.val >> 24) & 0xFF;
@@ -5589,12 +5582,12 @@ class World {
       var pos_z = (z/this.obj_size_z)|0;
 
       var chunk = new Chunk(
+        store,
         pos_x * this.obj_size_x,
         pos_y * this.obj_size_y,
         pos_z * this.obj_size_z,
         this.obj_size_x, this.obj_size_y, this.obj_size_z,
         "CREATED", 1, "world");
-      chunk.init(store);
       var i = this.addChunk(chunk);
       return [i];
     }
