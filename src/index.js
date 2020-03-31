@@ -20,6 +20,49 @@ const loadModel = (store, name, modelData) => {
   return chunk;
 };
 
+const loadImageFile = file => new Promise(
+  (resolve) => {
+    var image = new Image();
+    image.src = file;
+    var ctx = document.createElement('canvas').getContext('2d');
+    image.onload = () => {
+      ctx.canvas.width  = image.width;
+      ctx.canvas.height = image.height;
+      ctx.drawImage(image, 0, 0);
+      var map = new Array();
+      var imgData = ctx.getImageData(0, 0, image.width, image.height);
+
+      var list = [];
+      for(var y = 0; y < image.height; y++) {
+        var pos = y * image.width * 4;
+        map[y] = new Array();
+        for(var x = 0; x < image.width; x++) {
+          var r = imgData.data[pos++];
+          var g = imgData.data[pos++];
+          var b = imgData.data[pos++];
+          var a = imgData.data[pos++];
+          map[y][x] = {};
+          map[y][x].r = r;
+          map[y][x].g = g;
+          map[y][x].b = b;
+          map[y][x].a = a;
+          if(a != 0 && !(r == 0 && g == 0 && b == 0)) {
+            list.push({x: x, y: y, z: 0, r: r, g: g, b: b, a: a});
+          }
+        }
+      }
+      resolve([list, image.width, image.height, map]);
+    };
+  },
+);
+//function loadImageFile(file, callback) {
+//  
+//    //callback(map, image.width, image.height);
+//    callback(list, image.width, image.height, map);
+//  //}
+//}
+
+
 class Char {
   constructor() {
     this.hp = 0;
@@ -2447,286 +2490,289 @@ class Maps {
   init(store, name, ground, objects) {
     this.name = name;
 
-    // Load ground
-    loadImageFile(ground, (data, width, height, map) => {
-      this.width = width;
-      this.height = height;
-      var walls = [];
-      var floor = [];
-      var wall_map = new Array(width);
-      for (var x = 0; x < width; x++) {
-        wall_map[x] = new Array(height);
-      }
-
-      for (var x = 0; x < map.length; x++) {
-        for (var z = 0; z < map[x].length; z++) {
-          var p = map[x][z];
-          if (p.a == 0) { continue; }
-
-          // Black will dissapear in chunk algo.
-          if (p.r == 0 && p.g == 0 && p.b == 0) {
-            p.r = 1;
-            p.g = 1;
-            p.b = 1;
-          }
-          var wall_thickness = store.maps.wall_thickness;
-          var wall_height = store.maps.wall_height;
-
-          if(p.r == 0x22 && p.g == 0x22 && p.b == 0x22) {
-            for (var y = 0; y < wall_height; y++) {
-              var pix = store.textures.getPixel(y, x, this.wall2_texture);
-              walls.push({ x: x, y: y, z: z, r: pix.r, g: pix.g, b: pix.b });
-              wall_map[x][z] = 1;
-            }
+    loadImageFile(ground)
+      .then(
+        ([data, width, height, map]) => {
+          this.width = width;
+          this.height = height;
+          var walls = [];
+          var floor = [];
+          var wall_map = new Array(width);
+          for (var x = 0; x < width; x++) {
+            wall_map[x] = new Array(height);
           }
 
-          if (map[x + 1][z].a == 0) {
-            for (var y = 0; y < wall_height; y++) {
-              var pix = store.textures.getPixel(y, z, this.wall_texture);
-              for (var xx = 0; xx < wall_thickness; xx++) {
-                walls.push({ x: x + xx, y: y, z: z, r: pix.r, g: pix.g, b: pix.b });
-                walls.push({ x: x + xx, y: y, z: z - 1, r: pix.r, g: pix.g, b: pix.b });
-                walls.push({ x: x + xx, y: y, z: z + 1, r: pix.r, g: pix.g, b: pix.b });
-                wall_map[x + xx][z - 1] = 1;
-                wall_map[x + xx][z + 1] = 1;
-                wall_map[x + xx][z] = 1;
+          for (var x = 0; x < map.length; x++) {
+            for (var z = 0; z < map[x].length; z++) {
+              var p = map[x][z];
+              if (p.a == 0) { continue; }
+
+              // Black will dissapear in chunk algo.
+              if (p.r == 0 && p.g == 0 && p.b == 0) {
+                p.r = 1;
+                p.g = 1;
+                p.b = 1;
+              }
+              var wall_thickness = store.maps.wall_thickness;
+              var wall_height = store.maps.wall_height;
+
+              if(p.r == 0x22 && p.g == 0x22 && p.b == 0x22) {
+                for (var y = 0; y < wall_height; y++) {
+                  var pix = store.textures.getPixel(y, x, this.wall2_texture);
+                  walls.push({ x: x, y: y, z: z, r: pix.r, g: pix.g, b: pix.b });
+                  wall_map[x][z] = 1;
+                }
+              }
+
+              if (map[x + 1][z].a == 0) {
+                for (var y = 0; y < wall_height; y++) {
+                  var pix = store.textures.getPixel(y, z, this.wall_texture);
+                  for (var xx = 0; xx < wall_thickness; xx++) {
+                    walls.push({ x: x + xx, y: y, z: z, r: pix.r, g: pix.g, b: pix.b });
+                    walls.push({ x: x + xx, y: y, z: z - 1, r: pix.r, g: pix.g, b: pix.b });
+                    walls.push({ x: x + xx, y: y, z: z + 1, r: pix.r, g: pix.g, b: pix.b });
+                    wall_map[x + xx][z - 1] = 1;
+                    wall_map[x + xx][z + 1] = 1;
+                    wall_map[x + xx][z] = 1;
+                  }
+                }
+              }
+              if (map[x - 1][z].a == 0) {
+                for (var y = 0; y < wall_height; y++) {
+                  var pix = store.textures.getPixel(y, z, this.wall_texture);
+                  for (var xx = 0; xx < wall_thickness; xx++) {
+                    walls.push({ x: x - xx, y: y, z: z, r: pix.r, g: pix.g, b: pix.b });
+                    walls.push({ x: x - xx, y: y, z: z - 1, r: pix.r, g: pix.g, b: pix.b });
+                    wall_map[x - xx][z - 1] = 1;
+                    wall_map[x - xx][z] = 1;
+                  }
+                }
+              }
+              if (map[x][z + 1].a == 0) {
+                for (var y = 0; y < wall_height; y++) {
+                  var pix = store.textures.getPixel(y, x, this.wall_texture);
+                  for (var zz = 0; zz < wall_thickness; zz++) {
+                    walls.push({ x: x - 1, y: y, z: z + zz, r: pix.r, g: pix.g, b: pix.b });
+                    walls.push({ x: x, y: y, z: z + zz, r: pix.r, g: pix.g, b: pix.b });
+                    wall_map[x - 1][z + zz] = 1;
+                    wall_map[x][z + zz] = 1;
+                  }
+                }
+              }
+              if (map[x][z - 1].a == 0) {
+                for (var y = 0; y < wall_height; y++) {
+                  var pix = store.textures.getPixel(y, x, this.wall_texture);
+                  for (var zz = 0; zz < wall_thickness; zz++) {
+                    walls.push({ x: x - 1, y: y, z: z - zz, r: pix.r, g: pix.g, b: pix.b });
+                    walls.push({ x: x, y: y, z: z - zz, r: pix.r, g: pix.g, b: pix.b });
+                    wall_map[x][z - zz] = 1;
+                    wall_map[x - 1][z - zz] = 1;
+                  }
+                }
+              }
+
+              // Draw floor
+              for (var y = 0; y < store.maps.ground; y++) {
+                floor.push({ x: x, y: y, z: z, r: p.r, g: p.g, b: p.b });
               }
             }
           }
-          if (map[x - 1][z].a == 0) {
-            for (var y = 0; y < wall_height; y++) {
-              var pix = store.textures.getPixel(y, z, this.wall_texture);
-              for (var xx = 0; xx < wall_thickness; xx++) {
-                walls.push({ x: x - xx, y: y, z: z, r: pix.r, g: pix.g, b: pix.b });
-                walls.push({ x: x - xx, y: y, z: z - 1, r: pix.r, g: pix.g, b: pix.b });
-                wall_map[x - xx][z - 1] = 1;
-                wall_map[x - xx][z] = 1;
-              }
-            }
-          }
-          if (map[x][z + 1].a == 0) {
-            for (var y = 0; y < wall_height; y++) {
-              var pix = store.textures.getPixel(y, x, this.wall_texture);
-              for (var zz = 0; zz < wall_thickness; zz++) {
-                walls.push({ x: x - 1, y: y, z: z + zz, r: pix.r, g: pix.g, b: pix.b });
-                walls.push({ x: x, y: y, z: z + zz, r: pix.r, g: pix.g, b: pix.b });
-                wall_map[x - 1][z + zz] = 1;
-                wall_map[x][z + zz] = 1;
-              }
-            }
-          }
-          if (map[x][z - 1].a == 0) {
-            for (var y = 0; y < wall_height; y++) {
-              var pix = store.textures.getPixel(y, x, this.wall_texture);
-              for (var zz = 0; zz < wall_thickness; zz++) {
-                walls.push({ x: x - 1, y: y, z: z - zz, r: pix.r, g: pix.g, b: pix.b });
-                walls.push({ x: x, y: y, z: z - zz, r: pix.r, g: pix.g, b: pix.b });
-                wall_map[x][z - zz] = 1;
-                wall_map[x - 1][z - zz] = 1;
-              }
-            }
-          }
 
-          // Draw floor
-          for (var y = 0; y < store.maps.ground; y++) {
-            floor.push({ x: x, y: y, z: z, r: p.r, g: p.g, b: p.b });
-          }
-        }
-      }
-
-      // Find floor and create chunks for it.
-      var total_chunks = 0;
-      while (true) {
-        var x = 0;
-        var z = 0;
-        var found = false;
-        for (x = 0; x < width; x++) {
-          for (z = 0; z < height; z++) {
-            if (map[x][z].a != 0) {
-              found = true;
+          // Find floor and create chunks for it.
+          var total_chunks = 0;
+          while (true) {
+            var x = 0;
+            var z = 0;
+            var found = false;
+            for (x = 0; x < width; x++) {
+              for (z = 0; z < height; z++) {
+                if (map[x][z].a != 0) {
+                  found = true;
+                  break;
+                }
+              }
+              if (found) break;
+            }
+            if (!found) {
               break;
             }
-          }
-          if (found) break;
-        }
-        if (!found) {
-          break;
-        }
-        // We found a wall position.
-        // Get how far on X the wall is.
-        var max_x = 0;
-        var max_z = 1000;
-        var found = false;
-        var max_width = 20;
-        var max_height = 20;
-        for (var x1 = 0; x + x1 < width && x1 < max_width; x1++) {
-          if (map[x + x1][z].a != 0) {
-            max_x++;
-            // Check Z
-            var mz = 0;
-            for (var z1 = 0; z + z1 < height && z1 < max_height; z1++) {
-              if (map[x + x1][z + z1].a != 0) {
-                mz++;
+            // We found a wall position.
+            // Get how far on X the wall is.
+            var max_x = 0;
+            var max_z = 1000;
+            var found = false;
+            var max_width = 20;
+            var max_height = 20;
+            for (var x1 = 0; x + x1 < width && x1 < max_width; x1++) {
+              if (map[x + x1][z].a != 0) {
+                max_x++;
+                // Check Z
+                var mz = 0;
+                for (var z1 = 0; z + z1 < height && z1 < max_height; z1++) {
+                  if (map[x + x1][z + z1].a != 0) {
+                    mz++;
+                  } else {
+                    break;
+                  }
+                }
+                if (mz < max_z) {
+                  max_z = mz;
+                }
               } else {
                 break;
               }
             }
-            if (mz < max_z) {
-              max_z = mz;
+            for (var x_ = x; x_ < x + max_x; x_++) {
+              for (var z_ = z; z_ < z + max_z; z_++) {
+                map[x_][z_].a = 0;
+              }
             }
-          } else {
-            break;
+
+            // Now find all blocks within the range.
+            var chunk = new Chunk(store, x, 0, z, max_x, store.maps.ground, max_z, "floor", 1, "world");
+            for (var i = 0; i < floor.length; i++) {
+              if (floor[i].x >= x && floor[i].x < x + max_x &&
+                floor[i].z >= z && floor[i].z < z + max_z) {
+                chunk.addBlock(store, floor[i].x, floor[i].y, floor[i].z, floor[i].r, floor[i].g, floor[i].b);
+              }
+            }
+
+            store.world.addChunk(chunk);
           }
-        }
-        for (var x_ = x; x_ < x + max_x; x_++) {
-          for (var z_ = z; z_ < z + max_z; z_++) {
-            map[x_][z_].a = 0;
-          }
-        }
-
-        // Now find all blocks within the range.
-        var chunk = new Chunk(store, x, 0, z, max_x, store.maps.ground, max_z, "floor", 1, "world");
-        for (var i = 0; i < floor.length; i++) {
-          if (floor[i].x >= x && floor[i].x < x + max_x &&
-            floor[i].z >= z && floor[i].z < z + max_z) {
-            chunk.addBlock(store, floor[i].x, floor[i].y, floor[i].z, floor[i].r, floor[i].g, floor[i].b);
-          }
-        }
-
-        store.world.addChunk(chunk);
-      }
 
 
-      // Find wall and create chunks for them.
-      while (true) {
-        var x = 0;
-        var z = 0;
-        var found = false;
-        for (x = 0; x < width; x++) {
-          for (z = 0; z < height; z++) {
-            if (wall_map[x][z] == 1) {
-              found = true;
+          // Find wall and create chunks for them.
+          while (true) {
+            var x = 0;
+            var z = 0;
+            var found = false;
+            for (x = 0; x < width; x++) {
+              for (z = 0; z < height; z++) {
+                if (wall_map[x][z] == 1) {
+                  found = true;
+                  break;
+                }
+              }
+              if (found) break;
+            }
+            if (!found) {
               break;
             }
-          }
-          if (found) break;
-        }
-        if (!found) {
-          break;
-        }
-        // We found a wall position.
-        // Get how far on X the wall is.
-        var max_x = 0;
-        var max_z = 1000;
-        var found = false;
-        var max_width = 20;
-        var max_height = 20;
-        for (var x1 = 0; x + x1 < width && x1 < max_width; x1++) {
-          if (wall_map[x + x1][z] == 1) {
-            max_x++;
-            // Check Z
-            var mz = 0;
-            for (var z1 = 0; z + z1 < height && z1 < max_height; z1++) {
-              if (wall_map[x + x1][z + z1] == 1) {
-                mz++;
+            // We found a wall position.
+            // Get how far on X the wall is.
+            var max_x = 0;
+            var max_z = 1000;
+            var found = false;
+            var max_width = 20;
+            var max_height = 20;
+            for (var x1 = 0; x + x1 < width && x1 < max_width; x1++) {
+              if (wall_map[x + x1][z] == 1) {
+                max_x++;
+                // Check Z
+                var mz = 0;
+                for (var z1 = 0; z + z1 < height && z1 < max_height; z1++) {
+                  if (wall_map[x + x1][z + z1] == 1) {
+                    mz++;
+                  } else {
+                    break;
+                  }
+                }
+                if (mz < max_z) {
+                  max_z = mz;
+                }
               } else {
                 break;
               }
             }
-            if (mz < max_z) {
-              max_z = mz;
-            }
-          } else {
-            break;
-          }
-        }
-        for (var x_ = x; x_ < x + max_x; x_++) {
-          for (var z_ = z; z_ < z + max_z; z_++) {
-            wall_map[x_][z_] = 0;
-          }
-        }
-
-        // Now find all blocks within the range.
-        // 0.01 = offset so we don't see black borders on the floor.
-        var chunk = 0;
-        if (max_x > max_z) {
-          chunk = new Chunk(store, x - wall_thickness, this.ground, z - wall_thickness, max_x + wall_thickness, wall_height, max_z + wall_thickness, "x", 1, "world");
-        } else {
-          chunk = new Chunk(store, x - wall_thickness, this.ground, z, max_x + wall_thickness, wall_height, max_z + wall_thickness, "x", 1, "world");
-        }
-        for (var i = 0; i < walls.length; i++) {
-          if (walls[i].x >= x && walls[i].x <= x + max_x &&
-            walls[i].z >= z && walls[i].z <= z + max_z) {
-            chunk.addBlock(store, walls[i].x, walls[i].y + this.ground, walls[i].z, walls[i].r, walls[i].g, walls[i].b);
-          }
-        }
-        store.world.addChunk(chunk);
-      }
-
-      // Load objects + enemies + player
-      loadImageFile(objects, (data, width, height) => {
-        var list = [];
-        for (var i = 0; i < data.length; i++) {
-          if (data[i].a == 0) { continue; }
-          var found = 0;
-          for (var k in this.objects) {
-            if (data[i].r == this.objects[k].r && data[i].g == this.objects[k].g && data[i].b == this.objects[k].b) {
-
-              const entityTypes = {
-                Portal,
-                PainKillers,
-                PaperPoliceCar,
-                PaperAgent,
-                Tree,
-                StreetLamp,
-                UfoSign,
-                RadiationSign,
-                DeadHearty,
-                BarrelFire,
-                Barrel,
-                FBIHQ,
-                SpiderWeb,
-                Lamp1,
-                AmmoCrate,
-                AmmoSniper,
-                AmmoP90,
-                Ammo,
-                Shell,
-                Heart,
-                Greenie,
-                Agent,
-                AgentBlack,
-                Hearty,
-                DeadHearty,
-                Player,
-                Dudo,
-                Lamp1,
-                Greenie,
-                Barrel,
-                BarrelFire,
-                FBIHQ,
-                Tree,
-                StreetLamp,
-                PaperAgent,
-                PaperPoliceCar,
-                PainKillers,
-              };
-
-              var o = new entityTypes[k]();
-
-              o.create(store, data[i].y, 0, data[i].x);
-              this.loaded.push(o);
-              if (k == "Player") {
-                store.player = o;
+            for (var x_ = x; x_ < x + max_x; x_++) {
+              for (var z_ = z; z_ < z + max_z; z_++) {
+                wall_map[x_][z_] = 0;
               }
-              found = 0;
             }
-            if (found) { break; }
-          }
-        }
-      });
-    });
 
+            // Now find all blocks within the range.
+            // 0.01 = offset so we don't see black borders on the floor.
+            var chunk = 0;
+            if (max_x > max_z) {
+              chunk = new Chunk(store, x - wall_thickness, this.ground, z - wall_thickness, max_x + wall_thickness, wall_height, max_z + wall_thickness, "x", 1, "world");
+            } else {
+              chunk = new Chunk(store, x - wall_thickness, this.ground, z, max_x + wall_thickness, wall_height, max_z + wall_thickness, "x", 1, "world");
+            }
+            for (var i = 0; i < walls.length; i++) {
+              if (walls[i].x >= x && walls[i].x <= x + max_x &&
+                walls[i].z >= z && walls[i].z <= z + max_z) {
+                chunk.addBlock(store, walls[i].x, walls[i].y + this.ground, walls[i].z, walls[i].r, walls[i].g, walls[i].b);
+              }
+            }
+            store.world.addChunk(chunk);
+          }
+
+          loadImageFile(objects)
+            .then(
+              ([data, width, height]) => {
+                var list = [];
+                for (var i = 0; i < data.length; i++) {
+                  if (data[i].a == 0) { continue; }
+                  var found = 0;
+                  for (var k in this.objects) {
+                    if (data[i].r == this.objects[k].r && data[i].g == this.objects[k].g && data[i].b == this.objects[k].b) {
+
+                      const entityTypes = {
+                        Portal,
+                        PainKillers,
+                        PaperPoliceCar,
+                        PaperAgent,
+                        Tree,
+                        StreetLamp,
+                        UfoSign,
+                        RadiationSign,
+                        DeadHearty,
+                        BarrelFire,
+                        Barrel,
+                        FBIHQ,
+                        SpiderWeb,
+                        Lamp1,
+                        AmmoCrate,
+                        AmmoSniper,
+                        AmmoP90,
+                        Ammo,
+                        Shell,
+                        Heart,
+                        Greenie,
+                        Agent,
+                        AgentBlack,
+                        Hearty,
+                        DeadHearty,
+                        Player,
+                        Dudo,
+                        Lamp1,
+                        Greenie,
+                        Barrel,
+                        BarrelFire,
+                        FBIHQ,
+                        Tree,
+                        StreetLamp,
+                        PaperAgent,
+                        PaperPoliceCar,
+                        PainKillers,
+                      };
+
+                      var o = new entityTypes[k]();
+
+                      o.create(store, data[i].y, 0, data[i].x);
+                      this.loaded.push(o);
+                      if (k == "Player") {
+                        store.player = o;
+                      }
+                      found = 0;
+                    }
+                    if (found) { break; }
+                  }
+                }
+              }
+            );
+        }
+      );
   }
 }
 
@@ -2817,20 +2863,23 @@ class Level1 extends Maps {
       }
 
       if (typeof (this.models[key][0].default) === 'string') { 
-        loadImageFile(this.models[key][0].default, (data, width, height) => {
-          var chunk = new Chunk(store, 0, 0, 0, width, height, this.models[key][1], key, 1, this.models[key][2]);
-          for(var i = 0; i < data.length; i++) {
-            for(var y = 0; y < this.models[key][1]; y++) {
-              chunk.addBlock(store, data[i].x, data[i].y, y, data[i].r, data[i].g, data[i].b);
-            }
-          }
-          chunk.blockSize = 1;
-          chunk.build(store);
-          this.models[key] = chunk;
-          // Remove mesh from scene (cloned later)
-          chunk.mesh.visible = false;
-          this.loadFiles(store);
-        });
+        loadImageFile(this.models[key][0].default)
+          .then(
+            ([data, width, height]) => {
+              var chunk = new Chunk(store, 0, 0, 0, width, height, this.models[key][1], key, 1, this.models[key][2]);
+              for(var i = 0; i < data.length; i++) {
+                for(var y = 0; y < this.models[key][1]; y++) {
+                  chunk.addBlock(store, data[i].x, data[i].y, y, data[i].r, data[i].g, data[i].b);
+                }
+              }
+              chunk.blockSize = 1;
+              chunk.build(store);
+              this.models[key] = chunk;
+              // Remove mesh from scene (cloned later)
+              chunk.mesh.visible = false;
+              this.loadFiles(store);
+            },
+          );
       } else {
         const modelData = this.models[key];
         // XXX: This is already loaded due to webpack.
@@ -5045,42 +5094,7 @@ lfsr.setSeed();
 //////////////////////////////////////////////////////////////////////
 // Load image files to pixel map
 //////////////////////////////////////////////////////////////////////
-  function loadImageFile(file, callback) {
-    console.log('load image',file);
-    var image = new Image();
-    image.src = file;
-    var ctx = document.createElement('canvas').getContext('2d');
-    image.onload = () => {
-      ctx.canvas.width  = image.width;
-      ctx.canvas.height = image.height;
-      ctx.drawImage(image, 0, 0);
-      var map = new Array();
-      var imgData = ctx.getImageData(0, 0, image.width, image.height);
-
-      var list = [];
-      for(var y = 0; y < image.height; y++) {
-        var pos = y * image.width * 4;
-        map[y] = new Array();
-        for(var x = 0; x < image.width; x++) {
-          var r = imgData.data[pos++];
-          var g = imgData.data[pos++];
-          var b = imgData.data[pos++];
-          var a = imgData.data[pos++];
-          map[y][x] = {};
-          map[y][x].r = r;
-          map[y][x].g = g;
-          map[y][x].b = b;
-          map[y][x].a = a;
-          if(a != 0 && !(r == 0 && g == 0 && b == 0)) {
-            list.push({x: x, y: y, z: 0, r: r, g: g, b: b, a: a});
-          }
-        }
-      }
-      //callback(map, image.width, image.height);
-      callback(list, image.width, image.height, map);
-    }
-  }
-
+ 
 class VoxelData {
   constructor(buffer, i) {
     this.x = buffer[i++] & 0xFF;
