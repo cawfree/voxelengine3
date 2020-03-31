@@ -2261,8 +2261,7 @@ class Main {
         10,
       );
     } else {
-      this.maps = new Map1();
-      //this.maps = new Level1();
+      this.maps = new Level1();
       this.maps.init(this);
 
       // Load objects here to reduce overhead of multiple objects of same type.
@@ -2722,30 +2721,11 @@ class Maps {
   }
 }
 
-class Map1 extends Maps {
-  constructor() {
-    super();
-    this.wall_texture = WALL2; // from textures class.
-    this.wall2_texture = WALL2; // from textures class.
-    this.map_file = require("../assets/maps/map3_ground.png").default;
-    this.obj_file = require("../assets/maps/map3_objects.png").default;
-  }
-  init(store) {
-    super.init(store, "Level1", this.map_file, this.obj_file);
-    this.set_lightning(store);
-    store.sounds.PlaySound(store, "ambient_horror", null, 800, true);
-  }
-  set_lightning(store) {
-    this.ambient_light = new THREE.AmbientLight( 0xFFFFFF, 0.9);
-    store.scene.add(this.ambient_light);
-  }
-}
-
 class Level1 extends Maps {
   constructor() {
     super();
-    this.wall_texture = WALL2; // from textures class.
-    this.wall2_texture = WOOD_WALL; // from textures class.
+    this.wall_texture = WALL2;
+    this.wall2_texture = WOOD_WALL;
     this.map_file = require("../assets/maps/map3_ground.png").default;
     this.obj_file = require("../assets/maps/map3_objects.png").default;
   }
@@ -2761,10 +2741,10 @@ class Level1 extends Maps {
   }
   init(store) {
     super.init(store, "Level1", this.map_file, this.obj_file);
-    this.set_lightning(store);
+    this.setLighting(store);
     store.sounds.PlaySound(store, "ambient_horror", null, 800, true);
   }
-  set_lightning(store) {
+  setLighting(store) {
     this.ambient_light = new THREE.AmbientLight( 0xFFFFFF, 0.8);
     store.scene.add(this.ambient_light);
   }
@@ -3719,8 +3699,6 @@ function ParticlePool(size, type) {
       store.particles.lights.push(p);
     }
   };
-
-
 
   ParticlePool.prototype.chunkDebris = function (x, y, z, chunk, dirx, diry, dirz, power) {
     var vx, vy, vz, fx, fz;
