@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 class Char {
   constructor() {
     this.hp = 0;
@@ -718,7 +720,7 @@ class Player extends Char {
     this.chunk.mesh.add(store.camera);
     var pos = this.chunk.mesh.position.clone();
     var point = this.chunk.mesh.localToWorld(new THREE.Vector3(0, 0, 0));
-    store.camera.lookAt(point);
+    //store.camera.lookAt(point);
     store.camera.rotation.z = Math.PI;
     store.camera.rotation.x =-Math.PI/1.4;
     store.camera.position.y = 150;
@@ -2049,7 +2051,7 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
             }
             this.dirty = true;
 
-            ffc = new FFChunk();
+            let ffc = new FFChunk();
             ffc.create(store, chunk);
             ffc.base_type = this.owner.base_type;
             chunk.build(store);
@@ -2953,6 +2955,7 @@ function ModelLoader() {
 
     //this.models["fbihq"] = ["/assets/vox/demon.vox", 1, "object"];
 
+  let key;
     this.files = [];
 
     ModelLoader.prototype.init = function(store) {
