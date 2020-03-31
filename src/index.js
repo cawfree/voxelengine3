@@ -1,5 +1,25 @@
 import * as THREE from 'three';
 
+const loadModel = (store, name, modelData) => {
+  var model = Vox.LoadModel(modelData[0], name);
+  var p = 0, r = 0, g = 0, b = 0;
+  var chunk = new Chunk(store, 0, 0, 0, model.sx, model.sz, model.sy, name, modelData[1], modelData[2]);
+  chunk.blockSize = modelData[1];
+  for(var i = 0; i < model.data.length; i++) {
+    p = model.data[i];
+    r = (p.val >> 24) & 0xFF;
+    g = (p.val >> 16) & 0xFF;
+    b = (p.val >> 8) & 0xFF;
+    if(p.y > model.sy || p.x > model.sx || p.z > model.sz) {
+      continue;
+    }
+    chunk.addBlock(store, p.x, p.z, p.y, r, g, b);
+  }
+  chunk.build(store);
+  chunk.mesh.visible = false;
+  return chunk;
+};
+
 class Char {
   constructor() {
     this.hp = 0;
@@ -2812,31 +2832,11 @@ class Level1 extends Maps {
           this.loadFiles(store);
         });
       } else {
+        const modelData = this.models[key];
         // XXX: This is already loaded due to webpack.
-        this.loadModel(store, key);
+        this.models[key] = loadModel(store, key, modelData);
         this.loadFiles(store);
       }
-    };
-
-    ModelLoader.prototype.loadModel = function(store, name) {
-      //var vox = new Vox();
-      var model = Vox.LoadModel(this.models[name][0], name);
-      var p = 0, r = 0, g = 0, b = 0;
-      var chunk = new Chunk(store, 0, 0, 0, model.sx, model.sz, model.sy, name, this.models[name][1], this.models[key][2]);
-      chunk.blockSize = this.models[name][1];
-      for(var i = 0; i < model.data.length; i++) {
-        p = model.data[i];
-        r = (p.val >> 24) & 0xFF;
-        g = (p.val >> 16) & 0xFF;
-        b = (p.val >> 8) & 0xFF;
-        if(p.y > model.sy || p.x > model.sx || p.z > model.sz) {
-          continue;
-        }
-        chunk.addBlock(store, p.x, p.z, p.y, r, g, b);
-      }
-      chunk.build(store);
-      chunk.mesh.visible = false;
-      this.models[name] = chunk;
     };
 
     ModelLoader.prototype.getModel = function(store, name, size, obj, only_mesh) {
