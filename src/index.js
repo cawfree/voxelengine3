@@ -68,11 +68,9 @@ class Char {
       r = "blood3";
     }
     store.sounds.PlaySound(store, r, this.chunk.mesh.position, 300);
-    if (this.alive) {
-      if (Math.random() > 0.8) {
-        // TODO: Something really interesting going here.
-        store.sounds.PlaySound(store, "hit" + (1 + Math.random() * 2 | 0), this.chunk.mesh.position, 500);
-      }
+    if (this.alive && Math.random() > 0.8) {
+      // TODO: Something really interesting going here. Forces integer, maybe?
+      store.sounds.PlaySound(store, "hit" + (1 + Math.random() * 2 | 0), this.chunk.mesh.position, 500);
     }
   }
   create(store, model, x, y, z, size) {
@@ -1064,8 +1062,6 @@ function Chunk(store, x, y, z, cx, cy, cz, id, bs, type) {
   this.offset = 0;
 
   this.material = store.chunk_material;
-  //this.material = new THREE.MeshLambertMaterial({vertexColors: THREE.VertexColors, wireframe: this.wireframe});
-  //        this.material = new THREE.MeshPhongMaterial({bumpMap: bump, vertexColors: THREE.VertexColors, wireframe: this.wireframe});
   this.blocks = new Array(this.chunk_size_x);
   for (var x = 0; x < this.chunk_size_x; x++) {
     this.blocks[x] = new Array(this.chunk_size_y);
@@ -2038,8 +2034,7 @@ function Chunk(store, x, y, z, cx, cy, cz, id, bs, type) {
       }
       this.dirty = true;
 
-      let ffc = new FFChunk();
-      ffc.create(store, chunk);
+      let ffc = new FFChunk(store, chunk);
       ffc.base_type = this.owner.base_type;
       chunk.build(store);
 
@@ -2658,7 +2653,6 @@ class Maps {
             if (data[i].r == this.objects[k].r && data[i].g == this.objects[k].g && data[i].b == this.objects[k].b) {
 
               const entityTypes = {
-                FFChunk,
                 Portal,
                 PainKillers,
                 PaperPoliceCar,
@@ -2901,10 +2895,16 @@ class Obj {
 }
 
 class FFChunk extends Obj {
-  constructor() {
+  constructor(store, chunk) {
     super();
     this.base_type = "";
     this.type = "ff_chunk";
+    this.chunk = chunk;
+    this.base_type = chunk.owner.base_type;
+    this.chunk.owner = this;
+    this.chunk.build(store);
+    store.maps.loaded.push(this);
+    store.addToCD(this.chunk.mesh);
   }
   hit(store, dmg, dir, type, pos) {
     dir.x += (1-Math.random()*2);
@@ -2913,14 +2913,6 @@ class FFChunk extends Obj {
     this.chunk.explode(store, dir, dmg);
     this.alive = false;
     store.removeFromCD(this.chunk.mesh);
-  }
-  create(store, chunk) {
-    this.chunk = chunk;
-    this.base_type = chunk.owner.base_type;
-    this.chunk.owner = this;
-    this.chunk.build(store);
-    store.maps.loaded.push(this);
-    store.addToCD(this.chunk.mesh);
   }
 }
 
