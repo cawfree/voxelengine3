@@ -3047,10 +3047,8 @@ function ModelLoader() {
 }
 
 
-/////////////////////////////////////////////////////////////////////
-// Objects
-/////////////////////////////////////////////////////////////////////
-function Obj() {
+class Obj {
+  constructor() {
     this.chunk = 0;
     this.active = [];
     this.ptr = 0;
@@ -3060,698 +3058,630 @@ function Obj() {
     this.green_light = new THREE.PointLight(0x00FF00, 2, 10);
     this.streetlight = new THREE.SpotLight(0xFFAA00);
     this.max = 20;
-
-    Obj.prototype.create = function(store, model, size) {
-        this.chunk = store.modelLoader.getModel(store, model, size, this);
-        this.chunk.mesh.visible = false;
-        this.chunk.mesh.rotation.set(Math.PI, 0, 0);
-    };
-
-    Obj.prototype.update = function(store, time, delta) {
-    };
-
-    Obj.prototype.destroy = function(store) {
-      // TODO: Definitely try this out!
-      //  this.chunk.explode();
-    };
+  }
+  create(store, model, size) {
+    this.chunk = store.modelLoader.getModel(store, model, size, this);
+    this.chunk.mesh.visible = false;
+    this.chunk.mesh.rotation.set(Math.PI, 0, 0);
+  }
+  update(store, time, delta) {}
+  destroy(store) {
+    // TODO: Definitely try this out!
+    //  this.chunk.explode();
+  }
 }
 
-function FFChunk() {
-    Obj.call(this);
+class FFChunk extends Obj {
+  constructor() {
+    super();
     this.base_type = "";
     this.type = "ff_chunk";
+  }
+  hit(store, dmg, dir, type, pos) {
+    dir.x += (1-Math.random()*2);
+    dir.y += (1-Math.random()*2);
+    dir.z += (1-Math.random()*2);
+    this.chunk.explode(store, dir, dmg);
+    this.alive = false;
+    store.removeFromCD(this.chunk.mesh);
+  }
+  create(store, chunk) {
+    this.chunk = chunk;
+    this.base_type = chunk.owner.base_type;
+    this.chunk.owner = this;
+    this.chunk.build(store);
+    store.maps.loaded.push(this);
+    store.addToCD(this.chunk.mesh);
+  }
+}
 
-    FFChunk.prototype.hit = function(store, dmg, dir, type, pos) {
-        dir.x += (1-Math.random()*2);
-        dir.y += (1-Math.random()*2);
-        dir.z += (1-Math.random()*2);
-        this.chunk.explode(store, dir, dmg);
-        this.alive = false;
-        store.removeFromCD(this.chunk.mesh);
-    };
-
-    FFChunk.prototype.create = function(store, chunk) {
-        this.chunk = chunk;
-        this.base_type = chunk.owner.base_type;
-        this.chunk.owner = this;
-        this.chunk.build(store);
-        store.maps.loaded.push(this);
-        store.addToCD(this.chunk.mesh);
-    };
-};
-FFChunk.prototype = new Obj; 
-FFChunk.prototype.constructor = FFChunk;
-
-function Portal() {
-    Obj.call(this);
+class Portal extends Obj {
+  constructor() {
+    super();
     this.base_type = "object";
     this.type = "portal";
     this.alive = true;
     this.x = 0;
     this.y = 0;
     this.z = 0;
-
-    Portal.prototype.create = function(store, x, y, z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    };
-
-    Portal.prototype.update = function(store, time, delta) {
-        var x = 0; 
-        var r = 10;
-        for(var a = 0; a < Math.PI*2; a+=Math.PI/4) {
-            x = this.x + r * Math.cos(a)
-            z = this.z + r * Math.sin(a)
-            store.particles.portalMagic(x, store.maps.ground, z);
-        }
-    };
+  }
+  create(store, x, y, z) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+  }
+  update(store, time, delta) {
+    var x = 0; 
+    var r = 10;
+    for(var a = 0; a < Math.PI*2; a+=Math.PI/4) {
+      x = this.x + r * Math.cos(a)
+      z = this.z + r * Math.sin(a)
+      store.particles.portalMagic(x, store.maps.ground, z);
+    }
+  }
 }
-Portal.prototype = new Obj; 
-Portal.prototype.constructor = Portal;
 
-// Painkillers
-function PainKillers() {
-    Obj.call(this);
+class PainKillers extends Obj {
+  constructor() {
+    super();
     this.base_type = "object";
     this.obj_type = "painkillers";
     this.alive = true;
     this.light = 0;
     this.taken = false;
-
-    PainKillers.prototype.grab = function (store, mesh_id) {
-        if(!this.taken) {
-            store.sounds.PlaySound(store, "painkillers", this.chunk.mesh.position, 250);
-            store.removeFromCD(this.chunk.mesh);
-            store.player.bleed_timer += 60; // add 60 sec.
-            this.taken = true;
-        }
-    };
-
-    PainKillers.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel(store, "painkillers", 0.2, this);
-        this.chunk.owner = this;
-        this.chunk.mesh.owner = this;
-        this.chunk.mesh.visible = true;
-        this.chunk.mesh.position.set(x, store.maps.ground+1, z);
-        store.addToCD(this.chunk.mesh);
-    };
-
-    PainKillers.prototype.update = function(store, time, delta) {
-        Obj.prototype.update.call(this, store, time, delta);
-        if(!this.taken) {
-            this.chunk.mesh.rotation.y += Math.sin(delta);
-            this.chunk.mesh.position.y = store.maps.ground+6 + Math.sin(time * 2.5);
-        } else {
-            this.chunk.mesh.position.y += 0.5;
-            if(this.chunk.mesh.position.y > store.maps.ground + 30) {
-                this.chunk.virtual_explode(store, this.chunk.mesh.position);
-                this.chunk.destroy(store);
-                this.alive = false;
-            }
-        }
-    };
+  }
+  // TODO: Grabbable.
+  grab(store, mesh_id) {
+    if(!this.taken) {
+      store.sounds.PlaySound(store, "painkillers", this.chunk.mesh.position, 250);
+      store.removeFromCD(this.chunk.mesh);
+      store.player.bleed_timer += 60; // add 60 sec.
+      this.taken = true;
+    }
+  }
+  create(store, x, y, z) {
+    this.chunk = store.modelLoader.getModel(store, "painkillers", 0.2, this);
+    this.chunk.owner = this;
+    this.chunk.mesh.owner = this;
+    this.chunk.mesh.visible = true;
+    this.chunk.mesh.position.set(x, store.maps.ground+1, z);
+    store.addToCD(this.chunk.mesh);
+  }
+  update(store, time, delta) {
+    super.update(store, time, delta);
+    if(!this.taken) {
+      this.chunk.mesh.rotation.y += Math.sin(delta);
+      this.chunk.mesh.position.y = store.maps.ground+6 + Math.sin(time * 2.5);
+    } else {
+      this.chunk.mesh.position.y += 0.5;
+      if(this.chunk.mesh.position.y > store.maps.ground + 30) {
+        this.chunk.virtual_explode(store, this.chunk.mesh.position);
+        this.chunk.destroy(store);
+        this.alive = false;
+      }
+    }
+  }
 }
-PainKillers.prototype = new Obj; 
-PainKillers.prototype.constructor = PainKillers;
 
-function PaperPoliceCar() {
-    Obj.call(this);
+class PaperPoliceCar extends Obj {
+  constructor() {
+    super();
     this.base_type = "object";
     this.type = "paperpolicecar";
     this.alive = true;
-
-    PaperPoliceCar.prototype.hit = function(store, dmg, dir, type, pos) {
-        this.chunk.hit(store, dir, dmg, pos);
-    };
-
-    PaperPoliceCar.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel(store, "paperpolicecar", 0.6, this);
-        this.chunk.owner = this;
-        this.chunk.mesh.visible = true;
-        this.chunk.mesh.position.set(x, store.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
-    };
+  }
+  hit(store, dmg, dir, type, pos) {
+    this.chunk.hit(store, dir, dmg, pos);
+  }
+  create(store, x, y, z) {
+    this.chunk = store.modelLoader.getModel(store, "paperpolicecar", 0.6, this);
+    this.chunk.owner = this;
+    this.chunk.mesh.visible = true;
+    this.chunk.mesh.position.set(x, store.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
+  }
 }
-PaperPoliceCar.prototype = new Obj; 
-PaperPoliceCar.prototype.constructor = PaperPoliceCar;
 
-function PaperAgent() {
-    Obj.call(this);
+class PaperAgent extends Obj {
+  constructor() {
+    super();
     this.base_type = "object";
     this.type = "paperagent";
     this.alive = true;
-
-    PaperAgent.prototype.hit = function(store, dmg, dir, type, pos) {
-        this.chunk.hit(store, dir, dmg, pos);
-    };
-
-    PaperAgent.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel(store, "paperagent", 0.2, this);
-        this.chunk.owner = this;
-        this.chunk.mesh.visible = true;
-        this.chunk.mesh.position.set(x, store.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
-    };
+  }
+  hit(store, dmg, dir, type, pos) {
+    this.chunk.hit(store, dir, dmg, pos);
+  }
+  create(store, x, y, z) {
+    this.chunk = store.modelLoader.getModel(store, "paperagent", 0.2, this);
+    this.chunk.owner = this;
+    this.chunk.mesh.visible = true;
+    this.chunk.mesh.position.set(x, store.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
+  }
 }
-PaperAgent.prototype = new Obj; 
-PaperAgent.prototype.constructor = PaperAgent;
 
-function Tree() {
-    Obj.call(this);
+class Tree extends Obj {
+  constructor() {
+    super();
     this.base_type = "object";
     this.type = "tree";
     this.alive = true;
     this.light = 0;
-
-    Tree.prototype.hit = function(store, dmg, dir, type, pos) {
-        this.chunk.hit(store, dir, dmg, pos);
-    };
-
-    Tree.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel(store, "tree", 0.5, this);
-        this.chunk.owner = this;
-        this.chunk.mesh.visible = true;
-        this.chunk.mesh.position.set(x, store.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
-    };
+  }
+  hit(store, dmg, dir, type, pos) {
+    this.chunk.hit(store, dir, dmg, pos);
+  }
+  create(store, x, y, z) {
+    this.chunk = store.modelLoader.getModel(store, "tree", 0.5, this);
+    this.chunk.owner = this;
+    this.chunk.mesh.visible = true;
+    this.chunk.mesh.position.set(x, store.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
+  }
 }
-Tree.prototype = new Obj; 
-Tree.prototype.constructor = Tree;
 
-function StreetLamp() {
-    Obj.call(this);
+class StreetLamp extends Obj {
+  constructor() {
+    super();
     this.base_type = "object";
     this.obj_type = "street_lamp";
     this.alive = true;
     this.light = 0;
+  }
+  hit(store, dmg, dir, type, pos) {
+    if(this.chunk.hit(store, dir, dmg, pos)) {
+      if(type != "missile" && type != "grenade") {
+        store.sounds.PlaySound(store, "bullet_metal", pos, 300);
+      }
+      if (this.chunk.health < 60) {
+        this.alive = false;
+      }
+      return true;
+    }
+    return false;
+  }
+  create(store, x, y, z) {
+    this.chunk = store.modelLoader.getModel(store, "streetlamp", 0.4, this);
+    this.chunk.owner = this;
+    this.chunk.mesh.visible = true;
 
-    StreetLamp.prototype.hit = function(store, dmg, dir, type, pos) {
-        if(this.chunk.hit(store, dir, dmg, pos)) {
-            if(type != "missile" && type != "grenade") {
-                store.sounds.PlaySound(store, "bullet_metal", pos, 300);
-            }
-            if (this.chunk.health < 60) {
-                this.alive = false;
-            }
-            return true;
-        }
-        return false;
-    };
+    // Check rotation depending on wall
+    this.chunk.mesh.position.set(x, store.maps.ground+10, z);
 
-    StreetLamp.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel(store, "streetlamp", 0.4, this);
-        this.chunk.owner = this;
-        this.chunk.mesh.visible = true;
+    var res = store.world.checkExists(store, new THREE.Vector3(x-1,store.maps.ground+10,z));
+    if(res.length > 0) {
+      //     this.chunk.mesh.rotation.y = -Math.PI*2;
+      this.chunk.mesh.position.x += 10;
+      //    this.light.position.set(7, 18, 0);
+    }
+    res = store.world.checkExists(store, new THREE.Vector3(x,store.maps.ground+10,z-1));
 
-        // Check rotation depending on wall
-        this.chunk.mesh.position.set(x, store.maps.ground+10, z);
+    for(var i = 0; i < 10; i++) {
+      res = store.world.checkExists(store, new THREE.Vector3(x+i,store.maps.ground+10,z));
+      if(res.length > 0) {
+        this.chunk.mesh.position.x -= 10;
+        break;
+      }
+    }
+  }
+  update(store, time, delta) {
 
-        var res = store.world.checkExists(store, new THREE.Vector3(x-1,store.maps.ground+10,z));
-        if(res.length > 0) {
-       //     this.chunk.mesh.rotation.y = -Math.PI*2;
-            this.chunk.mesh.position.x += 10;
-        //    this.light.position.set(7, 18, 0);
-        }
-        res = store.world.checkExists(store, new THREE.Vector3(x,store.maps.ground+10,z-1));
-        
-        for(var i = 0; i < 10; i++) {
-            res = store.world.checkExists(store, new THREE.Vector3(x+i,store.maps.ground+10,z));
-            if(res.length > 0) {
-                this.chunk.mesh.position.x -= 10;
-                break;
-            }
-        }
-    };
-
-    StreetLamp.prototype.update = function(store, time, delta) {};
+  }
 }
-StreetLamp.prototype = new Obj; 
-StreetLamp.prototype.constructor = StreetLamp;
 
-// UfoSign
-function UfoSign() {
-    Obj.call(this);
+class UfoSign extends Obj {
+  constructor() {
+    super();
     this.base_type = "object";
     this.type = "radiation_sign";
     this.alive = true;
     this.light = 0;
+  }
+  // TODO: This *returns*?
+  hit(store, dmg, dir, type, pos) {
+    return this.chunk.hit(store, dir, dmg, pos);
+  }
+  create(store, x, y, z) {
+    this.chunk = store.modelLoader.getModel(store, "ufo_sign", 0.2, this);
+    this.chunk.owner = this;
+    this.chunk.mesh.visible = true;
+    this.chunk.mesh.rotation.y = Math.PI * 0.5;
 
-    UfoSign.prototype.hit = function(store, dmg, dir, type, pos) {
-       return this.chunk.hit(store, dir, dmg, pos);
-    };
+    // Check rotation depending on wall
+    var res = store.world.checkExists(store, new THREE.Vector3(x-1,store.maps.ground+10,z));
+    if(res.length > 0) {
+      this.chunk.mesh.rotation.y = -Math.PI * 0.5;
+    }
+    res = store.world.checkExists(store, new THREE.Vector3(x,store.maps.ground+10,z-1));
+    if(res.length > 0) {
+      this.chunk.mesh.rotation.y = 2*Math.PI;
+    }
+    res = store.world.checkExists(store, new THREE.Vector3(x,store.maps.ground+10,z+2));
+    if(res.length > 0) {
+      this.chunk.mesh.rotation.y = -Math.PI;
+    }
 
-    UfoSign.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel(store, "ufo_sign", 0.2, this);
-        this.chunk.owner = this;
-        this.chunk.mesh.visible = true;
-        this.chunk.mesh.rotation.y = Math.PI * 0.5;
-   //     this.chunk.mesh.rotation.x = -Math.PI;
-        // Check rotation depending on wall
-        var res = store.world.checkExists(store, new THREE.Vector3(x-1,store.maps.ground+10,z));
-        if(res.length > 0) {
-            this.chunk.mesh.rotation.y = -Math.PI * 0.5;
-        }
-        res = store.world.checkExists(store, new THREE.Vector3(x,store.maps.ground+10,z-1));
-        if(res.length > 0) {
-            this.chunk.mesh.rotation.y = 2*Math.PI;
-        }
-        res = store.world.checkExists(store, new THREE.Vector3(x,store.maps.ground+10,z+2));
-        if(res.length > 0) {
-            this.chunk.mesh.rotation.y = -Math.PI;
-        }
-
-        this.chunk.mesh.position.set(x, store.maps.ground+10, z);
-    };
+    this.chunk.mesh.position.set(x, store.maps.ground+10, z);
+  }
 }
-UfoSign.prototype = new Obj; 
-UfoSign.prototype.constructor = UfoSign;
 
-// RadiationSign
-function RadiationSign() {
-    Obj.call(this);
+class RadiationSign extends Obj {
+  constructor() {
+    super();
     this.base_type = "object";
     this.type = "radiation_sign";
     this.alive = true;
     this.light = 0;
+  }
+  hit(store, dmg, dir, type, pos) {
+    this.chunk.hit(store, dir, dmg, pos);
+  }
+  create(store, x, y, z) {
+    this.chunk = store.modelLoader.getModel(store, "radiation_sign", 0.2, this);
+    this.chunk.owner = this;
+    this.chunk.mesh.visible = true;
+    this.chunk.mesh.rotation.y = Math.PI * 0.5;
+    this.chunk.mesh.rotation.x = -Math.PI;
+    // Check rotation depending on wall
+    var res = store.world.checkExists(store, new THREE.Vector3(x-1,store.maps.ground+10,z));
+    if(res.length > 0) {
+      this.chunk.mesh.rotation.y = -Math.PI * 0.5;
+    }
+    res = store.world.checkExists(store, new THREE.Vector3(x,store.maps.ground+10,z-1));
+    if(res.length > 0) {
+      this.chunk.mesh.rotation.y = 2*Math.PI;
+    }
+    res = store.world.checkExists(store, new THREE.Vector3(x,store.maps.ground+10,z+2));
+    if(res.length > 0) {
+      this.chunk.mesh.rotation.y = Math.PI;
+    }
 
-    RadiationSign.prototype.hit = function(store, dmg, dir, type, pos) {
-        this.chunk.hit(store, dir, dmg, pos);
-    };
-
-    RadiationSign.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel(store, "radiation_sign", 0.2, this);
-        this.chunk.owner = this;
-        this.chunk.mesh.visible = true;
-        this.chunk.mesh.rotation.y = Math.PI * 0.5;
-        this.chunk.mesh.rotation.x = -Math.PI;
-        // Check rotation depending on wall
-        var res = store.world.checkExists(store, new THREE.Vector3(x-1,store.maps.ground+10,z));
-        if(res.length > 0) {
-            this.chunk.mesh.rotation.y = -Math.PI * 0.5;
-        }
-        res = store.world.checkExists(store, new THREE.Vector3(x,store.maps.ground+10,z-1));
-        if(res.length > 0) {
-            this.chunk.mesh.rotation.y = 2*Math.PI;
-        }
-        res = store.world.checkExists(store, new THREE.Vector3(x,store.maps.ground+10,z+2));
-        if(res.length > 0) {
-            this.chunk.mesh.rotation.y = Math.PI;
-        }
-
-        this.chunk.mesh.position.set(x, store.maps.ground+10, z);
-    };
+    this.chunk.mesh.position.set(x, store.maps.ground+10, z);
+  }
 }
-RadiationSign.prototype = new Obj; 
-RadiationSign.prototype.constructor = RadiationSign;
 
-// Dead hearty
-function DeadHearty() {
-    Obj.call(this);
+class DeadHearty extends Obj {
+  constructor() {
+    super();
     this.base_type = "object";
     this.type = "dead_hearty";
     this.alive = true;
     this.light = 0;
     this.radioactive = true;
     this.radioactive_leak = true;
-
-    DeadHearty.prototype.hit = function(store, dmg, dir, type, pos) {
-        this.chunk.hit(store, dir, dmg, pos);
-        this.alive = false;
-    };
-
-    DeadHearty.prototype.update = function(store, time, delta) {
-        var pos = this.chunk.mesh.position;
-        store.particles.radiation(pos.x+(2-Math.random()*4), pos.y, pos.z+(2-Math.random()*4));
-        if(Math.random() > 0.9) {
-            this.light.intensity = (2-Math.random());
-        }
-    };
-
-    DeadHearty.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel(store, "dead_hearty", 1, this);
-        this.chunk.owner = this;
-        this.chunk.mesh.visible = true;
-        this.chunk.mesh.rotation.y = Math.random()*Math.PI*2;
-        this.chunk.mesh.position.set(x, store.maps.ground+1, z);
-        this.light = this.green_light.clone();
-        this.light.position.set(0, 3, 0);
-        this.chunk.mesh.add(this.light);
-    };
+  }
+  hit(store, dmg, dir, type, pos) {
+    this.chunk.hit(store, dir, dmg, pos);
+    this.alive = false;
+  }
+  update(store, time, delta) {
+    var pos = this.chunk.mesh.position;
+    store.particles.radiation(pos.x+(2-Math.random()*4), pos.y, pos.z+(2-Math.random()*4));
+    if(Math.random() > 0.9) {
+      this.light.intensity = (2-Math.random());
+    }
+  }
+  create(store, x, y, z) {
+    this.chunk = store.modelLoader.getModel(store, "dead_hearty", 1, this);
+    this.chunk.owner = this;
+    this.chunk.mesh.visible = true;
+    this.chunk.mesh.rotation.y = Math.random()*Math.PI*2;
+    this.chunk.mesh.position.set(x, store.maps.ground+1, z);
+    this.light = this.green_light.clone();
+    this.light.position.set(0, 3, 0);
+    this.chunk.mesh.add(this.light);
+  }
 }
-DeadHearty.prototype = new Obj; 
-DeadHearty.prototype.constructor = DeadHearty;
 
-function BarrelFire() {
-    Obj.call(this);
+class BarrelFire extends Obj {
+  constructor() {
+    super();
     this.base_type = "object";
     this.type = "barrel_fire";
     this.alive = true;
     this.light = 0;
-
-    BarrelFire.prototype.hit = function(store, dmg, dir, type, pos) {
-        if(this.chunk.hit(store, dir, dmg, pos)) {
-            if(type != "missile" && type != "grenade") {
-                store.sounds.PlaySound(store, "bullet_metal", pos, 300);
-            }
-            this.alive = false;
-            return true;
-        } 
-        return false;
-    };
-
-    BarrelFire.prototype.update = function(store, time, delta) {
-        var pos = this.chunk.mesh.position;
-        store.particles.fire(store, pos.x+(4-Math.random()*8), store.maps.ground+6+this.chunk.to_y*2, pos.z+(4-Math.random()*8));
-        if(Math.random() > 0.9) {
-            this.light.intensity = 2-Math.random()*0.1;
-            this.light.distance = (20+Math.random()*5);
-        }
-    };
-
-    BarrelFire.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel(store, "barrel_fire", 0.5, this);
-        this.chunk.mesh.position.set(x, store.maps.ground+this.chunk.to_y*(1/this.chunk.blockSize), z);
-        this.light = this.yellow_light.clone();
-        this.light.position.set(0, 10, 0);
-        this.chunk.mesh.add(this.light);
-    };
+  }
+  hit(store, dmg, dir, type, pos) {
+    if(this.chunk.hit(store, dir, dmg, pos)) {
+      if(type != "missile" && type != "grenade") {
+        store.sounds.PlaySound(store, "bullet_metal", pos, 300);
+      }
+      this.alive = false;
+      return true;
+    } 
+    return false;
+  }
+  update(store, time, delta) {
+    var pos = this.chunk.mesh.position;
+    store.particles.fire(store, pos.x+(4-Math.random()*8), store.maps.ground+6+this.chunk.to_y*2, pos.z+(4-Math.random()*8));
+    if(Math.random() > 0.9) {
+      this.light.intensity = 2-Math.random()*0.1;
+      this.light.distance = (20+Math.random()*5);
+    }
+  }
+  create(store, x, y, z) {
+    this.chunk = store.modelLoader.getModel(store, "barrel_fire", 0.5, this);
+    this.chunk.mesh.position.set(x, store.maps.ground+this.chunk.to_y*(1/this.chunk.blockSize), z);
+    this.light = this.yellow_light.clone();
+    this.light.position.set(0, 10, 0);
+    this.chunk.mesh.add(this.light);
+  }
 }
-BarrelFire.prototype = new Obj; 
-BarrelFire.prototype.constructor = BarrelFire;
 
-function Barrel() {
-    Obj.call(this);
+class Barrel extends Obj {
+  constructor() {
+    super();
     this.base_type = "object";
     this.type = "barrel";
     this.alive = true;
     this.light = 0;
     this.radioactive = true;
     this.radioactive_leak = true;
-
-    Barrel.prototype.hit = function(store, dmg, dir, type, pos) {
-        if(this.chunk.hit(store, dir, dmg, pos)) {
-            if(type != "missile" && type != "grenade") {
-                store.sounds.PlaySound(store, "bullet_metal", pos, 300);
-            }
-            this.alive = false;
-            return true;
-        } 
-        return false;
-    };
-
-    Barrel.prototype.update = function(store, time, delta) {
-        var pos = this.chunk.mesh.position;
-        store.particles.radiation(pos.x+(1-Math.random()*2), store.maps.ground+4+this.chunk.to_y*2, pos.z+(1-Math.random()*2));
-        if(Math.random() > 0.9) {
-            this.light.intensity = 2-Math.random()*0.1;
-            this.light.distance = (20+Math.random()*5);
-        }
-    };
-
-    Barrel.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel(store, "barrel", 0.5, this);
-        //this.chunk.owner = this;
-        //this.chunk.mesh.visible = true;
-      //  this.chunk.mesh.rotation.y = Math.random()*Math.PI*2;
-       // this.chunk.mesh.rotation.y = -Math.PI;
-        this.chunk.mesh.position.set(x, store.maps.ground+this.chunk.to_y*(1/this.chunk.blockSize), z);
-        this.light = this.green_light.clone();
-        this.light.position.set(0, 10, 0);
-        this.chunk.mesh.add(this.light);
-    };
+  }
+  hit(store, dmg, dir, type, pos) {
+    if(this.chunk.hit(store, dir, dmg, pos)) {
+      if(type != "missile" && type != "grenade") {
+        store.sounds.PlaySound(store, "bullet_metal", pos, 300);
+      }
+      this.alive = false;
+      return true;
+    } 
+    return false;
+  }
+  update(store, time, delta) {
+    var pos = this.chunk.mesh.position;
+    store.particles.radiation(pos.x+(1-Math.random()*2), store.maps.ground+4+this.chunk.to_y*2, pos.z+(1-Math.random()*2));
+    if(Math.random() > 0.9) {
+      this.light.intensity = 2-Math.random()*0.1;
+      this.light.distance = (20+Math.random()*5);
+    }
+  }
+  create(store, x, y, z) {
+    this.chunk = store.modelLoader.getModel(store, "barrel", 0.5, this);
+    this.chunk.mesh.position.set(x, store.maps.ground+this.chunk.to_y*(1/this.chunk.blockSize), z);
+    this.light = this.green_light.clone();
+    this.light.position.set(0, 10, 0);
+    this.chunk.mesh.add(this.light);
+  }
 }
-Barrel.prototype = new Obj; 
-Barrel.prototype.constructor = Barrel;
 
-function FBIHQ() {
-    Obj.call(this);
+class FBIHQ extends Obj {
+  constructor() {
+    super();
     this.base_type = "object";
     this.type = "fbihq";
     this.alive = true;
-
-    FBIHQ.prototype.hit = function(store, dmg, dir, type, pos) {
-        this.chunk.hit(store, dir, dmg, pos);
-    };
-
-    FBIHQ.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel(store, "fbihq", 1, this);
-        //this.chunk.mesh.rotation.y = -Math.PI;
-        this.chunk.mesh.position.set(x, store.maps.ground+this.chunk.chunk_size_y*this.chunk.blockSize * 0.5, z);
-    };
+  }
+  hit(store, dmg, dir, type, pos) {
+    this.chunk.hit(store, dir, dmg, pos);
+  }
+  create(store, x, y, z) {
+    this.chunk = store.modelLoader.getModel(store, "fbihq", 1, this);
+    this.chunk.mesh.position.set(x, store.maps.ground+this.chunk.chunk_size_y*this.chunk.blockSize * 0.5, z);
+  }
 }
-FBIHQ.prototype = new Obj; 
-FBIHQ.prototype.constructor = FBIHQ;
 
-// Spiderweb
-function SpiderWeb() {
-    Obj.call(this);
+class SpiderWeb extends Obj {
+  constructor() {
+    super();
     this.base_type = "object";
     this.type = "spiderweb";
     this.alive = true;
     this.light = 0;
-
-    SpiderWeb.prototype.hit = function(store, dmg, dir, type) {
-        this.chunk.explode(store, dir, dmg);
-        this.alive = false;
-    };
-
-    SpiderWeb.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel(store, "spiderweb", 0.2, this);
-        this.chunk.owner = this;
-        this.chunk.mesh.visible = true;
-        this.chunk.mesh.position.set(x, store.maps.ground+1, z);
-    };
+  }
+  hit(store, dmg, dir, type) {
+    this.chunk.explode(store, dir, dmg);
+    this.alive = false;
+  }
+  create(store, x, y, z) {
+    this.chunk = store.modelLoader.getModel(store, "spiderweb", 0.2, this);
+    this.chunk.owner = this;
+    this.chunk.mesh.visible = true;
+    this.chunk.mesh.position.set(x, store.maps.ground+1, z);
+  }
 }
-SpiderWeb.prototype = new Obj; 
-SpiderWeb.prototype.constructor = SpiderWeb;
 
-// Ammo crate 
-function Lamp1() {
-    Obj.call(this);
+class Lamp1 extends Obj {
+  constructor() {
+    super();
     this.base_type = "object";
     this.type = "lamp1";
     this.alive = true;
     this.light = 0;
-
-    Lamp1.prototype.hit = function(store, dmg, dir, type, pos) {
-        this.chunk.hit(store, dir, dmg, pos)
-        if(this.light.intensity > 0) {
-            this.light.intensity -= 0.5*dmg;
-            if(this.light.intensity < 0) {
-                this.light.intensity = 0;
-            }
-        }
-        if (this.chunk.health < 60) {
-            this.alive = false;
-        }
-    };
-
-    Lamp1.prototype.create = function(store, x, y, z) {
-        this.chunk = store.modelLoader.getModel(store, "lamp1", 1, this);
-        this.chunk.type = "object";
-        this.chunk.owner = this;
-        this.chunk.mesh.visible = true;
-        this.chunk.mesh.position.set(x, store.maps.ground+7, z);
-        this.light = this.yellow_light.clone();
-        this.light.position.set(0, 12, 0);
-        this.chunk.mesh.add(this.light);
-    };
-
-    Lamp1.prototype.update = function(store, time, delta) {
-        if (Math.random() < this.light.intensity) {
-            store.particles_box.fire(
-                store,
-                this.chunk.mesh.position.x,
-                this.chunk.mesh.position.y + 8,
-                this.chunk.mesh.position.z
-            );
-        }
-    };
+  }
+  hit(store, dmg, dir, type, pos) {
+    this.chunk.hit(store, dir, dmg, pos)
+    if(this.light.intensity > 0) {
+      this.light.intensity -= 0.5*dmg;
+      if(this.light.intensity < 0) {
+        this.light.intensity = 0;
+      }
+    }
+    if (this.chunk.health < 60) {
+      this.alive = false;
+    }
+  }
+  create(store, x, y, z) {
+    this.chunk = store.modelLoader.getModel(store, "lamp1", 1, this);
+    this.chunk.type = "object";
+    this.chunk.owner = this;
+    this.chunk.mesh.visible = true;
+    this.chunk.mesh.position.set(x, store.maps.ground+7, z);
+    this.light = this.yellow_light.clone();
+    this.light.position.set(0, 12, 0);
+    this.chunk.mesh.add(this.light);
+  }
+  update(store, time, delta) {
+    if (Math.random() < this.light.intensity) {
+      store.particles_box.fire(
+        store,
+        this.chunk.mesh.position.x,
+        this.chunk.mesh.position.y + 8,
+        this.chunk.mesh.position.z
+      );
+    }
+  }
 }
-Lamp1.prototype = new Obj; 
-Lamp1.prototype.constructor = Lamp1;
 
-// Ammo crate 
-function AmmoCrate() {
-    Obj.call(this);
+class AmmoCrate extends Obj {
+  constructor() {
+    super();
     this.sides = [];
-
-    AmmoCrate.prototype.create = function(store) {
-        var up = store.modelLoader.getModel(store, "crate", 1, this);
-        up.mesh.visible = false;
-        up.mesh.rotation.set(Math.PI, 0, 0);
-        up.mesh.position.set(200, 8, 300);
-
-    };
+  }
+  create(store) {
+    var up = store.modelLoader.getModel(store, "crate", 1, this);
+    up.mesh.visible = false;
+    up.mesh.rotation.set(Math.PI, 0, 0);
+    up.mesh.position.set(200, 8, 300);
+  }
 }
-AmmoCrate.prototype = new Obj; 
-AmmoCrate.prototype.constructor = AmmoCrate;
 
-// Ammo shell 
-function AmmoSniper() {
-    Obj.call(this);
-
-    AmmoSniper.prototype.create = function(store) {
-        Obj.prototype.create.call(this, store, "ammo", 0.02);
-        for(var i = 0; i < this.max; i++) {
-            var c = this.chunk.mesh.clone();
-            c.visible = false;
-            store.scene.add(c);
-            this.active.push(c);
-        }
-    };
-
-    AmmoSniper.prototype.add = function(store, x,y,z) {
-        if(this.ptr++ >= this.max - 1) {
-            this.ptr = 0;
-        }
-        store.particles.empty_shell(x,y,z, this.active[this.ptr]);
-    };
+class AmmoSniper extends Obj {
+  constructor() {
+    super();
+  }
+  create(store) {
+    super.create(store, "ammo", 0.02);
+    for(var i = 0; i < this.max; i++) {
+      var c = this.chunk.mesh.clone();
+      c.visible = false;
+      store.scene.add(c);
+      this.active.push(c);
+    }
+  }
+  add(store, x,y,z) {
+    if(this.ptr++ >= this.max - 1) {
+      this.ptr = 0;
+    }
+    store.particles.empty_shell(x,y,z, this.active[this.ptr]);
+  }
 }
-AmmoSniper.prototype = new Obj; 
-AmmoSniper.prototype.constructor = AmmoSniper;
 
-// Ammo shell
-function AmmoP90() {
-    Obj.call(this);
-
-    AmmoP90.prototype.create = function(store) {
-        Obj.prototype.create.call(this, store, "ammo", 0.009);
-        for(var i = 0; i < this.max; i++) {
-            var c = this.chunk.mesh.clone();
-            c.visible = false;
-            store.scene.add(c);
-            this.active.push(c);
-
-        }
-    };
-
-    AmmoP90.prototype.add = function(store, x,y,z) {
-        if(this.ptr == this.max - 1) {
-            this.ptr = 0;
-        }
-        this.ptr++;
-        store.particles.empty_shell(x,y,z, this.active[this.ptr]);
-    };
+class AmmoP90 extends Obj {
+  constructor() {
+    super();
+  }
+  create(store) {
+    super.create(store, "ammo", 0.009);
+    for(var i = 0; i < this.max; i++) {
+      var c = this.chunk.mesh.clone();
+      c.visible = false;
+      store.scene.add(c);
+      this.active.push(c);
+    }
+  }
+  add(store, x,y,z) {
+    if(this.ptr == this.max - 1) {
+      this.ptr = 0;
+    }
+    this.ptr++;
+    store.particles.empty_shell(x,y,z, this.active[this.ptr]);
+  }
 }
-AmmoP90.prototype = new Obj; 
-AmmoP90.prototype.constructor = AmmoP90;
 
-// Ammo shell
-function Ammo() {
-    Obj.call(this);
-
-    Ammo.prototype.create = function(store) {
-        Obj.prototype.create.call(this, store, "ammo", 0.015);
-        for(var i = 0; i < this.max; i++) {
-            var c = this.chunk.mesh.clone();
-            c.visible = false;
-            store.scene.add(c);
-            this.active.push(c);
-        }
-    };
-
-    Ammo.prototype.add = function(store, x,y,z) {
-        if(this.ptr == this.max - 1) {
-            this.ptr = 0;
-        }
-        this.ptr++;
-        store.particles.empty_shell(x,y,z, this.active[this.ptr]);
-    };
+class Ammo extends Obj {
+  constructor() {
+    super();
+  }
+  create(store) {
+    super.create(store, "ammo", 0.015);
+    for(var i = 0; i < this.max; i++) {
+      var c = this.chunk.mesh.clone();
+      c.visible = false;
+      store.scene.add(c);
+      this.active.push(c);
+    }
+  }
+  add(store, x,y,z) {
+    if(this.ptr == this.max - 1) {
+      this.ptr = 0;
+    }
+    this.ptr++;
+    store.particles.empty_shell(x,y,z, this.active[this.ptr]);
+  }
 }
-Ammo.prototype = new Obj; 
-Ammo.prototype.constructor = Ammo;
 
-// Shotgun shell
-function Shell(store) {
-    Obj.call(this);
-
-    Shell.prototype.create = function(store) {
-        Obj.prototype.create.call(this, store, "shell", 0.025);
-        for(var i = 0; i < this.max; i++) {
-            var c = this.chunk.mesh.clone();
-            c.visible = false;
-            store.scene.add(c);
-            this.active.push(c);
-        }
-    };
-
-    Shell.prototype.add = function(store, x,y,z) {
-        if(this.ptr++ >= this.max - 1) {
-            this.ptr = 0;
-        }
-        store.particles.empty_shell(x,y,z, this.active[this.ptr]);
-    };
+class Shell extends Obj {
+  constructor() {
+    super();
+  }
+  create(store) {
+    super.create(store, "shell", 0.025);
+    for(var i = 0; i < this.max; i++) {
+      var c = this.chunk.mesh.clone();
+      c.visible = false;
+      store.scene.add(c);
+      this.active.push(c);
+    }
+  }
+  add(store, x,y,z) {
+    if(this.ptr++ >= this.max - 1) {
+      this.ptr = 0;
+    }
+    store.particles.empty_shell(x,y,z, this.active[this.ptr]);
+  }
 }
-Shell.prototype = new Obj; 
-Shell.prototype.constructor = Shell;
 
-// Heart
-function Heart() {
-    Obj.call(this);
+class Heart extends Obj {
+  constructor() {
+    super();
     this.obj_type = "heart";
-
-    Heart.prototype.create = function(store) {
-        Obj.prototype.create.call(this, store, "heart", 0.2);
-    };
-
-    Heart.prototype.grab = function (store, mesh_id) {
-        for(var i = 0; i < this.active.length; i++) {
-            if(this.active[i].id == mesh_id) {
-                store.sounds.PlaySound(store, "take_heart", this.active[i].position, 250);
-                store.removeFromCD(this.active[i]);
-                this.active[i].alive = false;
-            }
+  }
+  create(store) {
+    super.create(store, "heart", 0.2);
+  }
+  grab(store, mesh_id) {
+    for(var i = 0; i < this.active.length; i++) {
+      if(this.active[i].id == mesh_id) {
+        store.sounds.PlaySound(store, "take_heart", this.active[i].position, 250);
+        store.removeFromCD(this.active[i]);
+        this.active[i].alive = false;
+      }
+    }
+  }
+  update(store, time, delta) {
+    super.update(store, time, delta);
+    for(var i = 0; i < this.active.length; i++) {
+      if (this.active[i].alive) {
+        this.active[i].rotation.y += Math.sin(delta);
+        this.active[i].position.y = store.maps.ground+6 + Math.sin(time * 2.5);
+        if(Math.random() > 0.5) {
+          store.particles.blueMagic(
+            this.active[i].position.x,
+            this.active[i].position.y,
+            this.active[i].position.z
+          );
         }
-    };
-
-    Heart.prototype.update = function(store, time, delta) {
-        Obj.prototype.update.call(this, store, time, delta);
-        for(var i = 0; i < this.active.length; i++) {
-            if (this.active[i].alive) {
-                this.active[i].rotation.y += Math.sin(delta);
-                this.active[i].position.y = store.maps.ground+6 + Math.sin(time * 2.5);
-                if(Math.random() > 0.5) {
-                    store.particles.blueMagic(
-                                             this.active[i].position.x,
-                                             this.active[i].position.y,
-                                             this.active[i].position.z
-                    );
-                }
-            } else {
-                if (this.active[i].position.y < store.maps.ground+20) {
-                    //this.active[i].rotation.y += time*10;
-                    this.active[i].position.y += 0.3;
-                } else {
-                    this.active[i].rotation.y = 0;
-                    this.chunk.virtual_explode(store, this.active[i].position);
-                    store.scene.remove(this.active[i]);
-                    this.active.splice(i, 1);
-                }
-            }
+      } else {
+        if (this.active[i].position.y < store.maps.ground+20) {
+          //this.active[i].rotation.y += time*10;
+          this.active[i].position.y += 0.3;
+        } else {
+          this.active[i].rotation.y = 0;
+          this.chunk.virtual_explode(store, this.active[i].position);
+          store.scene.remove(this.active[i]);
+          this.active.splice(i, 1);
         }
-    };
-
-    Heart.prototype.add = function(store, x,y,z) {
-        var m = this.chunk.mesh.clone();
-        store.scene.add(m);
-        m.position.set(x,y,z);
-        m.visible = true;
-        this.active.push(m);
-        m.alive = true;
-        m.owner = this;
-        var l1 = this.red_light.clone();
-        var l2 = this.red_light.clone();
-        m.add(l1);
-        m.add(l2);
-        l1.position.y = 2;
-        l1.position.z = -2;
-        l2.position.y = 2;
-        l2.position.z = 2;
-        store.addToCD(m);
-    };
+      }
+    }
+  }
+  add(store, x,y,z) {
+    var m = this.chunk.mesh.clone();
+    store.scene.add(m);
+    m.position.set(x,y,z);
+    m.visible = true;
+    this.active.push(m);
+    m.alive = true;
+    m.owner = this;
+    var l1 = this.red_light.clone();
+    var l2 = this.red_light.clone();
+    m.add(l1);
+    m.add(l2);
+    l1.position.y = 2;
+    l1.position.z = -2;
+    l2.position.y = 2;
+    l2.position.z = 2;
+    store.addToCD(m);
+  }
 }
-Heart.prototype = new Obj; 
-Heart.prototype.constructor = Heart;
-
 
 function ParticlePool(size, type) {
     this.particles = [];
