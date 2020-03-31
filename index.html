@@ -43,6 +43,13 @@ p {
 <script src="lib/THREEx.KeyboardState.js"></script>
 
 <script src="dist/bundle.js"></script>
+<script type="text/javascript">
+function LockPointer() {
+  var e = document.body;
+  e.requestPointerLock = e.requestPointerLock || e.mozRequestPointerLock || e.webkitRequestPointerLock;
+  e.requestPointerLock();
+}
+</script>
 
 <div id="info" style="color: #FFFFFF; margin-top: 0px; position: absolute; z-index:100;">
     <span>Switch Weapon: <b style="color: #FF0000;">F</b> Drop Weapon: <b style="color: #FF0000;">E</b> Walk: <b style="color: #ff0000;">WASD (+mouse)</b> Flashlight On/Off: <b style="color: #FF0000;">T/R</b> </span>

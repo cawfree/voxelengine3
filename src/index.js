@@ -5118,18 +5118,6 @@ function loadImageFile(file, callback) {
     }
 }
 
-function LockPointer() {
-    var e = document.body;
-    //var e = document.getElementById('container');
-    e.requestPointerLock = e.requestPointerLock ||
-        e.mozRequestPointerLock ||
-        e.webkitRequestPointerLock;
-
-    e.requestPointerLock();
-}
-
-window.LockPointer = LockPointer;
-
 class VoxelData {
   constructor(buffer, i) {
     this.x = buffer[i++] & 0xFF;
