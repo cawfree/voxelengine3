@@ -1025,16 +1025,7 @@ class Player extends Char {
     if (this.keyboard.pressed("F")) {
       this.shiftWeapon(store);
     }
-     //   if(this.moving && !this.footsteps) {
-     //       store.sounds.PlaySound("footsteps", this.chunk.mesh.position, 300);
-     //       this.footsteps = true;
-     //   }
-     //   if(!this.moving && this.footsteps) {
-     //       store.sounds.StopSound("footsteps");
-     //       this.footsteps = false;
-     //   }
-
-    }
+  }
 }
 
 // TODO: Okay, so this isn't really a class, it's some weird mutatable object.
@@ -2151,10 +2142,8 @@ function Chunk(x, y, z, cx, cy, cz, id, bs, type) {
 
 (!Detector.webgl) && Detector.addGetWebGLMessage();
 
-//////////////////////////////////////////////////////////////////////
-// Main class - Where the magic happens
-//////////////////////////////////////////////////////////////////////
-function Main() {
+class Main {
+  constructor() {
     this.renderer = 0;
     this.controls = 0;
     this.camera = 0;
@@ -2178,276 +2167,160 @@ function Main() {
     this.ff_objects = [];
     this.sounds = new SoundLoader();
 
-    // Particle stuff.
     this.box_material = new THREE.MeshPhongMaterial({ color: 0xffffff });
     this.sprite_material = new THREE.SpriteMaterial({ color: 0xffffff });
     this.chunk_material = new THREE.MeshPhongMaterial({ vertexColors: THREE.VertexColors, wireframe: false });
     this.p_light = new THREE.PointLight(0xFFAA00, 1, 10);
- 
-    Main.prototype.init = function() {
-        this.sounds.Add({name: "sniper", file: require("../assets/sounds/sniper.wav.mp3")});
-        this.sounds.Add({name: "take_heart", file: require("../assets/sounds/heart.wav.mp3")});
-        this.sounds.Add({name: "walk1", file: require("../assets/sounds/walk1.wav.mp3")});
-        this.sounds.Add({name: "blood1", file: require("../assets/sounds/blood1.wav.mp3")});
-        this.sounds.Add({name: "blood2", file: require("../assets/sounds/blood2.wav.mp3")});
-        this.sounds.Add({name: "blood3", file: require("../assets/sounds/blood3.wav.mp3")});
-        this.sounds.Add({name: "rocket", file: require("../assets/sounds/rocket_shoot.wav.mp3")});
-        this.sounds.Add({name: "rocket_explode", file: require("../assets/sounds/rocket_explode.wav.mp3")});
-        this.sounds.Add({name: "ak47", file: require("../assets/sounds/ak47.wav.mp3")});
-        this.sounds.Add({name: "p90", file: require("../assets/sounds/p90.wav.mp3")});
-        this.sounds.Add({name: "pistol", file: require("../assets/sounds/pistol.mp3")});
-        this.sounds.Add({name: "grenadelauncher", file: require("../assets/sounds/grenadelauncher.mp3")});
-        this.sounds.Add({name: "shotgun", file: require("../assets/sounds/shotgun_shoot.wav.mp3")});
-        this.sounds.Add({name: "shotgun_reload", file: require("../assets/sounds/shotgun_reload.wav.mp3")});
-        this.sounds.Add({name: "minigun", file: require("../assets/sounds/gunshot1.wav.mp3")});
-        this.sounds.Add({name: "fall", file: require("../assets/sounds/fall.wav.mp3")});
-        this.sounds.Add({name: "fall2", file: require("../assets/sounds/scream.wav.mp3")});
-        this.sounds.Add({name: "footsteps", file: require("../assets/sounds/footsteps.wav.mp3")});
-        this.sounds.Add({name: "heartbeat", file: require("../assets/sounds/heartbeat.wav.mp3")});
-        this.sounds.Add({name: "painkillers", file: require("../assets/sounds/painkillers.wav.mp3")});
-        this.sounds.Add({name: "ambient_horror", file: require("../assets/sounds/ambient_horror.wav.mp3")});
-        this.sounds.Add({name: "ambient_street", file: require("../assets/sounds/ambient_street.mp3")});
-        this.sounds.Add({name: "hit1", file: require("../assets/sounds/hit1.wav.mp3")});
-        this.sounds.Add({name: "hit2", file: require("../assets/sounds/hit2.wav.mp3")});
-        this.sounds.Add({name: "hunt1", file: require("../assets/sounds/kill_you.wav.mp3")});
-        this.sounds.Add({name: "hunt2", file: require("../assets/sounds/take_him.wav.mp3")});
-        this.sounds.Add({name: "ammo_fall", file: require("../assets/sounds/ammo_fall.wav.mp3")});
-        this.sounds.Add({name: "reload", file: require("../assets/sounds/reload.wav.mp3")});
-        this.sounds.Add({name: "bullet_wall", file: require("../assets/sounds/bullet_wall.mp3")});
-        this.sounds.Add({name: "bullet_metal", file: require("../assets/sounds/bullet_metal.mp3")});
-       // this.sounds.Add({name: "haha1", file: "assets/sounds/haha.wav.mp3"});
-       // this.sounds.Add({name: "haha2", file: "assets/sounds/haha2.wav.mp3"});
-       // this.sounds.Add({name: "haha3", file: "assets/sounds/haha3.wav.mp3"});
-        //
-        //var loader = new THREE.TextureLoader();
-        //var that = this;
-        //loader.load(
-        //    'assets/textures/bump.png',
-        //    function (texture) {
-        //        //texture.anisotropy = 4;
-        //        //texture.repeat.set(0.998, 0.998);
-        //        //texture.offset.set(0.001, 0.001);
-        //        //texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-        //        //texture.format = THREE.RGBFormat;
-        //        that.bump_map = new THREE.MeshPhongMaterial({ map: texture,specularMap: texture, vertexColors: THREE.VertexColors, wireframe: false });
-        //    }
-        //);
-        var container = document.getElementById( 'container' );
-        this.scene = new THREE.Scene();
-        this.clock = new THREE.Clock();
-        
-        //// Iosmetric view
-        //var aspect = window.innerWidth / window.innerHeight;
-        //var d = 70;
-        //var aspect = window.innerWidth/window.innerHeight;
-        //this.camera = new THREE.OrthographicCamera( - d * aspect, d * aspect, d, -d, 1, 3000 );
+  }
+  init() {
+    this.sounds.Add({name: "sniper", file: require("../assets/sounds/sniper.wav.mp3")});
+    this.sounds.Add({name: "take_heart", file: require("../assets/sounds/heart.wav.mp3")});
+    this.sounds.Add({name: "walk1", file: require("../assets/sounds/walk1.wav.mp3")});
+    this.sounds.Add({name: "blood1", file: require("../assets/sounds/blood1.wav.mp3")});
+    this.sounds.Add({name: "blood2", file: require("../assets/sounds/blood2.wav.mp3")});
+    this.sounds.Add({name: "blood3", file: require("../assets/sounds/blood3.wav.mp3")});
+    this.sounds.Add({name: "rocket", file: require("../assets/sounds/rocket_shoot.wav.mp3")});
+    this.sounds.Add({name: "rocket_explode", file: require("../assets/sounds/rocket_explode.wav.mp3")});
+    this.sounds.Add({name: "ak47", file: require("../assets/sounds/ak47.wav.mp3")});
+    this.sounds.Add({name: "p90", file: require("../assets/sounds/p90.wav.mp3")});
+    this.sounds.Add({name: "pistol", file: require("../assets/sounds/pistol.mp3")});
+    this.sounds.Add({name: "grenadelauncher", file: require("../assets/sounds/grenadelauncher.mp3")});
+    this.sounds.Add({name: "shotgun", file: require("../assets/sounds/shotgun_shoot.wav.mp3")});
+    this.sounds.Add({name: "shotgun_reload", file: require("../assets/sounds/shotgun_reload.wav.mp3")});
+    this.sounds.Add({name: "minigun", file: require("../assets/sounds/gunshot1.wav.mp3")});
+    this.sounds.Add({name: "fall", file: require("../assets/sounds/fall.wav.mp3")});
+    this.sounds.Add({name: "fall2", file: require("../assets/sounds/scream.wav.mp3")});
+    this.sounds.Add({name: "footsteps", file: require("../assets/sounds/footsteps.wav.mp3")});
+    this.sounds.Add({name: "heartbeat", file: require("../assets/sounds/heartbeat.wav.mp3")});
+    this.sounds.Add({name: "painkillers", file: require("../assets/sounds/painkillers.wav.mp3")});
+    this.sounds.Add({name: "ambient_horror", file: require("../assets/sounds/ambient_horror.wav.mp3")});
+    this.sounds.Add({name: "ambient_street", file: require("../assets/sounds/ambient_street.mp3")});
+    this.sounds.Add({name: "hit1", file: require("../assets/sounds/hit1.wav.mp3")});
+    this.sounds.Add({name: "hit2", file: require("../assets/sounds/hit2.wav.mp3")});
+    this.sounds.Add({name: "hunt1", file: require("../assets/sounds/kill_you.wav.mp3")});
+    this.sounds.Add({name: "hunt2", file: require("../assets/sounds/take_him.wav.mp3")});
+    this.sounds.Add({name: "ammo_fall", file: require("../assets/sounds/ammo_fall.wav.mp3")});
+    this.sounds.Add({name: "reload", file: require("../assets/sounds/reload.wav.mp3")});
+    this.sounds.Add({name: "bullet_wall", file: require("../assets/sounds/bullet_wall.mp3")});
+    this.sounds.Add({name: "bullet_metal", file: require("../assets/sounds/bullet_metal.mp3")});
+    
+    var container = document.getElementById('container');
+    this.scene = new THREE.Scene();
+    this.clock = new THREE.Clock();
 
-        // Perspective View
-        this.camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, this.visible_distance );
-      //
-       // this.camera.applyMatrix( new THREE.Matrix4().makeTranslation( 300, 150, 300 ) );
-       // this.camera.applyMatrix( new THREE.Matrix4().makeRotationX( -0.8 ) );
+    //// Iosmetric view
+    //var aspect = window.innerWidth / window.innerHeight;
+    //var d = 70;
+    //var aspect = window.innerWidth/window.innerHeight;
+    //this.camera = new THREE.OrthographicCamera( - d * aspect, d * aspect, d, -d, 1, 3000 );
 
-        //this.camera.position.set( 200, 300, 700 ); 
+    // Perspective View
+    this.camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, this.visible_distance );
+    this.scene.fog = new THREE.Fog( 0x000000, 180, this.visible_distance );
 
-      //  this.scene.fog = new THREE.FogExp2( 0xFFA1C1, 0.0059 );
-        //this.scene.fog = new THREE.Fog( 0xFFA1C1, 180, this.visible_distance );
-        this.scene.fog = new THREE.Fog( 0x000000, 180, this.visible_distance );
+    this.renderer = new THREE.WebGLRenderer({antialias: false});
+    this.renderer.setPixelRatio( 1 );
+    this.renderer.setSize( window.innerWidth, window.innerHeight );
+    this.renderer.setClearColor(0x000000, 1);
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-     //   this.controls = new THREE.FlyControls( this.camera );
-     //   this.controls.movementSpeed = 700;
-     //   this.controls.domElement = container;
-     //   this.controls.rollSpeed = Math.PI / 10;
-     //   this.controls.autoForward = false;
-     //   this.controls.dragToLook = false;
+    container.appendChild( this.renderer.domElement );
+    this.stats = new Stats();
+    container.appendChild( this.stats.dom );
+    window.addEventListener('resize', this.onWindowResize.bind(this), false);
 
-        
-//
- //       var hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 1.1 );
- //     //  hemiLight.color.setHSL( 0.6, 0.6, 0.6 );
- //      // hemiLight.groundColor.setHSL( 0.095, 0.5, 0.75 );
- //       hemiLight.position.set( 0, 10, 0 );
- //       this.scene.add( hemiLight );
+    this.modelLoader.init(this);
+    this.modelLoader.loadFiles(this);
 
-       // var dirLight = new THREE.DirectionalLight( 0xffffff, 0.6 );
-       // dirLight.position.set(0, 50, 40);
-       // this.scene.add( dirLight );
-       // var dirLight2 = new THREE.DirectionalLight( 0xffffff, 0.6 );
-       // dirLight2.position.set(0, 50, -40);
-       // this.scene.add( dirLight2 );
-       // var dirLight2 = new THREE.DirectionalLight( 0xffffff, 0.6 );
-       // dirLight2.position.set(-1000, 0, -40);
-       // this.scene.add( dirLight2 );
-       // var dirLight2 = new THREE.DirectionalLight( 0xffffff, 0.6 );
-       // dirLight2.position.set(1000, 0, -40);
-       // this.scene.add( dirLight2 );
-//
-//
-     //   var dirLight = new THREE.DirectionalLight( 0x000000, 1.2 );
-     //   dirLight.color.setHSL( 0.5, 0.9, 0.95 );
-     //   dirLight.position.set( 20, 10, -20 );
-     //   dirLight.position.multiplyScalar( 10);
+    this.world.init(this);
 
-     //   dirLight.castShadow = true;
+    this.particles = new ParticlePool();
+    this.particles.init(this, 2000, 0);
+    this.particles_box = new ParticlePool();
+    this.particles_box.init(this, 1000, 1);
 
-     //   dirLight.shadow.mapSize.width = 2048;
-     //   dirLight.shadow.mapSize.height = 2048; // 2048
+    // Wait for all resources to be loaded before loading map.
+    this.textures.prepare();
+    this.waitForLoadTextures();
+  }
+  waitForLoadTextures() {
+    if (!this.textures.isLoaded()) {
+      setTimeout(
+        () => this.waitForLoadTextures(),
+        10,
+      );
+    } else {
+      this.waitForLoadMap();
+    }
+  }
+  waitForLoadMap() {
+    if(this.modelLoader.files.length > 0) {
+      setTimeout(
+        () => this.waitForLoadMap(),
+        10,
+      );
+    } else {
+      this.maps = new Map1();
+      //this.maps = new Level1();
+      this.maps.init(this);
 
-     //   var d = 1500;
+      // Load objects here to reduce overhead of multiple objects of same type.
+      this.objects["shell"] = new Shell();
+      this.objects["shell"].create(this);
+      this.objects["ammo"] = new Ammo();
+      this.objects["ammo"].create(this);
+      this.objects["ammo_p90"] = new AmmoP90();
+      this.objects["ammo_p90"].create(this);
+      this.objects["ammo_sniper"] = new AmmoSniper();
+      this.objects["ammo_sniper"].create(this);
+      this.objects["heart"] = new Heart(this);
+      this.objects["heart"].create(this);
 
-     //   dirLight.shadow.camera.left = -d;
-     //   dirLight.shadow.camera.right = d;
-     //   dirLight.shadow.camera.top = d;
-     //   dirLight.shadow.camera.bottom = -d;
-
-     //   dirLight.shadow.camera.far = 1500;
-     // //  dirLight.shadow.bias = -0.00001;
-     //   this.light1 = dirLight;
-     //   this.scene.add(dirLight);
-
-        //   this.controls = new THREE.FirstPersonControls(this.camera);
-     //   this.controls.lookSpeed = 0.4;
-     //   this.controls.noFly = true;
-     //   this.controls.lookVertical = false;
-     //   this.controls.constrainVertical = true;
-     //   this.controls.verticalMin = Math.PI/2;
-     //   //this.controls.verticalMax = 2.0;
-     //   this.controls.lon = -150;
-     //   this.controls.lat = 120;
-     //   this.controls.movementSpeed = 70;
-
-        this.renderer = new THREE.WebGLRenderer({antialias: false});
-     //   console.log(window.devicePixelRatio);
-        this.renderer.setPixelRatio( 1 );
-        this.renderer.setSize( window.innerWidth, window.innerHeight );
-       // this.renderer.setClearColor(0xFFA1C1, 1);
-      //  this.renderer.setClearColor(0xFFA1C1, 1);
-        this.renderer.setClearColor(0x000000, 1);
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        container.appendChild( this.renderer.domElement );
-        this.stats = new Stats();
-        container.appendChild( this.stats.dom );
-
-        window.addEventListener('resize', this.onWindowResize.bind(this), false);
-
-        // Load models
-        this.modelLoader.init(this);
-        this.modelLoader.loadFiles(this);
-
-        // Init world.
-        this.world.init(this);
-
-
-        // Init particle engine
-        this.particles = new ParticlePool();
-        this.particles.init(this, 2000, 0);
-        this.particles_box = new ParticlePool();
-        this.particles_box.init(this, 1000, 1);
-        
-        // DEBUG STUFF
-       // var gridHelper = new THREE.GridHelper( 5000, 100);
-       // gridHelper.position.set(0,0,0);
-       // store.scene.add( gridHelper );
-        
-        // Wait for all resources to be loaded before loading map.
-        this.textures.prepare();
-        this.waitForLoadTextures();
-        
-    };
-
-    Main.prototype.waitForLoadTextures = function() {
-        if (!this.textures.isLoaded()) {
-            setTimeout(
-              () => this.waitForLoadTextures(),
-              10,
-            );
-        } else {
-          this.waitForLoadMap();
-        }
-    };
-
-    Main.prototype.waitForLoadMap = function() {
-        if(this.modelLoader.files.length > 0) {
-            setTimeout(
-              () => this.waitForLoadMap(),
-              10,
-            );
-        } else {
-            this.maps = new Map1();
-            //this.maps = new Level1();
-            this.maps.init(this);
-
-            // Load objects here to reduce overhead of multiple objects of same type.
-            this.objects["shell"] = new Shell();
-            this.objects["shell"].create(this);
-            this.objects["ammo"] = new Ammo();
-            this.objects["ammo"].create(this);
-            this.objects["ammo_p90"] = new AmmoP90();
-            this.objects["ammo_p90"].create(this);
-            this.objects["ammo_sniper"] = new AmmoSniper();
-            this.objects["ammo_sniper"].create(this);
-            this.objects["heart"] = new Heart(this);
-            this.objects["heart"].create(this);
-
-            this.render();
-        }
-    };
-
-    // XXX: Note: Does accept an instance. (It _is_ the instance.)
-    Main.prototype.reset = function() {
-        this.camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, this.visible_distance );
-        this.world.reset(this);
-        this.maps.reset(this);
-        this.player.reset(this);
-        this.cdList = [];
-        for(var i = 0; i < this.update_objects.length; i++) {
-            if(this.update_objects[i].chunk) {
-                this.scene.remove(this.update_objects[i].chunk.mesh);
-            }
-        }
-        this.update_objects = [];
-        this.maps.init(this);
-    };
-
-    Main.prototype.onWindowResize = function() {
-        this.camera.aspect = window.innerWidth / window.innerHeight;
-        this.camera.updateProjectionMatrix();
-
-        this.renderer.setSize( window.innerWidth, window.innerHeight );
-
-    };
-
-  //  Main.prototype.animate = function() {
-  //      requestAnimationFrame( this.animate.bind(this) );
-  //      this.render();
-  //  };
-
-    Main.prototype.addObject = function(obj) {
-        this.update_objects.push(obj);
-    };
-
-    Main.prototype.addToCD = function(obj) {
-        if (obj.owner == null || obj.owner == "") {
-          var err = new Error();
-          console.log(err.stack);
-        }
-        if (obj != undefined) {
-          this.cdList.push(obj);
-        }
-    };
-
-    Main.prototype.spliceCDList = function (index) {
-        var len = this.cdList.length;
-        if (!len) { return; }
-        while (index < len) {
-          this.cdList[index] = this.cdList[index + 1];
-          index++
-        }
-        this.cdList.length--;
-    };
-
-  Main.prototype.removeFromCD = function(obj) {
+      this.render();
+    }
+  }
+  reset() {
+    this.camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, this.visible_distance );
+    this.world.reset(this);
+    this.maps.reset(this);
+    this.player.reset(this);
+    this.cdList = [];
+    for(var i = 0; i < this.update_objects.length; i++) {
+      if(this.update_objects[i].chunk) {
+        this.scene.remove(this.update_objects[i].chunk.mesh);
+      }
+    }
+    this.update_objects = [];
+    this.maps.init(this);
+  }
+  onWindowResize() {
+    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize( window.innerWidth, window.innerHeight );
+  }
+  addObject(obj) {
+    this.update_objects.push(obj);
+  }
+  addToCD(obj) {
+    if (obj.owner == null || obj.owner == "") {
+      var err = new Error();
+      console.log(err.stack);
+    }
+    if (obj != undefined) {
+      this.cdList.push(obj);
+    }
+  }
+  spliceCDList (index) {
+    var len = this.cdList.length;
+    if (!len) { return; }
+    while (index < len) {
+      this.cdList[index] = this.cdList[index + 1];
+      index++
+    }
+    this.cdList.length--;
+  }
+  removeFromCD(obj) {
     for(var i = 0; i < this.cdList.length; i++) {
       if(this.cdList[i] != undefined) {
         if(this.cdList[i].id == obj.id) {
@@ -2456,38 +2329,33 @@ function Main() {
         }
       }
     }
-  };
+  }
+  render() {
+    requestAnimationFrame( this.render.bind(this) );
 
-    Main.prototype.render = function() {
-        requestAnimationFrame( this.render.bind(this) );
+    var time = (Date.now() - this.t_start)*0.001;
+    var delta = this.clock.getDelta();
 
-        var time = (Date.now() - this.t_start)*0.001;
-        //var time = Date.now() * 0.00005;
-        var delta = this.clock.getDelta();
+    for(var f in this.update_objects) {
+      if(this.update_objects[f] == null) { continue; }
+      if(this.update_objects[f].update) {
+        this.update_objects[f].update(this, time, delta);
+      } else {
+        this.update_objects[f] = null;
+      }
+    }
 
-        // Update all objects
-        for(var f in this.update_objects) {
-            if(this.update_objects[f] == null) { continue; }
-            if(this.update_objects[f].update) {
-                this.update_objects[f].update(this, time, delta);
-            } else {
-                this.update_objects[f] = null;
-            }
-        }
+    for(var f in this.objects) {
+      this.objects[f].update(this, time, delta);
+    }
 
-        for(var f in this.objects) {
-            this.objects[f].update(this, time, delta);
-        }
-
-        //this.controls.update(delta);
-
-        this.stats.update();
-        this.particles.update(this, time, delta);
-        this.particles_box.update(this, time, delta);
-        this.world.update(this, time, delta);
-        this.maps.update(this, time, delta);
-        this.renderer.render(this.scene, this.camera);
-    };
+    this.stats.update();
+    this.particles.update(this, time, delta);
+    this.particles_box.update(this, time, delta);
+    this.world.update(this, time, delta);
+    this.maps.update(this, time, delta);
+    this.renderer.render(this.scene, this.camera);
+  }
 }
 
 class Maps {
