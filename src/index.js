@@ -2367,7 +2367,8 @@ class Maps {
     this.objects = [];
     this.wall_texture = 0;
     this.wall2_texture = 0;
-    // Object => color in obj image
+
+    // Object => color in obj image ?
     this.objects["Agent"] = { r: 0xFF, g: 0x00, b: 0x00 };
     this.objects["Greenie"] = { r: 0xEE, g: 0x00, b: 0x00 };
     this.objects["Dudo"] = { r: 0xDD, g: 0x00, b: 0x00 };
@@ -2773,132 +2774,132 @@ class Level1 extends Maps {
 // ModelLoader class (Loads both .vox and image files)
 //////////////////////////////////////////////////////////////////////
 function ModelLoader() {
-    this.models = []
-    this.models["greenie"] = [require("../assets/vox/greenie.vox"), 1, "object"];
-    this.models["agent"] = [require("../assets/vox/agent.vox"), 0.1, "object"];
-    this.models["agentblack"] = [require("../assets/vox/agent_black.vox"), 0.1, "object"];
-    this.models["hearty"] = [require("../assets/vox/hearty.vox"), 1, "object"];
-    this.models["dead_hearty"] = [require("../assets/vox/dead_hearty.vox"), 1, "object"];
-    this.models["player"] = [require("../assets/vox/player.vox"), 1, "object"];
-    this.models["dudo"] = [require("../assets/vox/dudo.vox"), 1, "object"];
-    this.models["lamp1"] = [require("../assets/vox/lamp1.vox"), 1, "object"];
-    this.models["barrel"] = [require("../assets/vox/barrel.vox"), 0.1, "object"];
-    this.models["barrel_fire"] = [require("../assets/vox/barrel_fire.vox"), 0.1, "object"];
-    this.models["fbihq"] = [require("../assets/vox/fbi_hq.vox"), 5, "object"];
-    this.models["tree"] = [require("../assets/vox/tree.vox"), 1, "object"];
-    this.models["streetlamp"] = [require("../assets/vox/StreetLamp.vox"), 1, "object"];
-    this.models["tree"] = [require("../assets/vox/test1.vox"), 1, "object"];
-    this.models["paperagent"] = [require("../assets/vox/paperagent.vox"), 1, "object"];
-    this.models["paperpolicecar"] = [require("../assets/vox/policecar.vox"), 1, "object"];
+  this.models = [];
+  this.models["greenie"] = [require("../assets/vox/greenie.vox"), 1, "object"];
+  this.models["agent"] = [require("../assets/vox/agent.vox"), 0.1, "object"];
+  this.models["agentblack"] = [require("../assets/vox/agent_black.vox"), 0.1, "object"];
+  this.models["hearty"] = [require("../assets/vox/hearty.vox"), 1, "object"];
+  this.models["dead_hearty"] = [require("../assets/vox/dead_hearty.vox"), 1, "object"];
+  this.models["player"] = [require("../assets/vox/player.vox"), 1, "object"];
+  this.models["dudo"] = [require("../assets/vox/dudo.vox"), 1, "object"];
+  this.models["lamp1"] = [require("../assets/vox/lamp1.vox"), 1, "object"];
+  this.models["barrel"] = [require("../assets/vox/barrel.vox"), 0.1, "object"];
+  this.models["barrel_fire"] = [require("../assets/vox/barrel_fire.vox"), 0.1, "object"];
+  this.models["fbihq"] = [require("../assets/vox/fbi_hq.vox"), 5, "object"];
+  this.models["tree"] = [require("../assets/vox/tree.vox"), 1, "object"];
+  this.models["streetlamp"] = [require("../assets/vox/StreetLamp.vox"), 1, "object"];
+  this.models["tree"] = [require("../assets/vox/test1.vox"), 1, "object"];
+  this.models["paperagent"] = [require("../assets/vox/paperagent.vox"), 1, "object"];
+  this.models["paperpolicecar"] = [require("../assets/vox/policecar.vox"), 1, "object"];
 
-    // TODO: Don't know how to load images yet.
-    this.models["shotgun"] = [require("../assets/pixelart/shotgun.png"), 8, "object"];
-    this.models["shell"] = [require("../assets/pixelart/shell.png"), 20, "object"];
-    this.models["heart"] = [require("../assets/pixelart/heart.png"), 3, "object"];
-    this.models["ammo"] = [require("../assets/pixelart/ammo.png"), 20, "object"];
-    this.models["ak47"] = [require("../assets/pixelart/ak47.png"), 5, "object"];
-    this.models["p90"] = [require("../assets/pixelart/p90.png"), 5, "object"];
-    this.models["pistol"] = [require("../assets/pixelart/pistol.png"), 5, "object"];
-    this.models["sniper"] = [require("../assets/pixelart/sniper.png"), 5, "object"];
-    this.models["minigun"] = [require("../assets/pixelart/minigun.png"), 10, "object"];
-    this.models["rocketlauncher"] = [require("../assets/pixelart/rocketlauncher.png"), 8, "object"];
-    this.models["grenadelauncher"] = [require("../assets/pixelart/grenadelauncher.png"), 8, "object"];
-    this.models["spiderweb"] = [require("../assets/pixelart/spiderweb.png"), 1, "object"];
-    this.models["painkillers"] = [require("../assets/pixelart/painkillers.jpg"), 1, "object"];
-    this.models["radiation_sign"] = [require("../assets/pixelart/radiation_sign.png"), 1, "object"];
-    this.models["ufo_sign"] = [require("../assets/pixelart/sign_ufo.png"), 1, "object"];
+  // TODO: Don't know how to load images yet.
+  this.models["shotgun"] = [require("../assets/pixelart/shotgun.png"), 8, "object"];
+  this.models["shell"] = [require("../assets/pixelart/shell.png"), 20, "object"];
+  this.models["heart"] = [require("../assets/pixelart/heart.png"), 3, "object"];
+  this.models["ammo"] = [require("../assets/pixelart/ammo.png"), 20, "object"];
+  this.models["ak47"] = [require("../assets/pixelart/ak47.png"), 5, "object"];
+  this.models["p90"] = [require("../assets/pixelart/p90.png"), 5, "object"];
+  this.models["pistol"] = [require("../assets/pixelart/pistol.png"), 5, "object"];
+  this.models["sniper"] = [require("../assets/pixelart/sniper.png"), 5, "object"];
+  this.models["minigun"] = [require("../assets/pixelart/minigun.png"), 10, "object"];
+  this.models["rocketlauncher"] = [require("../assets/pixelart/rocketlauncher.png"), 8, "object"];
+  this.models["grenadelauncher"] = [require("../assets/pixelart/grenadelauncher.png"), 8, "object"];
+  this.models["spiderweb"] = [require("../assets/pixelart/spiderweb.png"), 1, "object"];
+  this.models["painkillers"] = [require("../assets/pixelart/painkillers.jpg"), 1, "object"];
+  this.models["radiation_sign"] = [require("../assets/pixelart/radiation_sign.png"), 1, "object"];
+  this.models["ufo_sign"] = [require("../assets/pixelart/sign_ufo.png"), 1, "object"];
 
-    //this.models["fbihq"] = ["/assets/vox/demon.vox", 1, "object"];
+  //this.models["fbihq"] = ["/assets/vox/demon.vox", 1, "object"];
 
-    let key;
-    this.files = [];
+  let key;
+  this.files = [];
 
-    ModelLoader.prototype.init = function(store) {
-        for(var k in this.models) {
-            this.files.push(k);
-        }
-    };
+  ModelLoader.prototype.init = function(store) {
+    for(var k in this.models) {
+      this.files.push(k);
+    }
+  };
 
-    ModelLoader.prototype.loadFiles = function(store) {
-        if(this.files.length > 0) {
-            key = this.files.pop();   
-        } else {
-            return;
-        }
+  ModelLoader.prototype.loadFiles = function(store) {
+    if(this.files.length > 0) {
+      key = this.files.pop();   
+    } else {
+      return;
+    }
 
-        if (typeof (this.models[key][0].default) === 'string') { 
-            loadImageFile(this.models[key][0].default, (data, width, height) => {
-                var chunk = new Chunk(0, 0, 0, width, height, this.models[key][1], key, 1, this.models[key][2]);
-                chunk.init(store);
-                for(var i = 0; i < data.length; i++) {
-                    for(var y = 0; y < this.models[key][1]; y++) {
-                        chunk.addBlock(store, data[i].x, data[i].y, y, data[i].r, data[i].g, data[i].b);
-                    }
-                }
-                chunk.blockSize = 1;
-                chunk.build(store);
-                this.models[key] = chunk;
-                // Remove mesh from scene (cloned later)
-                chunk.mesh.visible = false;
-                this.loadFiles(store);
-            });
-        } else {
-          // XXX: This is already loaded due to webpack.
-          this.loadModel(store, key);
-          this.loadFiles(store);
-        }
-    };
-
-    ModelLoader.prototype.loadModel = function(store, name) {
-        var vox = new Vox();
-        var model = vox.LoadModel(this.models[name][0], name);
-        var p = 0, r = 0, g = 0, b = 0;
-        var chunk = new Chunk(0, 0, 0, model.sx, model.sz, model.sy, name, this.models[name][1], this.models[key][2]);
-        chunk.blockSize = this.models[name][1];
+    if (typeof (this.models[key][0].default) === 'string') { 
+      loadImageFile(this.models[key][0].default, (data, width, height) => {
+        var chunk = new Chunk(0, 0, 0, width, height, this.models[key][1], key, 1, this.models[key][2]);
         chunk.init(store);
-        for(var i = 0; i < model.data.length; i++) {
-            p = model.data[i];
-            r = (p.val >> 24) & 0xFF;
-            g = (p.val >> 16) & 0xFF;
-            b = (p.val >> 8) & 0xFF;
-            if(p.y > model.sy || p.x > model.sx || p.z > model.sz) {
-                continue;
-            }
-            chunk.addBlock(store, p.x, p.z, p.y, r, g, b);
+        for(var i = 0; i < data.length; i++) {
+          for(var y = 0; y < this.models[key][1]; y++) {
+            chunk.addBlock(store, data[i].x, data[i].y, y, data[i].r, data[i].g, data[i].b);
+          }
         }
+        chunk.blockSize = 1;
         chunk.build(store);
+        this.models[key] = chunk;
+        // Remove mesh from scene (cloned later)
         chunk.mesh.visible = false;
-        this.models[name] = chunk;
-    };
+        this.loadFiles(store);
+      });
+    } else {
+      // XXX: This is already loaded due to webpack.
+      this.loadModel(store, key);
+      this.loadFiles(store);
+    }
+  };
 
-    ModelLoader.prototype.getModel = function(store, name, size, obj, only_mesh) {
-        if(size == null) { size = 1; }
-        if(only_mesh == null) { only_mesh = false; }
-        // Depp copy chunk
-        var new_obj;
-        if(only_mesh) {
-            new_obj = {};
-            new_obj.owner = obj;
-            new_obj.mesh = this.models[name].mesh.clone();
-            new_obj.mesh.owner = obj;
+  ModelLoader.prototype.loadModel = function(store, name) {
+    //var vox = new Vox();
+    var model = Vox.LoadModel(this.models[name][0], name);
+    var p = 0, r = 0, g = 0, b = 0;
+    var chunk = new Chunk(0, 0, 0, model.sx, model.sz, model.sy, name, this.models[name][1], this.models[key][2]);
+    chunk.blockSize = this.models[name][1];
+    chunk.init(store);
+    for(var i = 0; i < model.data.length; i++) {
+      p = model.data[i];
+      r = (p.val >> 24) & 0xFF;
+      g = (p.val >> 16) & 0xFF;
+      b = (p.val >> 8) & 0xFF;
+      if(p.y > model.sy || p.x > model.sx || p.z > model.sz) {
+        continue;
+      }
+      chunk.addBlock(store, p.x, p.z, p.y, r, g, b);
+    }
+    chunk.build(store);
+    chunk.mesh.visible = false;
+    this.models[name] = chunk;
+  };
 
-            new_obj.mesh.visible = true;
-            new_obj.mesh.scale.set(size, size, size);
-            store.scene.add(new_obj.mesh);
-            store.addToCD(new_obj.mesh);
-        } else {
-            var new_obj = jQuery.extend(true, {}, this.models[name]);
-            new_obj.owner = obj;
-            new_obj.blockSize = size;
+  ModelLoader.prototype.getModel = function(store, name, size, obj, only_mesh) {
+    if(size == null) { size = 1; }
+    if(only_mesh == null) { only_mesh = false; }
+    // Depp copy chunk
+    var new_obj;
+    if(only_mesh) {
+      new_obj = {};
+      new_obj.owner = obj;
+      new_obj.mesh = this.models[name].mesh.clone();
+      new_obj.mesh.owner = obj;
 
-            new_obj.mesh = undefined;
-            new_obj.build(store);
+      new_obj.mesh.visible = true;
+      new_obj.mesh.scale.set(size, size, size);
+      store.scene.add(new_obj.mesh);
+      store.addToCD(new_obj.mesh);
+    } else {
+      var new_obj = jQuery.extend(true, {}, this.models[name]);
+      new_obj.owner = obj;
+      new_obj.blockSize = size;
 
-            new_obj.mesh.visible = true;
-            store.scene.add(new_obj.mesh);
-        }
-        return new_obj;
-    };
+      new_obj.mesh = undefined;
+      new_obj.build(store);
+
+      new_obj.mesh.visible = true;
+      store.scene.add(new_obj.mesh);
+    }
+    return new_obj;
+  };
 }
 
 
@@ -5129,29 +5130,17 @@ function LockPointer() {
 
 window.LockPointer = LockPointer;
 
-//==============================================================================
-// Author: Nergal
-// http://webgl.nu
-// Date: 2014-11-17
-//==============================================================================
-function VoxelData() {
-    this.x;
-    this.y;
-    this.z;
-    this.color;
-
-    VoxelData.prototype.Create = function(buffer, i) {
-        this.x = buffer[i++] & 0xFF;
-        this.y = buffer[i++] & 0xFF;
-        this.z = buffer[i++] & 0xFF;
-        this.color = buffer[i] & 0xFF;
-    };
+class VoxelData {
+  constructor(buffer, i) {
+    this.x = buffer[i++] & 0xFF;
+    this.y = buffer[i++] & 0xFF;
+    this.z = buffer[i++] & 0xFF;
+    this.color = buffer[i] & 0xFF;
+  }
 }
-VoxelData.prototype = new VoxelData();
-VoxelData.prototype.constructor = VoxelData;
 
-var Vox = function() {
-    var voxColors = [
+class Vox {
+  static voxColors = Object.freeze([
         0x00000000, 0xffffffff, 0xffccffff, 0xff99ffff, 0xff66ffff, 0xff33ffff, 0xff00ffff, 0xffffccff, 0xffccccff, 0xff99ccff, 0xff66ccff, 0xff33ccff, 0xff00ccff, 0xffff99ff, 0xffcc99ff, 0xff9999ff,
         0xff6699ff, 0xff3399ff, 0xff0099ff, 0xffff66ff, 0xffcc66ff, 0xff9966ff, 0xff6666ff, 0xff3366ff, 0xff0066ff, 0xffff33ff, 0xffcc33ff, 0xff9933ff, 0xff6633ff, 0xff3333ff, 0xff0033ff, 0xffff00ff,
         0xffcc00ff, 0xff9900ff, 0xff6600ff, 0xff3300ff, 0xff0000ff, 0xffffffcc, 0xffccffcc, 0xff99ffcc, 0xff66ffcc, 0xff33ffcc, 0xff00ffcc, 0xffffcccc, 0xffcccccc, 0xff99cccc, 0xff66cccc, 0xff33cccc,
@@ -5168,122 +5157,101 @@ var Vox = function() {
         0xff663300, 0xff333300, 0xff003300, 0xffff0000, 0xffcc0000, 0xff990000, 0xff660000, 0xff330000, 0xff0000ee, 0xff0000dd, 0xff0000bb, 0xff0000aa, 0xff000088, 0xff000077, 0xff000055, 0xff000044,
         0xff000022, 0xff000011, 0xff00ee00, 0xff00dd00, 0xff00bb00, 0xff00aa00, 0xff008800, 0xff007700, 0xff005500, 0xff004400, 0xff002200, 0xff001100, 0xffee0000, 0xffdd0000, 0xffbb0000, 0xffaa0000,
         0xff880000, 0xff770000, 0xff550000, 0xff440000, 0xff220000, 0xff110000, 0xffeeeeee, 0xffdddddd, 0xffbbbbbb, 0xffaaaaaa, 0xff888888, 0xff777777, 0xff555555, 0xff444444, 0xff222222, 0xff111111
-    ];
+    ]);
+  static readInt(buffer, from) {
+    return buffer[from]| (buffer[from+1] << 8) |  (buffer[from+2] << 16) | (buffer[from+3] << 24);
+  }
+  static LoadModel(data, name) {
+    var colors = [];
+    var colors2 = undefined;
+    var voxelData = [];
 
+    var map = new Array();
+    var sizex = 0, sizey = 0, sizez = 0;
 
-    Vox.prototype.readInt = function(buffer, from) {
-        return buffer[from]| (buffer[from+1] << 8) |  (buffer[from+2] << 16) | (buffer[from+3] << 24);
-    };
+    if (data) {
+      var buffer = new Uint8Array(data);
 
-    Vox.prototype.LoadModel = function(data, name) {
-        var colors = [];
-        var colors2 = undefined;
-        var voxelData = [];
+      var i = 0;
+      var type = String.fromCharCode(parseInt(buffer[i++]))+
+        String.fromCharCode(parseInt(buffer[i++]))+
+        String.fromCharCode(parseInt(buffer[i++]))+
+        String.fromCharCode(parseInt(buffer[i++]));
+      var version = this.readInt(buffer, i);
+      i += 4;
 
-        var map = new Array();
-        var sizex = 0, sizey = 0, sizez = 0;
+      while(i < buffer.length) {
+        var id = String.fromCharCode(parseInt(buffer[i++]))+
+          String.fromCharCode(parseInt(buffer[i++]))+
+          String.fromCharCode(parseInt(buffer[i++]))+
+          String.fromCharCode(parseInt(buffer[i++]));
 
-        if (data) {
-            var buffer = new Uint8Array(data);
+        var chunkSize = this.readInt(buffer, i) & 0xFF;
+        i += 4;
+        var childChunks = this.readInt(buffer, i) & 0xFF;
+        i += 4;
 
-            var i = 0;
-            var type = String.fromCharCode(parseInt(buffer[i++]))+
-                String.fromCharCode(parseInt(buffer[i++]))+
-                String.fromCharCode(parseInt(buffer[i++]))+
-                String.fromCharCode(parseInt(buffer[i++]));
-            var version = this.readInt(buffer, i);
+        if(id == "SIZE") {
+          sizex = this.readInt(buffer, i) & 0xFF;
+          i += 4;
+          sizey = this.readInt(buffer, i) & 0xFF;
+          i += 4;
+          sizez = this.readInt(buffer, i) & 0xFF;
+          i += 4;
+
+          for(var x = 0; x < sizex; x++) {
+            map[x] = new Array();
+            for(var y = 0; y < sizey; y++) {
+              map[x][y] = new Array();
+            }
+          }
+          // i += chunkSize - 4 * 3;
+        } else if (id == "XYZI") {
+          var numVoxels = this.readInt(buffer, i);
+          i += 4;
+          voxelData = new Array(numVoxels);
+          for (var n = 0; n < voxelData.length; n++) {
+            voxelData[n] = new VoxelData(buffer, i);
             i += 4;
-
-            while(i < buffer.length) {
-                var id = String.fromCharCode(parseInt(buffer[i++]))+
-                    String.fromCharCode(parseInt(buffer[i++]))+
-                    String.fromCharCode(parseInt(buffer[i++]))+
-                    String.fromCharCode(parseInt(buffer[i++]));
-
-                var chunkSize = this.readInt(buffer, i) & 0xFF;
-                i += 4;
-                var childChunks = this.readInt(buffer, i) & 0xFF;
-                i += 4;
-
-                if(id == "SIZE") {
-                    sizex = this.readInt(buffer, i) & 0xFF;
-                    i += 4;
-                    sizey = this.readInt(buffer, i) & 0xFF;
-                    i += 4;
-                    sizez = this.readInt(buffer, i) & 0xFF;
-                    i += 4;
-
-                    for(var x = 0; x < sizex; x++) {
-                        map[x] = new Array();
-                        for(var y = 0; y < sizey; y++) {
-                            map[x][y] = new Array();
-                        }
-                    }
-                   // i += chunkSize - 4 * 3;
-                } else if (id == "XYZI") {
-                    var numVoxels = this.readInt(buffer, i);
-                    i += 4;
-                    voxelData = new Array(numVoxels);
-                    for (var n = 0; n < voxelData.length; n++) {
-                        voxelData[n] = new VoxelData();
-                        voxelData[n].Create(buffer, i); // Read 4 bytes
-                        i += 4;
-                       // if(voxelData[n].x > sizex || voxelData[n].y > sizey || voxelData[n].z > sizez) {
-                       //     console.log("VOXELS:",numVoxels, "N:",n);
-                       //     voxelData.length = n;
-                       //     break;
-                       // }
-                        //   // Workaround for some issues I can't figure out!?
-                        //   // numVoxels are not correct in some particular case and I can't see anything wrong
-                        //   // towards the .vox specification.
-                        //    var id = String.fromCharCode(parseInt(buffer[i++]))+
-                        //        String.fromCharCode(parseInt(buffer[i++]))+
-                        //        String.fromCharCode(parseInt(buffer[i++]))+
-                        //        String.fromCharCode(parseInt(buffer[i++]));
-                        //    if(id == "RGBA") {
-                        //        i -= 4;
-                        //        continue;
-                        //    }
-                        //}
-                    }
-                } else if (id == "MAIN") {
-                } else if (id == "PACK") {
-                    var numModels = this.readInt(buffer, i);
-                    i += 4;
-                } else if (id == "MATT") {
-                } else if (id == "RGBA") {
-                    colors2 = new Array(255);
-                    for (var n = 0; n <= 254; n++ ) {
-                        var r = buffer[i++] & 0xFF;
-                        var g = buffer[i++] & 0xFF;
-                        var b = buffer[i++] & 0xFF;
-                        var a = buffer[i++] & 0xFF;
-                        colors2[n+1] = {'r': r, 'g': g, 'b': b, 'a': a};
-                    }
-                } else {
-                    i += chunkSize;
-                }
-            }
-
-            if (voxelData == null || voxelData.length == 0) {
-                return null;
-            }
-            for (var n = 0; n < voxelData.length; n++) {
-                if(colors2 == undefined) {
-                    var c = voxColors[voxelData[n].color-1];
-                    var r = (c & 0xff0000) >> 16;
-                    var g = (c & 0x00ff00) >> 8;
-                    var b = (c & 0x0000ff);
-                    voxelData[n].val = (r & 0xFF) << 24 | (g & 0xFF) << 16 | (b & 0xFF) << 8;
-                } else {
-                    var color = colors2[voxelData[n].color];
-                    voxelData[n].val = (color.r & 0xFF) << 24 | (color.g & 0xFF) << 16 | (color.b & 0xFF) << 8;
-                }
-            }
-            return {name: name, data: voxelData, sx: sizex + 1, sy: sizey + 1, sz: sizez + 1};
+          }
+        } else if (id == "MAIN") {
+        } else if (id == "PACK") {
+          var numModels = this.readInt(buffer, i);
+          i += 4;
+        } else if (id == "MATT") {
+        } else if (id == "RGBA") {
+          colors2 = new Array(255);
+          for (var n = 0; n <= 254; n++ ) {
+            var r = buffer[i++] & 0xFF;
+            var g = buffer[i++] & 0xFF;
+            var b = buffer[i++] & 0xFF;
+            var a = buffer[i++] & 0xFF;
+            colors2[n+1] = {'r': r, 'g': g, 'b': b, 'a': a};
+          }
+        } else {
+          i += chunkSize;
         }
-    };
-}
+      }
+
+      if (voxelData == null || voxelData.length == 0) {
+        return null;
+      }
+      for (var n = 0; n < voxelData.length; n++) {
+        if(colors2 == undefined) {
+          var c = Vox.voxColors[voxelData[n].color-1];
+          var r = (c & 0xff0000) >> 16;
+          var g = (c & 0x00ff00) >> 8;
+          var b = (c & 0x0000ff);
+          voxelData[n].val = (r & 0xFF) << 24 | (g & 0xFF) << 16 | (b & 0xFF) << 8;
+        } else {
+          var color = colors2[voxelData[n].color];
+          voxelData[n].val = (color.r & 0xFF) << 24 | (color.g & 0xFF) << 16 | (color.b & 0xFF) << 8;
+        }
+      }
+      return {name: name, data: voxelData, sx: sizex + 1, sy: sizey + 1, sz: sizez + 1};
+    }
+    }
+};
 
 class Weapon {
   constructor() {
