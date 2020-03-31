@@ -1,3 +1,5 @@
+import "@babel/polyfill";
+
 import * as THREE from 'three';
 
 const loadModel = (store, name, modelData) => {
@@ -2227,7 +2229,7 @@ class Main {
     this.chunk_material = new THREE.MeshPhongMaterial({ vertexColors: THREE.VertexColors, wireframe: false });
     this.p_light = new THREE.PointLight(0xFFAA00, 1, 10);
   }
-  init() {
+  async init() {
     this.sounds.Add({name: "sniper", file: require("../assets/sounds/sniper.wav.mp3")});
     this.sounds.Add({name: "take_heart", file: require("../assets/sounds/heart.wav.mp3")});
     this.sounds.Add({name: "walk1", file: require("../assets/sounds/walk1.wav.mp3")});
@@ -2285,8 +2287,7 @@ class Main {
     container.appendChild( this.stats.dom );
     window.addEventListener('resize', this.onWindowResize.bind(this), false);
 
-    this.modelLoader.init(this);
-    this.modelLoader.loadFiles(this);
+    await this.modelLoader.init(this);
 
     this.world.init(this);
 
@@ -2297,42 +2298,23 @@ class Main {
 
     // Wait for all resources to be loaded before loading map.
     this.textures.prepare();
-    this.waitForLoadTextures();
-  }
-  waitForLoadTextures() {
-    if (!this.textures.isLoaded()) {
-      setTimeout(
-        () => this.waitForLoadTextures(),
-        10,
-      );
-    } else {
-      this.waitForLoadMap();
-    }
-  }
-  waitForLoadMap() {
-    if(this.modelLoader.files.length > 0) {
-      setTimeout(
-        () => this.waitForLoadMap(),
-        10,
-      );
-    } else {
-      this.maps = new Level1();
-      this.maps.init(this);
 
-      // Load objects here to reduce overhead of multiple objects of same type.
-      this.objects["shell"] = new Shell();
-      this.objects["shell"].create(this);
-      this.objects["ammo"] = new Ammo();
-      this.objects["ammo"].create(this);
-      this.objects["ammo_p90"] = new AmmoP90();
-      this.objects["ammo_p90"].create(this);
-      this.objects["ammo_sniper"] = new AmmoSniper();
-      this.objects["ammo_sniper"].create(this);
-      this.objects["heart"] = new Heart(this);
-      this.objects["heart"].create(this);
+    this.maps = new Level1();
+    this.maps.init(this);
 
-      this.render();
-    }
+    // Load objects here to reduce overhead of multiple objects of same type.
+    this.objects["shell"] = new Shell();
+    this.objects["shell"].create(this);
+    this.objects["ammo"] = new Ammo();
+    this.objects["ammo"].create(this);
+    this.objects["ammo_p90"] = new AmmoP90();
+    this.objects["ammo_p90"].create(this);
+    this.objects["ammo_sniper"] = new AmmoSniper();
+    this.objects["ammo_sniper"].create(this);
+    this.objects["heart"] = new Heart(this);
+    this.objects["heart"].create(this);
+
+    this.render();
   }
   reset() {
     this.camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, this.visible_distance );
@@ -2809,7 +2791,7 @@ class Level1 extends Maps {
 // ModelLoader class (Loads both .vox and image files)
 //////////////////////////////////////////////////////////////////////
   function ModelLoader() {
-    this.models = [];
+    this.models = {};
     this.models["greenie"] = [require("../assets/vox/greenie.vox"), 1, "object"];
     this.models["agent"] = [require("../assets/vox/agent.vox"), 0.1, "object"];
     this.models["agentblack"] = [require("../assets/vox/agent_black.vox"), 0.1, "object"];
@@ -2846,46 +2828,46 @@ class Level1 extends Maps {
 
     //this.models["fbihq"] = ["/assets/vox/demon.vox", 1, "object"];
 
-    let key;
-    this.files = [];
+    //let key;
+    //this.files = [];
 
     ModelLoader.prototype.init = function(store) {
-      for(var k in this.models) {
-        this.files.push(k);
-      }
-    };
-
-    ModelLoader.prototype.loadFiles = function(store) {
-      if(this.files.length > 0) {
-        key = this.files.pop();   
-      } else {
-        return;
-      }
-
-      if (typeof (this.models[key][0].default) === 'string') { 
-        loadImageFile(this.models[key][0].default)
-          .then(
-            ([data, width, height]) => {
-              var chunk = new Chunk(store, 0, 0, 0, width, height, this.models[key][1], key, 1, this.models[key][2]);
-              for(var i = 0; i < data.length; i++) {
-                for(var y = 0; y < this.models[key][1]; y++) {
-                  chunk.addBlock(store, data[i].x, data[i].y, y, data[i].r, data[i].g, data[i].b);
-                }
+      // TODO: Return all the model/keys and re-assign
+      return Promise.all(
+        Object.entries(this.models)
+          .map(
+            ([key, modelData]) => {
+              const [{ default: url }] = modelData;
+              if ((typeof url) === 'string') {
+                return loadImageFile(url)
+                  .then(
+                    ([data, width, height]) => {
+                      var chunk = new Chunk(store, 0, 0, 0, width, height, modelData[1], key, 1, modelData[2]);
+                      for(var i = 0; i < data.length; i++) {
+                        for(var y = 0; y < modelData[1]; y++) {
+                          chunk.addBlock(store, data[i].x, data[i].y, y, data[i].r, data[i].g, data[i].b);
+                        }
+                      }
+                      chunk.blockSize = 1;
+                      chunk.build(store);
+                      // Remove mesh from scene (cloned later)
+                      chunk.mesh.visible = false;
+                      this.models[key] = chunk;
+                    },
+                  );
               }
-              chunk.blockSize = 1;
-              chunk.build(store);
-              this.models[key] = chunk;
-              // Remove mesh from scene (cloned later)
-              chunk.mesh.visible = false;
-              this.loadFiles(store);
+              return Promise
+                .resolve()
+                .then(
+                  () => {
+                    const modelData = this.models[key];
+                    // XXX: This is already loaded due to webpack.
+                    this.models[key] = loadModel(store, key, modelData);
+                  },
+                );
             },
-          );
-      } else {
-        const modelData = this.models[key];
-        // XXX: This is already loaded due to webpack.
-        this.models[key] = loadModel(store, key, modelData);
-        this.loadFiles(store);
-      }
+          ),
+      );
     };
 
     ModelLoader.prototype.getModel = function(store, name, size, obj, only_mesh) {
@@ -5753,4 +5735,7 @@ class World {
   }
 }
 
-new Main().init();
+(async () => {
+  await new Main().init();
+  // TODO: Sequential stuff...
+})();
