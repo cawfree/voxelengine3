@@ -5417,11 +5417,8 @@ var Vox = function() {
     };
 }
 
-
-//////////////////////////////////////////////////////////////////////
-// Weapon base class
-//////////////////////////////////////////////////////////////////////
-function Weapon() {
+class Weapon {
+  constructor() {
     this.ammo = 0;
     this.base_type = "weapon";
     this.chunk = 0;
@@ -5435,364 +5432,288 @@ function Weapon() {
     this.relative_speed = 0;
     this.shoot_light = new THREE.PointLight( 0xFFAA00, 3, 10 );
     this.damage = 1;
-
-    Weapon.prototype.create = function(store, model, size) {
-        store.scene.add(this.shoot_light);
-        this.chunk = store.modelLoader.getModel(store, model, size, this, true);
-        store.removeFromCD(this.chunk.mesh);
-        store.addObject(this);
-    };
-
-    Weapon.prototype.destroy = function(store) {
-        store.scene.remove(this.chunk.mesh);
-        store.removeFromCD(this.chunk.mesh);
-       // this.chunk.mesh.geometry.dispose();
-       // this.chunk.mesh.material.dispose();
-       // this.chunk.bb.geometry.dispose();
-       // this.chunk.bb.material.dispose();
-        this.alive = false;
-    };
-
-    Weapon.prototype.setPosition = function(x, y, z) {
-        this.chunk.mesh.position.set(x, y, z);
-    };
-
-    Weapon.prototype.setRotation = function(x, y, z) {
-        this.chunk.mesh.rotation.set(x, y, z);
-    };
-
-    Weapon.prototype.detach = function(store, mesh, pos) {
-        if (this.attached && mesh.id == this.attached_id) {
-            this.chunk.mesh.visible = true;
-            mesh.remove(this.chunk.mesh);
-            store.scene.add(this.chunk.mesh);
-            store.addToCD(this.chunk.mesh);
-            this.setRotation(Math.PI, Math.PI, 0);
-            this.setPosition(pos.x+(6-Math.random()*12), 6, pos.z+(6-Math.random()*12));
-            this.attached = false;
-            this.attached_id = 0;
-        }
-    };
-
-    Weapon.prototype.attach = function(store, mesh) {
-        if(!this.attached) {
-            store.sounds.PlaySound(store, "reload", this.chunk.mesh.position, 800);
-            this.timeout = 0;
-            mesh.add(this.chunk.mesh);
-            store.removeFromCD(this.chunk.mesh);
-            this.attached = true;
-            this.attached_id = mesh.id;
-            return true;
-        }
-        return false;
-    };
-
-    Weapon.prototype.shoot = function(store, dir, id, mesh, speed) {
-        if(this.reloading <= 0) {
-            this.fire(store, dir, id, mesh, speed);
-            this.reloading = this.fire_rate;
-            //var light = this.shoot_light.clone();
-            var draw_light = false;
-            // Keep fps higher
-            if(this.obj_type == "minigun" && Math.random() > 0.5) {
-            //    draw_light = false;
-            }
-            if (draw_light) {
-                var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-                this.shoot_light.position.set(
-                    point.x,
-                    point.y,
-                    point.z
-                );
-                this.shoot_light.visible = true;
-            }
-            // TODO: Maybe render light whilst shooting?
-        }
-    };
-
-    Weapon.prototype.update = function(store, time, delta) {
-        if(!this.attached) {
-            if(this.timeout > 60) { // Remove after 1min.
-                this.destroy(store);
-            }
-            this.timeout += delta;
-        }
-        // Update reload time
-        if(this.reloading >= 0) {
-            this.reloading -= delta;
-        }
-        // Animate dropped weapon
-        if(!this.attached) {
-            this.chunk.mesh.position.y = store.maps.ground+6+Math.sin(time*2.5);
-            this.chunk.mesh.rotation.y += Math.sin(delta);
-        }
-        if (this.shoot_light.visible) {
-            this.shoot_light.visible = false;
-        }
-    };
+  }
+  create(store, model, size) {
+    store.scene.add(this.shoot_light);
+    this.chunk = store.modelLoader.getModel(store, model, size, this, true);
+    store.removeFromCD(this.chunk.mesh);
+    store.addObject(this);
+  }
+  destroy(store) {
+    store.scene.remove(this.chunk.mesh);
+    store.removeFromCD(this.chunk.mesh);
+    this.alive = false;
+  }
+  setPosition(x, y, z) {
+    this.chunk.mesh.position.set(x, y, z);
+  }
+  setRotation(x, y, z) {
+    this.chunk.mesh.rotation.set(x, y, z);
+  }
+  detach(store, mesh, pos) {
+    if (this.attached && mesh.id == this.attached_id) {
+      this.chunk.mesh.visible = true;
+      mesh.remove(this.chunk.mesh);
+      store.scene.add(this.chunk.mesh);
+      store.addToCD(this.chunk.mesh);
+      this.setRotation(Math.PI, Math.PI, 0);
+      this.setPosition(pos.x+(6-Math.random()*12), 6, pos.z+(6-Math.random()*12));
+      this.attached = false;
+      this.attached_id = 0;
+    }
+  }
+  attach(store, mesh) {
+    if(!this.attached) {
+      store.sounds.PlaySound(store, "reload", this.chunk.mesh.position, 800);
+      this.timeout = 0;
+      mesh.add(this.chunk.mesh);
+      store.removeFromCD(this.chunk.mesh);
+      this.attached = true;
+      this.attached_id = mesh.id;
+      return true;
+    }
+    return false;
+  }
+  shoot(store, dir, id, mesh, speed) {
+    if(this.reloading <= 0) {
+      this.fire(store, dir, id, mesh, speed);
+      this.reloading = this.fire_rate;
+    }
+  }
+  update(store, time, delta) {
+    if(!this.attached) {
+      if(this.timeout > 60) { // Remove after 1min.
+        this.destroy(store);
+      }
+      this.timeout += delta;
+    }
+    // Update reload time
+    if(this.reloading >= 0) {
+      this.reloading -= delta;
+    }
+    // Animate dropped weapon
+    if(!this.attached) {
+      this.chunk.mesh.position.y = store.maps.ground+6+Math.sin(time*2.5);
+      this.chunk.mesh.rotation.y += Math.sin(delta);
+    }
+    if (this.shoot_light.visible) {
+      this.shoot_light.visible = false;
+    }
+  }
 }
 
-//////////////////////////////////////////////////////////////////////
-// Shotgun class
-//////////////////////////////////////////////////////////////////////
-function Shotgun(store) {
-    Weapon.call(this);
+class Shotgun extends Weapon {
+  constructor(store) {
+    super();
     this.obj_type = "shotgun";
     this.fire_rate = 0.5;
     this.create(store, "shotgun", 0.1);
     this.recoil = 1;
     this.damage = 1;
+  }
+  create(store, model, size) {
+    super.create(store, model, size);
+  }
+  fire(store, q, id, shooter, speed) {
+    store.sounds.PlaySound(store, "shotgun", store.player.chunk.mesh.position, 250);
+    var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
+    var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
 
-    Shotgun.prototype.create = function(store, model, size) {
-        Weapon.prototype.create.call(this, store, model, size);
-    };
-
-    Shotgun.prototype.fire = function(store, q, id, shooter, speed) {
-        store.sounds.PlaySound(store, "shotgun", store.player.chunk.mesh.position, 250);
-        var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-        var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
-
-        for (var i = 0; i < 10; i++) {
-            store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
-            store.particles.smoke(point.x + (1 - Math.random() * 2), point.y + (1 - Math.random() * 2), point.z + (1 - Math.random() * 2), 0.5);
-        }
-       // shooter.translateZ(-this.recoil);
-        store.particles.ammoShell(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
-        store.objects["shell"].add(store, point.x, point.y, point.z);
-        store.sounds.PlaySound(store, "shotgun_reload", store.player.chunk.mesh.position, 300);
-    };
-
+    for (var i = 0; i < 10; i++) {
+      store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
+      store.particles.smoke(point.x + (1 - Math.random() * 2), point.y + (1 - Math.random() * 2), point.z + (1 - Math.random() * 2), 0.5);
+    }
+    // shooter.translateZ(-this.recoil);
+    store.particles.ammoShell(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
+    store.objects["shell"].add(store, point.x, point.y, point.z);
+    store.sounds.PlaySound(store, "shotgun_reload", store.player.chunk.mesh.position, 300);
+  }
 }
-Shotgun.prototype = new Weapon;
-Shotgun.prototype.constructor = Shotgun;
 
-//////////////////////////////////////////////////////////////////////
-// Sniper class
-//////////////////////////////////////////////////////////////////////
-function Sniper(store) {
-    Weapon.call(this);
+class Sniper extends Weapon {
+  constructor(store) {
+    super();
     this.obj_type = "sniper";
     this.fire_rate = 1.5;
     this.create(store, "sniper", 0.1);
     this.recoil = 5;
     this.damage = 5;
+  }
+  create(store, model, size) {
+    super.create(store, model, size);
+  }
+  fire(store, q, id, shooter, speed) {
+    store.sounds.PlaySound(store, "sniper", store.player.chunk.mesh.position, 300);
 
-    Sniper.prototype.create = function(store, model, size) {
-        Weapon.prototype.create.call(this, store, model, size);
-    };
+    var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
+    var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
 
-    Sniper.prototype.fire = function(store, q, id, shooter, speed) {
-        store.sounds.PlaySound(store, "sniper", store.player.chunk.mesh.position, 300);
-
-        var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-        var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
-
-        for(var i = 0; i < 2; i++) {
-            store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
-            store.particles.smoke(point.x, point.y, point.z, 0.4);
-        }
-       // shooter.translateZ(-this.recoil);
-        store.particles.ammoSniper(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
-        store.objects["ammo_sniper"].add(store, point.x, point.y, point.z);
-    };
-
+    for(var i = 0; i < 2; i++) {
+      store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
+      store.particles.smoke(point.x, point.y, point.z, 0.4);
+    }
+    // shooter.translateZ(-this.recoil);
+    store.particles.ammoSniper(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
+    store.objects["ammo_sniper"].add(store, point.x, point.y, point.z);
+  }
 }
-Sniper.prototype = new Weapon;
-Sniper.prototype.constructor = Sniper;
 
-//////////////////////////////////////////////////////////////////////
-// Pistol class
-//////////////////////////////////////////////////////////////////////
-function Pistol(store) {
-    Weapon.call(this);
+class Pistol extends Weapon {
+  constructor(store) {
+    super();
     this.obj_type = "pistol";
     this.fire_rate = 0.5;
     this.create(store, "pistol", 0.1);
     this.recoil = 0.2;
     this.damage = 1;
+  }
+  create(store, model, size) {
+    super.create(store, model, size);
+  }
+  fire(store, q, id, shooter, speed) {
+    store.sounds.PlaySound(store, "pistol", store.player.chunk.mesh.position, 450);
+    var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
+    var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
 
-    Pistol.prototype.create = function(store, model, size) {
-        Weapon.prototype.create.call(this, store, model, size);
-    };
-
-    Pistol.prototype.fire = function(store, q, id, shooter, speed) {
-        store.sounds.PlaySound(store, "pistol", store.player.chunk.mesh.position, 450);
-        var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-        var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
-
-        for(var i = 0; i < 2; i++) {
-            store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
-            store.particles.smoke(point.x, point.y, point.z, 0.4);
-        }
-       // shooter.translateZ(-this.recoil);
-        store.particles.ammoP90(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
-        store.objects["ammo_p90"].add(store, point.x, point.y, point.z);
-    };
-
+    for(var i = 0; i < 2; i++) {
+      store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
+      store.particles.smoke(point.x, point.y, point.z, 0.4);
+    }
+    // shooter.translateZ(-this.recoil);
+    store.particles.ammoP90(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
+    store.objects["ammo_p90"].add(store, point.x, point.y, point.z);
+  }
 }
-Pistol.prototype = new Weapon;
-Pistol.prototype.constructor = Pistol;
 
-//////////////////////////////////////////////////////////////////////
-// Grenade Launcher class
-//////////////////////////////////////////////////////////////////////
-function GrenadeLauncher(store) {
-    Weapon.call(this);
+class GrenadeLauncher extends Weapon {
+  constructor(store) {
+    super();
     this.obj_type = "grenadelauncher";
     this.fire_rate = 1;
     this.create(store, "grenadelauncher", 0.1);
     this.recoil = 0.2;
     this.damage = 8;
+  }
+  create(store, model, size) {
+    super.create(store, model, size);
+  }
+  fire(store, q, id, shooter, speed) {
+    store.sounds.PlaySound(store, "grenadelauncher", store.player.chunk.mesh.position, 450);
+    var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
+    var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
 
-    GrenadeLauncher.prototype.create = function(store, model, size) {
-        Weapon.prototype.create.call(this, store, model, size);
-    };
-
-    GrenadeLauncher.prototype.fire = function(store, q, id, shooter, speed) {
-        store.sounds.PlaySound(store, "grenadelauncher", store.player.chunk.mesh.position, 450);
-        var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-        var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
-
-        for(var i = 0; i < 2; i++) {
-            store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
-            store.particles.smoke(point.x, point.y, point.z, 0.4);
-        }
-       // shooter.translateZ(-this.recoil);
-        store.particles.ammoGrenadeLauncher(point.x, point.y, point.z, dir.x, dir.y, dir.z, speed, this.damage);
-    };
-
+    for(var i = 0; i < 2; i++) {
+      store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
+      store.particles.smoke(point.x, point.y, point.z, 0.4);
+    }
+    // shooter.translateZ(-this.recoil);
+    store.particles.ammoGrenadeLauncher(point.x, point.y, point.z, dir.x, dir.y, dir.z, speed, this.damage);
+  }
 }
-GrenadeLauncher.prototype = new Weapon;
-GrenadeLauncher.prototype.constructor = GrenadeLauncher;
 
-//////////////////////////////////////////////////////////////////////
-// P90 class
-//////////////////////////////////////////////////////////////////////
-function P90(store) {
-    Weapon.call(this);
+class P90 extends Weapon {
+  constructor(store) {
+    super();
     this.obj_type = "p90";
     this.fire_rate = 0.07;
     this.create(store, "p90", 0.1);
     this.recoil = 0.2;
     this.damage = 1;
+  }
+  create(store, model, size) {
+    super.create(store, model, size);
+  }
+  fire(store, q, id, shooter, speed) {
+    store.sounds.PlaySound(store, "p90", store.player.chunk.mesh.position, 350);
+    var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
+    var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
 
-    P90.prototype.create = function(store, model, size) {
-        Weapon.prototype.create.call(this, store, model, size);
-    };
-
-    P90.prototype.fire = function(store, q, id, shooter, speed) {
-        store.sounds.PlaySound(store, "p90", store.player.chunk.mesh.position, 350);
-        var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-        var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
-
-        for(var i = 0; i < 2; i++) {
-            store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
-            store.particles.smoke(point.x, point.y, point.z, 0.4);
-        }
-        store.particles.ammoP90(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
-        store.objects["ammo_p90"].add(store, point.x, point.y, point.z);
-    };
-
+    for(var i = 0; i < 2; i++) {
+      store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
+      store.particles.smoke(point.x, point.y, point.z, 0.4);
+    }
+    store.particles.ammoP90(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
+    store.objects["ammo_p90"].add(store, point.x, point.y, point.z);
+  }
 }
-P90.prototype = new Weapon;
-P90.prototype.constructor = P90;
 
-//////////////////////////////////////////////////////////////////////
-// Minigun class
-//////////////////////////////////////////////////////////////////////
-function Minigun(store) {
-    Weapon.call(this);
+class Minigun extends Weapon {
+  constructor(store) {
+    super();
     this.obj_type = "minigun";
     this.fire_rate = 0.1;
     this.create(store, "minigun", 0.1);
     this.recoil = 0.2;
     this.damage = 2;
+  }
+  create(store, model, size) {
+    super.create(store, model, size);
+  }
+  fire(store, q, id, shooter, speed) {
+    store.sounds.PlaySound(store, "minigun", store.player.chunk.mesh.position, 250);
+    var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
+    var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
 
-    Minigun.prototype.create = function(store, model, size) {
-        Weapon.prototype.create.call(this, store, model, size);
-    };
-
-    Minigun.prototype.fire = function(store, q, id, shooter, speed) {
-        store.sounds.PlaySound(store, "minigun", store.player.chunk.mesh.position, 250);
-        var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-        var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
-
-        for(var i = 0; i < 5; i++) {
-            store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
-            store.particles.smoke(point.x, point.y, point.z, 0.4);
-        }
-        store.particles.ammoMinigun(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
-        store.objects["ammo"].add(store, point.x, point.y, point.z);
-    };
-
+    for(var i = 0; i < 5; i++) {
+      store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
+      store.particles.smoke(point.x, point.y, point.z, 0.4);
+    }
+    store.particles.ammoMinigun(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
+    store.objects["ammo"].add(store, point.x, point.y, point.z);
+  }
 }
-Minigun.prototype = new Weapon;
-Minigun.prototype.constructor = Minigun;
 
-
-//////////////////////////////////////////////////////////////////////
-// Ak47 class
-//////////////////////////////////////////////////////////////////////
-function Ak47(store) {
-    Weapon.call(this);
+class Ak47 extends Weapon {
+  constructor(store) {
+    super();
     this.obj_type = "ak47";
     this.fire_rate = 0.15;
     this.create(store, "ak47", 0.1);
     this.recoil = 1;
     this.damage = 2;
+  }
+  create(store, model, size) {
+    super.create(store, model, size);
+  }
+  fire(store, q, id, shooter, speed) {
+    store.sounds.PlaySound(store, "ak47", store.player.chunk.mesh.position, 350);
 
-    Ak47.prototype.create = function(store, model, size) {
-        Weapon.prototype.create.call(this, store, model, size);
-    };
+    var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
+    var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
 
-    Ak47.prototype.fire = function(store, q, id, shooter, speed) {
-        store.sounds.PlaySound(store, "ak47", store.player.chunk.mesh.position, 350);
-
-        var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-        var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
-
-        for(var i = 0; i < 5; i++) {
-            store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
-            store.particles.smoke(point.x, point.y, point.z, 0.4);
-        }
-        store.particles.ammoAk47(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
-        store.objects["ammo"].add(store, point.x, point.y, point.z);
-    };
-
+    for(var i = 0; i < 5; i++) {
+      store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
+      store.particles.smoke(point.x, point.y, point.z, 0.4);
+    }
+    store.particles.ammoAk47(point.x, point.y, point.z, dir.x, dir.y, dir.z, id, speed, this.damage);
+    store.objects["ammo"].add(store, point.x, point.y, point.z);
+  }
 }
-Ak47.prototype = new Weapon;
-Ak47.prototype.constructor = Ak47;
 
-//////////////////////////////////////////////////////////////////////
-// RocketLauncher class
-//////////////////////////////////////////////////////////////////////
-function RocketLauncher(store) {
-    Weapon.call(this);
+class RocketLauncher extends Weapon {
+  constructor(store) {
+    super();
     this.obj_type = "rocketlauncher";
     this.fire_rate = 1;
     this.create(store, "rocketlauncher", 0.1);
     this.recoil = 4;
     this.damage = 6;
+  }
+  create(store, model, size) {
+    super.create(store, model, size);
+  }
+  fire(store, q, id, shooter, speed) {
+    store.sounds.PlaySound(store, "rocket", store.player.chunk.mesh.position, 350);
+    var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
+    var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
+    store.particles.ammoMissile(point.x, point.y, point.z, dir.x, dir.y, dir.z, this, null, speed, this.damage);
 
-    RocketLauncher.prototype.create = function(store, model, size) {
-        Weapon.prototype.create.call(this, store, model, size);
-    };
-
-    RocketLauncher.prototype.fire = function(store, q, id, shooter, speed) {
-        store.sounds.PlaySound(store, "rocket", store.player.chunk.mesh.position, 350);
-        var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-        var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
-        store.particles.ammoMissile(point.x, point.y, point.z, dir.x, dir.y, dir.z, this, null, speed, this.damage);
-
-        for(var i = 0; i < 50; i++) {
-            store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
-            store.particles.smoke(point.x+(1-Math.random()*2), point.y + (1-Math.random()*2), point.z+(1-Math.random()*2), 0.5);
-        }
-    };
-
+    for(var i = 0; i < 50; i++) {
+      store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
+      store.particles.smoke(point.x+(1-Math.random()*2), point.y + (1-Math.random()*2), point.z+(1-Math.random()*2), 0.5);
+    }
+  }
 }
-RocketLauncher.prototype = new Weapon;
-RocketLauncher.prototype.constructor = RocketLauncher;
 
 //////////////////////////////////////////////////////////////////////
 // World class - Helper for world chunks
