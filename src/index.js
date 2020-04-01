@@ -1942,9 +1942,9 @@ class Chunk {
           for(let z_ = z-offset; z_ < z+offset; z_++) {
             for(let y_ = y-offset; y_ < y+offset; y_++) {
               if (x_ >= 0 && y_ >= 0 && z_ >= 0 && x_ < this.chunk_size_x && y_ < this.chunk_size_y && z_ < this.chunk_size_z) {
-                rx |= 0;
-                ry |= 0;
-                rz |= 0;
+                //rx |= 0;
+                //ry |= 0;
+                //rz |= 0;
                 if((this.blocks[x_][y_][z_] >> 8) != 0) {
                   found = true;
                   x = x_; 
@@ -5404,11 +5404,14 @@ class World {
 
     let list = [];
     let vx = 0, vy = 0, vz = 0, val = 0, offset = 0;
-    for (let rx = x-power; rx <= x+power; rx++) {
+    let rx;
+    let ry;
+    let rz;
+    for (rx = x-power; rx <= x+power; rx++) {
       vx = Math.pow((rx-x), 2); 
-      for (let rz = z-power; rz <= z+power; rz++) {
+      for (rz = z-power; rz <= z+power; rz++) {
         vz = Math.pow((rz-z),2)+vx; 
-        for (let ry = y-power; ry <= y+power; ry++) {
+        for (ry = y-power; ry <= y+power; ry++) {
           if (ry > 0) {
             val = Math.pow((ry-y),2) + vz;
             if (val <= pow) {
