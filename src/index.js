@@ -128,7 +128,7 @@ class Char {
     this.chunk = 0;
     this.init_pos = new THREE.Vector3(0, 0, 0);
     this.weapon = 0;
-    this.obj_type = "char";
+    this.obj_type = model;
     this.loaded = false;
     this.alive = true;
     this.y_offset = 0;
@@ -595,7 +595,6 @@ class Enemy extends Char {
 class Dudo extends Enemy {
   constructor(store, x, y, z) {
     super(store, "dudo", x, y + store.maps.ground + 5, z, 1);
-    this.obj_type = "dudo";
     this.run_speed = 30;
     this.walk_speed = 15;
 
@@ -627,14 +626,7 @@ class AgentBlack extends Enemy {
     super(store, "agentblack", x, y + store.maps.ground + 7, z, 0.5);
     this.run_speed = 40;
     this.walk_speed = 15;
-    this.obj_type = "agentblack";
     this.shoot_ability = 0.5;
-  }
-  die(store) {
-    this.chunk.mesh.position.y = store.maps.ground + 1;
-  }
-  create(store, x, y, z) {
-    super.create(store, this.obj_type, x, store.maps.ground + this.y_offset, z, 0.5);
     this.chunk.mesh.rotation.order = 'YXZ';
     if (Math.random() > 0.8) {
       this.addWeapon(store, new Shotgun(store));
@@ -645,6 +637,10 @@ class AgentBlack extends Enemy {
     }
     this.weapon.attach(store, this.chunk.mesh);
     this.unloadWeapon();
+
+  }
+  die(store) {
+    this.chunk.mesh.position.y = store.maps.ground + 1;
   }
   loadWeapon() {
     super.loadWeapon();
@@ -667,7 +663,6 @@ class Agent extends Enemy {
     super(store, "agent", x, y + store.maps.ground + 7, z, 0.5);
     this.run_speed = 40;
     this.walk_speed = 15;
-    this.obj_type = "agent";
     this.shoot_ability = 0.5;
     this.chunk.mesh.rotation.order = 'YXZ';
     if (Math.random() > 0.8) {
@@ -704,7 +699,6 @@ class Greenie extends Enemy {
     super(store, "greenie", x, y + store.maps.ground + 5, z, 1);
     this.run_speed = 40;
     this.walk_speed = 15;
-    this.obj_type = "greenie";
 
     this.chunk.mesh.rotation.order = 'YXZ';
     if (Math.random() > 0.4) {
@@ -736,7 +730,6 @@ class Greenie extends Enemy {
 class Hearty extends Enemy {
   constructor(store, x, y, z) {
     super(store, "hearty", x, y + store.maps.ground + 6, z, 1);
-    this.obj_type = "hearty";
     this.run_speed = 50;
     this.walk_speed = 15;
 
@@ -768,7 +761,6 @@ class Hearty extends Enemy {
 class Player extends Char {
   constructor(store, x, y, z) {
     super(store, "player", x, y + store.maps.ground + 6, z, 1);
-    this.obj_type = "player";
     this.base_type = "player";
     this.run_speed = 50;
     this.keyboard = 0;
@@ -2443,9 +2435,8 @@ class Main {
       }
     }
 
-    for(var f in this.objects) {
-      this.objects[f].update(this, time, delta);
-    }
+    Object.values(this.objects)
+      .map(f => f.update(this, time, delta));
 
     this.stats.update();
     this.particles.update(this, time, delta);
@@ -2759,57 +2750,49 @@ class Maps {
                   if (data[i].a == 0) { continue; }
                   for (var k in this.objects) {
                     if (data[i].r == this.objects[k].r && data[i].g == this.objects[k].g && data[i].b == this.objects[k].b) {
-                      const objEntityTypes = {
-                        Portal,
-                        UfoSign,
-                        RadiationSign,
-                        DeadHearty,
-                        BarrelFire,
-                        Barrel,
-                        FBIHQ,
-                        SpiderWeb,
-                        AmmoCrate,
-                        AmmoSniper,
-                        AmmoP90,
-                        Ammo,
-                        Shell,
-                        Heart,
-                        DeadHearty,
-                        Lamp1,
-                        BarrelFire,
-                        Tree,
-                        StreetLamp,
-                        PaperPoliceCar,
-                        PainKillers,
-                        PaperAgent,
-                      };
-                      const charEntityTypes = {
-                        Agent,
-                        AgentBlack,
-                        Greenie,
-                        Hearty,
-                        Player,
-                        Dudo,
-                      };
+const Entities = Object.freeze({
+  /* chars */
+  Agent,
+  AgentBlack,
+  Greenie,
+  Hearty,
+  Player,
+  Dudo,
+  /* objs */
+  Portal,
+  UfoSign,
+  RadiationSign,
+  DeadHearty,
+  BarrelFire,
+  Barrel,
+  FBIHQ,
+  SpiderWeb,
+  AmmoCrate,
+  AmmoSniper,
+  AmmoP90,
+  Ammo,
+  Shell,
+  Heart,
+  DeadHearty,
+  Lamp1,
+  BarrelFire,
+  Tree,
+  StreetLamp,
+  PaperPoliceCar,
+  PainKillers,
+  PaperAgent,
+});
 
-                      let o;
-
-                      if (!!charEntityTypes[k]) {
-                        console.log(`Alloc Char ${k}`);
-                        // store, x, y, z (size is not up to us)
-                        o = new charEntityTypes[k](store, data[i].y, 0, data[i].x);
-                        this.loaded.push(o);
-                        if (k == "Player") {
-                          store.player = o;
-                        }
-                      } else if (!!objEntityTypes[k]) {
-                        console.log(`Alloc Obj ${k}`);
-                        o = new objEntityTypes[k](store, data[i].y, 0, data[i].x);
-                        //o = new objEntityTypes[k]();
-                        //o.create(store, data[i].y, 0, data[i].x);
-                        this.loaded.push(o);
+                      const Entity = Entities[k];
+                      if (!Entity) {
+                        throw new Error(`Encountered unrecognized entity, ${k}.`);
                       }
-
+                      const inst = new Entity(store, data[i].y, 0, data[i].x);
+                      this.loaded.push(inst);
+                      // TODO: Abstract stateful handling like this.
+                      if (k == "Player") {
+                        store.player = inst;
+                      }
                     }
                   }
                 }
@@ -2855,6 +2838,7 @@ class Obj {
     this.active = [];
     this.ptr = 0;
     this.base_type = "object";
+    this.obj_type = model;
     this.red_light = new THREE.PointLight(0xFF00AA, 2, 10);
     this.yellow_light = new THREE.PointLight(0xFFAA00, 2, 80);
     this.green_light = new THREE.PointLight(0x00FF00, 2, 10);
@@ -2899,7 +2883,6 @@ class FreeFormChunk {
 class Portal extends Obj {
   constructor(store, x, y, z) {
     super(store, "portal", x, y, z, 1);
-    this.base_type = "object";
     this.type = "portal";
     this.alive = true;
     this.x = x;
@@ -2921,7 +2904,6 @@ class PainKillers extends Obj {
   constructor(store, x, y, z) {
     super(store, "painkillers", x, y, z, 0.2);
     this.base_type = "object";
-    this.obj_type = "painkillers";
     this.alive = true;
     this.light = 0;
     this.taken = false;
@@ -2987,8 +2969,6 @@ class PaperAgent extends Obj {
 class Tree extends Obj {
   constructor(store, x, y, z) {
     super(store, "tree", x, y, z, 0.5);
-    this.base_type = "object";
-    this.type = "tree";
     this.alive = true;
     this.light = 0;
     this.chunk.owner = this;
@@ -3000,8 +2980,6 @@ class Tree extends Obj {
 class StreetLamp extends Obj {
   constructor(store, x, y, z) {
     super(store, "street_lamp", x, y, z, 0.4);
-    this.base_type = "object";
-    this.obj_type = "street_lamp";
     this.alive = true;
     this.light = 0;
 
@@ -3353,7 +3331,6 @@ class Shell extends Obj {
 class Heart extends Obj {
   constructor(store, x, y, z) {
     super(store, "heart", x, y, z, 0.02);
-    this.obj_type = "heart";
   }
   grab(store, mesh_id) {
     for(var i = 0; i < this.active.length; i++) {
@@ -5072,6 +5049,7 @@ class Weapon {
   constructor(store, model, size) {
     this.ammo = 0;
     this.base_type = "weapon";
+    this.obj_type = model;
     this.chunk = 0;
     this.name = "";
     this.fire_rate = 0; // in ms between each
@@ -5154,7 +5132,6 @@ class Weapon {
 class Shotgun extends Weapon {
   constructor(store) {
     super(store, "shotgun", 0.1);
-    this.obj_type = "shotgun";
     this.fire_rate = 0.5;
     this.recoil = 1;
     this.damage = 1;
@@ -5178,7 +5155,6 @@ class Shotgun extends Weapon {
 class Sniper extends Weapon {
   constructor(store) {
     super(store, "sniper", 0.1);
-    this.obj_type = "sniper";
     this.fire_rate = 1.5;
     this.recoil = 5;
     this.damage = 5;
@@ -5202,7 +5178,6 @@ class Sniper extends Weapon {
 class Pistol extends Weapon {
   constructor(store) {
     super(store, "pistol", 0.1);
-    this.obj_type = "pistol";
     this.fire_rate = 0.5;
     this.recoil = 0.2;
     this.damage = 1;
@@ -5225,7 +5200,6 @@ class Pistol extends Weapon {
 class GrenadeLauncher extends Weapon {
   constructor(store) {
     super(store, "grenadelauncher", 0.1);
-    this.obj_type = "grenadelauncher";
     this.fire_rate = 1;
     this.recoil = 0.2;
     this.damage = 8;
@@ -5247,7 +5221,6 @@ class GrenadeLauncher extends Weapon {
 class P90 extends Weapon {
   constructor(store) {
     super(store, "p90", 0.1);
-    this.obj_type = "p90";
     this.fire_rate = 0.07;
     this.recoil = 0.2;
     this.damage = 1;
@@ -5269,7 +5242,6 @@ class P90 extends Weapon {
 class Minigun extends Weapon {
   constructor(store) {
     super(store, "minigun", 0.1);
-    this.obj_type = "minigun";
     this.fire_rate = 0.1;
     this.recoil = 0.2;
     this.damage = 2;
@@ -5291,7 +5263,6 @@ class Minigun extends Weapon {
 class Ak47 extends Weapon {
   constructor(store) {
     super(store, "ak47", 0.1);
-    this.obj_type = "ak47";
     this.fire_rate = 0.15;
     this.recoil = 1;
     this.damage = 2;
@@ -5314,7 +5285,6 @@ class Ak47 extends Weapon {
 class RocketLauncher extends Weapon {
   constructor(store) {
     super(store, "rocketlauncher", 0.1);
-    this.obj_type = "rocketlauncher";
     this.fire_rate = 1;
     this.recoil = 4;
     this.damage = 6;
