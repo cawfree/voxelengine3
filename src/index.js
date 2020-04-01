@@ -399,13 +399,11 @@ class Char {
   hit(store, damage, direction, type, pos) {
     this.bleed_timer = this.chunk.health / 100 * 10;
 
-    let die = false;
-
     this.sound_hit(store);
 
     this.chunk.hit(store, direction, damage, pos);
 
-    die = this.chunk.health < 90? true: false;
+    const die = this.chunk.health < 90;
 
     if (die && this.alive) {
       this.dropWeapon(store);
@@ -1014,15 +1012,17 @@ class Player extends Char {
           }
           if (this.falling) {
             store.sounds.StopSound("footsteps");
-            if (Math.random() > 0.5) {
-              store.sounds.PlaySound(store, "fall", this.chunk.mesh.position, 400);
-            } else {
-              store.sounds.PlaySound(store, "fall2", this.chunk.mesh.position, 400);
-            }
-            store.maps.ambient_light.color.r = 0;
+            store.sounds.PlaySound(
+              store,
+              Math.random() > 0.5 ? "fall" : "fall2",
+              this.chunk.mesh.position,
+              400,
+            );
+            // XXX: Color the level.
+            store.maps.ambient_light.color.r = 0.1;
             store.maps.ambient_light.color.g = 0;
             store.maps.ambient_light.color.b = 0;
-            // Fall down!
+            // XXX: Fall down!
             this.chunk.mesh.remove(store.camera);
             store.scene.add(store.camera);
             store.camera.position.z = pos.z;
@@ -1182,11 +1182,8 @@ class Chunk {
     store.scene.remove(this.mesh);
     this.blocks = null;
   }
-  SameColor(block1, block2) {
-    if (((block1 >> 8) & 0xFFFFFF) == ((block2 >> 8) & 0xFFFFFF) && block1 != 0 && block2 != 0) {
-      return true;
-    }
-    return false;
+  isSameColor(block1, block2) {
+    return (((block1 >> 8) & 0xFFFFFF) == ((block2 >> 8) & 0xFFFFFF) && block1 != 0 && block2 != 0);
   }
   build(store) {
     let vertices = [];
@@ -1354,14 +1351,14 @@ class Chunk {
 
                 for (let x_ = x; x_ < this.chunk_size_x; x_++) {
                   // Check not drawn + same color
-                  if ((this.blocks[x_][y][z] & 0x20) == 0 && this.SameColor(this.blocks[x_][y][z], this.blocks[x][y][z])) {
+                  if ((this.blocks[x_][y][z] & 0x20) == 0 && this.isSameColor(this.blocks[x_][y][z], this.blocks[x][y][z])) {
                     maxX++;
                   } else {
                     break;
                   }
                   let tmpZ = 0;
                   for (let z_ = z; z_ < this.chunk_size_z; z_++) {
-                    if ((this.blocks[x_][y][z_] & 0x20) == 0 && this.SameColor(this.blocks[x_][y][z_], this.blocks[x][y][z])) {
+                    if ((this.blocks[x_][y][z_] & 0x20) == 0 && this.isSameColor(this.blocks[x_][y][z_], this.blocks[x][y][z])) {
                       tmpZ++;
                     } else {
                       break;
@@ -1409,14 +1406,14 @@ class Chunk {
 
               for (let x_ = x; x_ < this.chunk_size_x; x_++) {
                 // Check not drawn + same color
-                if ((this.blocks[x_][y][z] & 0x2) == 0 && this.SameColor(this.blocks[x_][y][z], this.blocks[x][y][z])) {
+                if ((this.blocks[x_][y][z] & 0x2) == 0 && this.isSameColor(this.blocks[x_][y][z], this.blocks[x][y][z])) {
                   maxX++;
                 } else {
                   break;
                 }
                 let tmpZ = 0;
                 for (let z_ = z; z_ < this.chunk_size_z; z_++) {
-                  if ((this.blocks[x_][y][z_] & 0x2) == 0 && this.SameColor(this.blocks[x_][y][z_], this.blocks[x][y][z])) {
+                  if ((this.blocks[x_][y][z_] & 0x2) == 0 && this.isSameColor(this.blocks[x_][y][z_], this.blocks[x][y][z])) {
                     tmpZ++;
                   } else {
                     break;
@@ -1462,14 +1459,14 @@ class Chunk {
 
               for (let x_ = x; x_ < this.chunk_size_x; x_++) {
                 // Check not drawn + same color
-                if ((this.blocks[x_][y][z] & 0x10) == 0 && this.SameColor(this.blocks[x_][y][z], this.blocks[x][y][z])) {
+                if ((this.blocks[x_][y][z] & 0x10) == 0 && this.isSameColor(this.blocks[x_][y][z], this.blocks[x][y][z])) {
                   maxX++;
                 } else {
                   break;
                 }
                 let tmpY = 0;
                 for (let y_ = y; y_ < this.chunk_size_y; y_++) {
-                  if ((this.blocks[x_][y_][z] & 0x10) == 0 && this.SameColor(this.blocks[x_][y_][z], this.blocks[x][y][z])) {
+                  if ((this.blocks[x_][y_][z] & 0x10) == 0 && this.isSameColor(this.blocks[x_][y_][z], this.blocks[x][y][z])) {
                     tmpY++;
                   } else {
                     break;
@@ -1513,14 +1510,14 @@ class Chunk {
 
               for (let x_ = x; x_ < this.chunk_size_x; x_++) {
                 // Check not drawn + same color
-                if ((this.blocks[x_][y][z] & 0x1) == 0 && this.SameColor(this.blocks[x_][y][z], this.blocks[x][y][z])) {
+                if ((this.blocks[x_][y][z] & 0x1) == 0 && this.isSameColor(this.blocks[x_][y][z], this.blocks[x][y][z])) {
                   maxX++;
                 } else {
                   break;
                 }
                 let tmpY = 0;
                 for (let y_ = y; y_ < this.chunk_size_y; y_++) {
-                  if ((this.blocks[x_][y_][z] & 0x1) == 0 && this.SameColor(this.blocks[x_][y_][z], this.blocks[x][y][z])) {
+                  if ((this.blocks[x_][y_][z] & 0x1) == 0 && this.isSameColor(this.blocks[x_][y_][z], this.blocks[x][y][z])) {
                     tmpY++;
                   } else {
                     break;
@@ -1564,14 +1561,14 @@ class Chunk {
 
               for (let z_ = z; z_ < this.chunk_size_z; z_++) {
                 // Check not drawn + same color
-                if ((this.blocks[x][y][z_] & 0x8) == 0 && this.SameColor(this.blocks[x][y][z_], this.blocks[x][y][z])) {
+                if ((this.blocks[x][y][z_] & 0x8) == 0 && this.isSameColor(this.blocks[x][y][z_], this.blocks[x][y][z])) {
                   maxZ++;
                 } else {
                   break;
                 }
                 let tmpY = 0;
                 for (let y_ = y; y_ < this.chunk_size_y; y_++) {
-                  if ((this.blocks[x][y_][z_] & 0x8) == 0 && this.SameColor(this.blocks[x][y_][z_], this.blocks[x][y][z])) {
+                  if ((this.blocks[x][y_][z_] & 0x8) == 0 && this.isSameColor(this.blocks[x][y_][z_], this.blocks[x][y][z])) {
                     tmpY++;
                   } else {
                     break;
@@ -1615,14 +1612,14 @@ class Chunk {
 
               for (let z_ = z; z_ < this.chunk_size_z; z_++) {
                 // Check not drawn + same color
-                if ((this.blocks[x][y][z_] & 0x4) == 0 && this.SameColor(this.blocks[x][y][z_], this.blocks[x][y][z])) {
+                if ((this.blocks[x][y][z_] & 0x4) == 0 && this.isSameColor(this.blocks[x][y][z_], this.blocks[x][y][z])) {
                   maxZ++;
                 } else {
                   break;
                 }
                 let tmpY = 0;
                 for (let y_ = y; y_ < this.chunk_size_y; y_++) {
-                  if ((this.blocks[x][y_][z_] & 0x4) == 0 && this.SameColor(this.blocks[x][y_][z_], this.blocks[x][y][z])) {
+                  if ((this.blocks[x][y_][z_] & 0x4) == 0 && this.isSameColor(this.blocks[x][y_][z_], this.blocks[x][y][z])) {
                     tmpY++;
                   } else {
                     break;
