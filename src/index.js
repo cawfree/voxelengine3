@@ -98,29 +98,24 @@ const loadAllModels =  (store, models) => Promise.all(
 )
   .then(Object.fromEntries);
 
-const getModel = (store, name, size, obj, only_mesh) => {
-  if(size == null) { size = 1; }
-  if(only_mesh == null) { only_mesh = false; }
+const getMesh = (store, name, size = 1, obj) => { 
+  const new_obj = {};
+  new_obj.owner = obj;
+  new_obj.mesh = store.models[name].mesh.clone();
+  new_obj.mesh.owner = obj;
+  new_obj.mesh.visible = true;
+  new_obj.mesh.scale.set(size, size, size);
+  store.scene.add(new_obj.mesh);
+  store.addToCD(new_obj.mesh);
+  return new_obj;
+};
 
-  if(only_mesh) {
-    const new_obj = {};
-    new_obj.owner = obj;
-    new_obj.mesh = store.models[name].mesh.clone();
-    new_obj.mesh.owner = obj;
-
-    new_obj.mesh.visible = true;
-    new_obj.mesh.scale.set(size, size, size);
-    store.scene.add(new_obj.mesh);
-    store.addToCD(new_obj.mesh);
-    return new_obj;
-  }
+const getModel = (store, name, size = 1, obj) => { 
   const new_obj = cloneChunk(store, store.models[name]);
   new_obj.owner = obj;
   new_obj.blockSize = size;
-
   new_obj.mesh = undefined;
   new_obj.build(store);
-
   new_obj.mesh.visible = true;
   store.scene.add(new_obj.mesh);
   return new_obj;
@@ -5189,7 +5184,7 @@ class Weapon {
     this.shoot_light = new THREE.PointLight( 0xFFAA00, 3, 10 );
     this.damage = 1;
     store.scene.add(this.shoot_light);
-    this.chunk = getModel(store, model, size, this, true);
+    this.chunk = getMesh(store, model, size, this);
     store.removeFromCD(this.chunk.mesh);
     store.addObject(this);
   }
