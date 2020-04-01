@@ -3515,6 +3515,7 @@ class Heart extends Obj {
 function ParticlePool(store, size, type) {
   this.particles = [];
   this.queue = [];
+  // XXX: Is size just particles.length?
   this.size = size;
   this.pos = 0;
   this.neg = 0;
@@ -3524,11 +3525,9 @@ function ParticlePool(store, size, type) {
   this.update_cnt = 0;
   this.lights = [];
   this.size = size;
-  for (var i = 0; i < this.size; i++) {
-    var p = new Particle();
-    p.init(store, type);
-    this.particles.push(p);
-  }
+  this.particles = [...Array(size)].map(
+    () => new Particle(store, type),
+  );
 
   ParticlePool.prototype.update = function (store, time, delta) {
     // Dim lights 
@@ -4285,7 +4284,7 @@ function ParticlePool(store, size, type) {
   };
 }
 
-function Particle() {
+function Particle(store, particle_type) {
   this.life = 0;
   this.active = 0;
   this.mesh = undefined;
@@ -4337,6 +4336,17 @@ function Particle() {
   this.hit = false;
   this.size = 1;
   this.stay = true;
+
+  this.particle_type = particle_type;
+  if (particle_type == 0) {
+    this.mesh = new THREE.Sprite(store.sprite_material.clone());
+  } else {
+    this.mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), store.box_material.clone());
+  }
+
+  store.scene.add(this.mesh);
+  this.mesh.visible = false;
+  this.mesh.castShadow = false;
 
   Particle.prototype.set = function (store, opts) {
     if (!this.isVisible(store, new THREE.Vector3(opts.x, opts.y, opts.z))) {
@@ -4427,20 +4437,7 @@ function Particle() {
     this.light = false;
     this.hit = false;
     this.stay = true;
-  };
-
-  Particle.prototype.init = function (store, particle_type) {
-    this.particle_type = particle_type;
-    if (particle_type == 0) {
-      this.mesh = new THREE.Sprite(store.sprite_material.clone());
-    } else {
-      this.mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), store.box_material.clone());
-    }
-
-    store.scene.add(this.mesh);
-    this.mesh.visible = false;
-    this.mesh.castShadow = false;
-  };
+  }; 
 
   Particle.prototype.checkLife = function () {
     if (this.life <= 0 || this.mesh.position.y < 0) {
