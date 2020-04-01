@@ -97,7 +97,6 @@ const loadAllModels =  (store, models) => Promise.all(
 )
   .then(Object.fromEntries);
 
-
 const getModel = (store, name, size, obj, only_mesh) => {
   if(size == null) { size = 1; }
   if(only_mesh == null) { only_mesh = false; }
@@ -4761,7 +4760,6 @@ function Particle() {
   };
 }
 
-
 function SoundLoader() {
   this.sounds = new Array();
   this.context;
@@ -5185,7 +5183,7 @@ class Vox {
 };
 
 class Weapon {
-  constructor() {
+  constructor(store, model, size) {
     this.ammo = 0;
     this.base_type = "weapon";
     this.chunk = 0;
@@ -5199,8 +5197,6 @@ class Weapon {
     this.relative_speed = 0;
     this.shoot_light = new THREE.PointLight( 0xFFAA00, 3, 10 );
     this.damage = 1;
-  }
-  create(store, model, size) {
     store.scene.add(this.shoot_light);
     this.chunk = getModel(store, model, size, this, true);
     store.removeFromCD(this.chunk.mesh);
@@ -5271,15 +5267,11 @@ class Weapon {
 
 class Shotgun extends Weapon {
   constructor(store) {
-    super();
+    super(store, "shotgun", 0.1);
     this.obj_type = "shotgun";
     this.fire_rate = 0.5;
-    this.create(store, "shotgun", 0.1);
     this.recoil = 1;
     this.damage = 1;
-  }
-  create(store, model, size) {
-    super.create(store, model, size);
   }
   fire(store, q, id, shooter, speed) {
     store.sounds.PlaySound(store, "shotgun", store.player.chunk.mesh.position, 250);
@@ -5299,15 +5291,11 @@ class Shotgun extends Weapon {
 
 class Sniper extends Weapon {
   constructor(store) {
-    super();
+    super(store, "sniper", 0.1);
     this.obj_type = "sniper";
     this.fire_rate = 1.5;
-    this.create(store, "sniper", 0.1);
     this.recoil = 5;
     this.damage = 5;
-  }
-  create(store, model, size) {
-    super.create(store, model, size);
   }
   fire(store, q, id, shooter, speed) {
     store.sounds.PlaySound(store, "sniper", store.player.chunk.mesh.position, 300);
@@ -5327,15 +5315,11 @@ class Sniper extends Weapon {
 
 class Pistol extends Weapon {
   constructor(store) {
-    super();
+    super(store, "pistol", 0.1);
     this.obj_type = "pistol";
     this.fire_rate = 0.5;
-    this.create(store, "pistol", 0.1);
     this.recoil = 0.2;
     this.damage = 1;
-  }
-  create(store, model, size) {
-    super.create(store, model, size);
   }
   fire(store, q, id, shooter, speed) {
     store.sounds.PlaySound(store, "pistol", store.player.chunk.mesh.position, 450);
@@ -5354,15 +5338,11 @@ class Pistol extends Weapon {
 
 class GrenadeLauncher extends Weapon {
   constructor(store) {
-    super();
+    super(store, "grenadelauncher", 0.1);
     this.obj_type = "grenadelauncher";
     this.fire_rate = 1;
-    this.create(store, "grenadelauncher", 0.1);
     this.recoil = 0.2;
     this.damage = 8;
-  }
-  create(store, model, size) {
-    super.create(store, model, size);
   }
   fire(store, q, id, shooter, speed) {
     store.sounds.PlaySound(store, "grenadelauncher", store.player.chunk.mesh.position, 450);
@@ -5380,15 +5360,11 @@ class GrenadeLauncher extends Weapon {
 
 class P90 extends Weapon {
   constructor(store) {
-    super();
+    super(store, "p90", 0.1);
     this.obj_type = "p90";
     this.fire_rate = 0.07;
-    this.create(store, "p90", 0.1);
     this.recoil = 0.2;
     this.damage = 1;
-  }
-  create(store, model, size) {
-    super.create(store, model, size);
   }
   fire(store, q, id, shooter, speed) {
     store.sounds.PlaySound(store, "p90", store.player.chunk.mesh.position, 350);
@@ -5406,15 +5382,11 @@ class P90 extends Weapon {
 
 class Minigun extends Weapon {
   constructor(store) {
-    super();
+    super(store, "minigun", 0.1);
     this.obj_type = "minigun";
     this.fire_rate = 0.1;
-    this.create(store, "minigun", 0.1);
     this.recoil = 0.2;
     this.damage = 2;
-  }
-  create(store, model, size) {
-    super.create(store, model, size);
   }
   fire(store, q, id, shooter, speed) {
     store.sounds.PlaySound(store, "minigun", store.player.chunk.mesh.position, 250);
@@ -5432,15 +5404,11 @@ class Minigun extends Weapon {
 
 class Ak47 extends Weapon {
   constructor(store) {
-    super();
+    super(store, "ak47", 0.1);
     this.obj_type = "ak47";
     this.fire_rate = 0.15;
-    this.create(store, "ak47", 0.1);
     this.recoil = 1;
     this.damage = 2;
-  }
-  create(store, model, size) {
-    super.create(store, model, size);
   }
   fire(store, q, id, shooter, speed) {
     store.sounds.PlaySound(store, "ak47", store.player.chunk.mesh.position, 350);
@@ -5459,15 +5427,11 @@ class Ak47 extends Weapon {
 
 class RocketLauncher extends Weapon {
   constructor(store) {
-    super();
+    super(store, "rocketlauncher", 0.1);
     this.obj_type = "rocketlauncher";
     this.fire_rate = 1;
-    this.create(store, "rocketlauncher", 0.1);
     this.recoil = 4;
     this.damage = 6;
-  }
-  create(store, model, size) {
-    super.create(store, model, size);
   }
   fire(store, q, id, shooter, speed) {
     store.sounds.PlaySound(store, "rocket", store.player.chunk.mesh.position, 350);
