@@ -17,6 +17,7 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
+    "klona": "^1.1.1",
     "three": "0.86"
   }
 }

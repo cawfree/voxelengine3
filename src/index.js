@@ -1,6 +1,7 @@
 import "@babel/polyfill";
 
 import * as THREE from 'three';
+import klona from "klona";
 
 const loadModel = (store, name, modelData) => {
   var model = Vox.LoadModel(modelData[0], name);
@@ -100,10 +101,9 @@ const loadAllModels =  (store, models) => Promise.all(
 const getModel = (store, name, size, obj, only_mesh) => {
   if(size == null) { size = 1; }
   if(only_mesh == null) { only_mesh = false; }
-  // Depp copy chunk
-  var new_obj;
+
   if(only_mesh) {
-    new_obj = {};
+    const new_obj = {};
     new_obj.owner = obj;
     new_obj.mesh = store.models[name].mesh.clone();
     new_obj.mesh.owner = obj;
@@ -112,17 +112,17 @@ const getModel = (store, name, size, obj, only_mesh) => {
     new_obj.mesh.scale.set(size, size, size);
     store.scene.add(new_obj.mesh);
     store.addToCD(new_obj.mesh);
-  } else {
-    var new_obj = jQuery.extend(true, {}, store.models[name]);
-    new_obj.owner = obj;
-    new_obj.blockSize = size;
-
-    new_obj.mesh = undefined;
-    new_obj.build(store);
-
-    new_obj.mesh.visible = true;
-    store.scene.add(new_obj.mesh);
+    return new_obj;
   }
+  const new_obj = cloneChunk(store, store.models[name]);
+  new_obj.owner = obj;
+  new_obj.blockSize = size;
+
+  new_obj.mesh = undefined;
+  new_obj.build(store);
+
+  new_obj.mesh.visible = true;
+  store.scene.add(new_obj.mesh);
   return new_obj;
 }
 
@@ -1151,6 +1151,23 @@ class Player extends Char {
     }
   }
 }
+
+const cloneChunk = (store, chunk) => {
+  const c = new Chunk(
+    store,
+    chunk.from_x,
+    chunk.from_y,
+    chunk.from_z,
+    chunk.chunk_size_x,
+    chunk.chunk_size_y,
+    chunk.chunk_size_z,
+    chunk.id,
+    chunk.blockSize,
+    chunk.type,
+  );
+  c.blocks = klona(chunk.blocks);
+  return c;
+};
 
 // TODO: Okay, so this isn't really a class, it's some weird mutatable object.
 //       Needs a heavy refactor about getModel.
