@@ -2388,10 +2388,8 @@ class Main {
 
     this.world.init(this);
 
-    this.particles = new ParticlePool();
-    this.particles.init(this, 2000, 0);
-    this.particles_box = new ParticlePool();
-    this.particles_box.init(this, 1000, 1);
+    this.particles = new ParticlePool(this, 2000, 0);
+    this.particles_box = new ParticlePool(this, 1000, 1);
 
     // Wait for all resources to be loaded before loading map.
     this.textures.prepare();
@@ -3518,7 +3516,7 @@ class Heart extends Obj {
   }
 }
 
-function ParticlePool(size, type) {
+function ParticlePool(store, size, type) {
   this.particles = [];
   this.queue = [];
   this.size = size;
@@ -3529,15 +3527,12 @@ function ParticlePool(size, type) {
   this.opts = 0;
   this.update_cnt = 0;
   this.lights = [];
-
-  ParticlePool.prototype.init = function (store, size, type) {
-    this.size = size;
-    for (var i = 0; i < this.size; i++) {
-      var p = new Particle();
-      p.init(store, type);
-      this.particles.push(p);
-    }
-  };
+  this.size = size;
+  for (var i = 0; i < this.size; i++) {
+    var p = new Particle();
+    p.init(store, type);
+    this.particles.push(p);
+  }
 
   ParticlePool.prototype.update = function (store, time, delta) {
     // Dim lights 
