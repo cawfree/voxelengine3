@@ -607,7 +607,7 @@ class Dudo extends Enemy {
     super.loadWeapon();
     if (this.weapon) {
       this.weapon.setPosition(-3, -1.5, 0.5);
-      this.weapon.setRotation(Math.PI, Math.PI / 2, 0);
+      this.weapon.setRotation(Math.PI, Math.PI * 0.5, 0);
     }
   }
   unloadWeapon() {
@@ -643,7 +643,7 @@ class AgentBlack extends Enemy {
     super.loadWeapon();
     if (this.weapon) {
       this.weapon.setPosition(-3, 0, 0.5);
-      this.weapon.setRotation(Math.PI, Math.PI / 2, 0);
+      this.weapon.setRotation(Math.PI, Math.PI * 0.5, 0);
     }
   }
   unloadWeapon() {
@@ -678,7 +678,7 @@ class Agent extends Enemy {
     super.loadWeapon();
     if (this.weapon) {
       this.weapon.setPosition(-3, 0, 0.5);
-      this.weapon.setRotation(Math.PI, Math.PI / 2, 0);
+      this.weapon.setRotation(Math.PI, Math.PI * 0.5, 0);
     }
   }
   unloadWeapon() {
@@ -709,7 +709,7 @@ class Greenie extends Enemy {
     super.loadWeapon();
     if (this.weapon) {
       this.weapon.setPosition(-3, -1.5, 0.5);
-      this.weapon.setRotation(Math.PI, Math.PI / 2, 0);
+      this.weapon.setRotation(Math.PI, Math.PI * 0.5, 0);
     }
   }
   unloadWeapon() {
@@ -739,7 +739,7 @@ class Hearty extends Enemy {
     super.loadWeapon();
     if (this.weapon) {
       this.weapon.setPosition(-2.5, -2.5, 0.5);
-      this.weapon.setRotation(Math.PI, Math.PI / 2, 0);
+      this.weapon.setRotation(Math.PI, Math.PI * 0.5, 0);
     }
   }
   unloadWeapon() {
@@ -855,7 +855,7 @@ class Player extends Char {
     }
     this.weapon = this.weapons[id];
     this.weapon.setPosition(2.5, -0.5, 2.5);
-    this.weapon.setRotation(Math.PI, Math.PI / 2, 0);
+    this.weapon.setRotation(Math.PI, Math.PI * 0.5, 0);
     this.can_shoot = true;
     this.loaded = true;
   }
@@ -1916,32 +1916,7 @@ class Chunk {
     if(this.base_type == "enemy") {
       offset = 20;
     }
-    // Try to find a point which has a block to not repeat the hits
-    if (x >= 0 && y >= 0 && z >= 0 && x < this.chunk_size_x && y < this.chunk_size_y && z < this.chunk_size_z) {
-      if((this.blocks[x][y][z] >> 8) == 0) {
-        let found = false;
-        for(let x_ = x-offset; x_ < x+offset; x_++) {
-          for(let z_ = z-offset; z_ < z+offset; z_++) {
-            for(let y_ = y-offset; y_ < y+offset; y_++) {
-              if (x_ >= 0 && y_ >= 0 && z_ >= 0 && x_ < this.chunk_size_x && y_ < this.chunk_size_y && z_ < this.chunk_size_z) {
-                //rx |= 0;
-                //ry |= 0;
-                //rz |= 0;
-                if((this.blocks[x_][y_][z_] >> 8) != 0) {
-                  found = true;
-                  x = x_; 
-                  y = y_;
-                  z = z_;
-                  break;
-                }
-              }
-            }
-            if(found) { break; }
-          }
-          if(found) { break; }
-        }
-      }
-    }
+    
     let isHit = 0;
     let from_x = (x - power) < 0? 0: x-power;
     let from_z = (z - power) < 0? 0: z-power;
@@ -2080,10 +2055,7 @@ class Chunk {
 
     if(result.length < 5) {
       return; 
-    }
-
-
-    if (result.length > 0 && result.length != this.current_blocks) {
+    } else if (result.length != this.current_blocks) {
       let chunk = new Chunk(store, 0, 0, 0, max_x, max_y, max_z, "ff_object", this.blockSize, false);
       for (let i = 0; i < result.length; i++) {
         let p = result[i][0];
@@ -2123,18 +2095,16 @@ class Chunk {
     for (let x = 0; x < this.chunk_size_x; x++) {
       for (let y = 0; y < this.chunk_size_y; y++) {
         for (let z = 0; z < this.chunk_size_z; z++) {
-          if (this.blocks[x][y][z] != 0) {
-            let c = this.blocks[x][y][z];
-            if (Math.random() > 0.9) {
-              store.particles.debris(
-                pos.x + x * this.blockSize / 2,
-                pos.y + y * this.blockSize / 2,
-                pos.z + z * this.blockSize / 2,
-                this.blockSize,
-                (c >> 24) & 0xFF, (c >> 16) & 0xFF, (c >> 8) & 0xFF,
-                true
-              );
-            }
+          let c = this.blocks[x][y][z];
+          if (c != 0 && Math.random() > 0.9) {
+            store.particles.debris(
+              pos.x + x * this.blockSize * 0.5,
+              pos.y + y * this.blockSize * 0.5,
+              pos.z + z * this.blockSize * 0.5,
+              this.blockSize,
+              (c >> 24) & 0xFF, (c >> 16) & 0xFF, (c >> 8) & 0xFF,
+              true
+            );
           }
         }
       }
@@ -2145,12 +2115,9 @@ class Chunk {
     let x = this.chunk_size_x - (pos.x - (this.mesh.position.x - l)) | 0; 
     let y = this.chunk_size_y - (pos.y - (this.mesh.position.y - l)) | 0; 
     let z = this.chunk_size_z - (pos.z - (this.mesh.position.z - l)) | 0; 
-    if(x >= 0 && y >= 0 && z >= 0 && x < this.chunk_size_x && y < this.chunk_size_y && z < this.chunk_size_z) {
-      if((this.blocks[x][y][z] >> 8) != 0) {
-        return true;
-      }
-    }
-    return false;
+    const a = (x >= 0 && y >= 0 && z >= 0 && x < this.chunk_size_x && y < this.chunk_size_y && z < this.chunk_size_z);
+    const b = ((this.blocks[x][y][z] >> 8) != 0);
+    return a && b;
   }
   checkExists(store, x, y, z) {
     x -= this.from_x * this.blockSize + this.blockSize;
@@ -2247,14 +2214,7 @@ class Main {
     this.scene = new THREE.Scene();
     this.clock = new THREE.Clock();
 
-    //// Iosmetric view
-    //let aspect = window.innerWidth / window.innerHeight;
-    //let d = 70;
-    //let aspect = window.innerWidth/window.innerHeight;
-    //this.camera = new THREE.OrthographicCamera( - d * aspect, d * aspect, d, -d, 1, 3000 );
-
-    // Perspective View
-    this.camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, this.visible_distance );
+    this.camera = this.createCamera();
     this.scene.fog = new THREE.Fog( 0x000000, 180, this.visible_distance );
 
     this.renderer = new THREE.WebGLRenderer({antialias: false});
@@ -2326,8 +2286,18 @@ class Main {
 
     this.render();
   }
+  createCamera() {
+    //// Iosmetric view
+    //let aspect = window.innerWidth / window.innerHeight;
+    //let d = 70;
+    //let aspect = window.innerWidth/window.innerHeight;
+    //this.camera = new THREE.OrthographicCamera( - d * aspect, d * aspect, d, -d, 1, 3000 );
+    //// Perspective View
+    //this.camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, this.visible_distance );
+    return new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, this.visible_distance );
+  }
   reset() {
-    this.camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, this.visible_distance );
+    this.camera = this.createCamera();
     this.world.reset(this);
     this.maps.reset(this);
     this.player.reset(this);
@@ -2343,7 +2313,7 @@ class Main {
   onWindowResize() {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize( window.innerWidth, window.innerHeight );
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
   addObject(obj) {
     this.update_objects.push(obj);
