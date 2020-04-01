@@ -34,13 +34,13 @@ const loadImageFile = file => new Promise(
       ctx.canvas.width  = image.width;
       ctx.canvas.height = image.height;
       ctx.drawImage(image, 0, 0);
-      let map = new Array();
+      let map = [];
       let imgData = ctx.getImageData(0, 0, image.width, image.height);
 
       let list = [];
       for(let y = 0; y < image.height; y++) {
         let pos = y * image.width * 4;
-        map[y] = new Array();
+        map[y] = [];
         for(let x = 0; x < image.width; x++) {
           let r = imgData.data[pos++];
           let g = imgData.data[pos++];
@@ -438,8 +438,7 @@ class Enemy extends Char {
     this.range_from_player = 30;
     this.follow_timer = 0;
     this.shoot_ability = 0.5;
-
-    this.run_speed = 20; //+Math.random()*50;
+    this.run_speed = 20 + Math.random() * 20;
     this.moving = true;
   }
   die(store) {
@@ -1167,14 +1166,12 @@ class Chunk {
     this.offset = 0;
   
     this.material = store.chunk_material;
-    this.blocks = new Array(this.chunk_size_x);
+    this.blocks = [...Array(this.chunk_size_x)];
     for (let x = 0; x < this.chunk_size_x; x++) {
-      this.blocks[x] = new Array(this.chunk_size_y);
+      this.blocks[x] = [...Array(this.chunk_size_y)];
       for (let y = 0; y < this.chunk_size_y; y++) {
-        this.blocks[x][y] = new Array(this.chunk_size_z);
-        for (let z = 0; z < this.chunk_size_z; z++) {
-          this.blocks[x][y][z] = 0;
-        }
+        this.blocks[x][y] = [...Array(this.chunk_size_z)]
+          .fill(0);
       }
     }
   }
@@ -1780,7 +1777,6 @@ class Chunk {
               mp_y + y * this.blockSize,
               mp_z + z * this.blockSize,
               size, (c >> 24) & 0xFF, (c >> 16) & 0xFF, (c >> 8) & 0xFF, false,
-              //this.blockSize, (c >> 24) & 0xFF, (c >> 16) & 0xFF, (c >> 8) & 0xFF, false,
               dir.x, dir.y, dir.z
             );
           }
@@ -1849,16 +1845,14 @@ class Chunk {
     x |= 0;
     y |= 0;
     z |= 0;
-    if (x < 0 || y < 0 || z < 0 ||
-      x >= this.chunk_size_x || y >= this.chunk_size_y || z >= this.chunk_size_z) {
-      return;
+    const shouldAdd = !(
+      x < 0 || y < 0 || z < 0 || x >= this.chunk_size_x || y >= this.chunk_size_y || z >= this.chunk_size_z
+    );
+    if (shouldAdd) {
+      this.blocks[x][y][z] = (r & 0xFF) << 24 | (g & 0xFF) << 16 | (b & 0xFF) << 8 | 0 & 0xFF;
+      this.dirty = true;
     }
-    this.blocks[x][y][z] =
-      (r & 0xFF) << 24 |
-      (g & 0xFF) << 16 |
-      (b & 0xFF) << 8 |
-      0 & 0xFF;
-    this.dirty = true;
+    return shouldAdd;
   }
   blockExists(x, y, z) {
     x -= this.from_x * this.blockSize;
@@ -1871,10 +1865,7 @@ class Chunk {
       x >= this.chunk_size_x || y >= this.chunk_size_y || z >= this.chunk_size_z) {
       return false;
     }
-    if(this.blocks[x][y][z] != 0) {
-      return true;
-    }
-    return false;
+    return !!this.blocks[x][y][z];
   }
   hit(store, dir, power, pos) {
     if (this.blocks == null) {
@@ -1884,7 +1875,7 @@ class Chunk {
     let y = 0;
     let z = 0;
     let vx = 0, vy = 0, vz = 0, val = 0, offset = 5;
-    let ff = new Array();
+    let ff = [];
     power =  power * (1/this.blockSize);
     let pow = power * power;
 
@@ -1951,26 +1942,6 @@ class Chunk {
         }
       }
     }
-    //if (x >= 0 && y >= 0 && z >= 0 && x < this.chunk_size_x && y < this.chunk_size_y && z < this.chunk_size_z) {
-    //    if((this.blocks[x][y][z] >> 8) == 0) {
-    //        let found = false;
-    //        for(let x_ = x; x_ < this.chunk_size_x; x_++) {
-    //            for(let z_ = z; z_ < this.chunk_size_z; z_++) {
-    //                if (x_ >= 0 && z_ >= 0 && x_ < this.chunk_size_x  && z_ < this.chunk_size_z) {
-    //                    if((this.blocks[x_][y][z_] >> 8) != 0) {
-    //                        found = true;
-    //                        console.log("NEW POS");
-    //                        x = x_; 
-    //                        z = z_;
-    //                        break;
-    //                    }
-    //                }
-    //            }
-    //            if(found) { break; }
-    //        }
-    //    }
-    //}
-
     let isHit = 0;
     let from_x = (x - power) < 0? 0: x-power;
     let from_z = (z - power) < 0? 0: z-power;
@@ -1990,9 +1961,6 @@ class Chunk {
                 if (this.owner.base_type == "enemy" || this.owner.base_type == "player") {
                   if(Math.random() > max) {
                     store.particles.blood(
-                      //                            this.mesh.position.x + rx * this.blockSize,
-                      //                            this.mesh.position.y + ry * this.blockSize,
-                      //                            this.mesh.position.z + rz * this.blockSize,
                       this.mesh.position.x - (this.blockSize * this.chunk_size_x) * 0.5 +rx*this.blockSize,
                       this.mesh.position.y - (this.blockSize * this.chunk_size_y) * 0.5 +ry*this.blockSize,
                       this.mesh.position.z - (this.blockSize * this.chunk_size_z) * 0.5  +rz*this.blockSize, 
@@ -2033,8 +2001,6 @@ class Chunk {
       if (((this.owner.base_type == "enemy" || this.owner.base_type == "player") && this.health < max_hp) ||
         ((this.owner.base_type == "object" || this.owner.base_type == "ff_object") && ff.length > 0))
       {
-
-
         for (let x = 0; x < this.chunk_size_x; x++) {
           for (let y = 0; y < this.chunk_size_y; y++) {
             for (let z = 0; z < this.chunk_size_z; z++) {
@@ -2058,10 +2024,9 @@ class Chunk {
     return false;
   }
   floodFill(store, start, dir, power) {
-    let ground = 1; //this.mesh.position.y - (this.chunk_size_y*this.blockSize / 2);
-    let stack = new Array();
-    let result = new Array();
-    // Keep track of upcoming chunk size.
+    let stack = [];
+    let result = [];
+
     let max_x = 0;
     let max_y = 0;
     let max_z = 0;
@@ -2142,8 +2107,7 @@ class Chunk {
       );
     }
   }
-  explode(store, dir, damage) {
-    if(!damage) { damage = 0; }
+  explode(store, dir, damage = 0) {
     for (let x = 0; x < this.chunk_size_x; x++) {
       for (let y = 0; y < this.chunk_size_y; y++) {
         for (let z = 0; z < this.chunk_size_z; z++) {
@@ -2412,7 +2376,6 @@ class Main {
   }
   render() {
     requestAnimationFrame(() => this.render());
-
     const time = (Date.now() - this.t_start) * 0.001;
     const delta = this.clock.getDelta();
 
@@ -5358,7 +5321,7 @@ class World {
     return [];
   }
   hit(store, dmg, dir, type, pos) {
-    this.explode(store, pos.x, pos.y, pos.z, dmg, type);
+    return this.explode(store, pos.x, pos.y, pos.z, dmg, type);
   }
   addChunk(chunk) {
     this.chunks[this.cid] = chunk;
