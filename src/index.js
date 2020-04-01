@@ -2370,16 +2370,11 @@ class Main {
     this.maps.init(this);
 
     // Load objects here to reduce overhead of multiple objects of same type.
-    this.objects["shell"] = new Shell();
-    this.objects["shell"].create(this);
-    this.objects["ammo"] = new Ammo();
-    this.objects["ammo"].create(this);
-    this.objects["ammo_p90"] = new AmmoP90();
-    this.objects["ammo_p90"].create(this);
-    this.objects["ammo_sniper"] = new AmmoSniper();
-    this.objects["ammo_sniper"].create(this);
+    this.objects["shell"] = new Shell(this);
+    this.objects["ammo"] = new Ammo(this);
+    this.objects["ammo_p90"] = new AmmoP90(this);
+    this.objects["ammo_sniper"] = new AmmoSniper(this);
     this.objects["heart"] = new Heart(this);
-    this.objects["heart"].create(this);
 
     this.render();
   }
@@ -2786,12 +2781,12 @@ class Maps {
                         StreetLamp,
                         PaperPoliceCar,
                         PainKillers,
+                        PaperAgent,
                       };
                       const charEntityTypes = {
                         Agent,
                         AgentBlack,
                         Greenie,
-                        PaperAgent,
                         Hearty,
                         Player,
                         Dudo,
@@ -2809,8 +2804,9 @@ class Maps {
                         }
                       } else if (!!objEntityTypes[k]) {
                         console.log(`Alloc Obj ${k}`);
-                        o = new objEntityTypes[k]();
-                        o.create(store, data[i].y, 0, data[i].x);
+                        o = new objEntityTypes[k](store, data[i].y, 0, data[i].x);
+                        //o = new objEntityTypes[k]();
+                        //o.create(store, data[i].y, 0, data[i].x);
                         this.loaded.push(o);
                       }
 
@@ -2854,7 +2850,7 @@ class Level1 extends Maps {
 };
 
 class Obj {
-  constructor() {
+  constructor(store, model, x, y, z, size = 1) {
     this.chunk = 0;
     this.active = [];
     this.ptr = 0;
@@ -2864,11 +2860,13 @@ class Obj {
     this.green_light = new THREE.PointLight(0x00FF00, 2, 10);
     this.streetlight = new THREE.SpotLight(0xFFAA00);
     this.max = 20;
-  }
-  create(store, model, size) {
+    // TODO: Looks like model should also be type
     this.chunk = getModel(store, model, size, this);
-    this.chunk.mesh.visible = false;
-    this.chunk.mesh.rotation.set(Math.PI, 0, 0);
+    this.chunk.owner = this;
+    this.chunk.mesh.visible = true;
+  }
+  hit(store, dmg, dir, type, pos) {
+    return this.chunk.hit(store, dir, dmg, pos);
   }
   update(store, time, delta) {}
   destroy(store) {
@@ -2899,16 +2897,11 @@ class FreeFormChunk {
 }
 
 class Portal extends Obj {
-  constructor() {
-    super();
+  constructor(store, x, y, z) {
+    super(store, "portal", x, y, z, 1);
     this.base_type = "object";
     this.type = "portal";
     this.alive = true;
-    this.x = 0;
-    this.y = 0;
-    this.z = 0;
-  }
-  create(store, x, y, z) {
     this.x = x;
     this.y = y;
     this.z = z;
@@ -2925,14 +2918,21 @@ class Portal extends Obj {
 }
 
 class PainKillers extends Obj {
-  constructor() {
-    super();
+  constructor(store, x, y, z) {
+    super(store, "painkillers", x, y, z, 0.2);
     this.base_type = "object";
     this.obj_type = "painkillers";
     this.alive = true;
     this.light = 0;
     this.taken = false;
+
+    this.chunk.owner = this;
+    this.chunk.mesh.owner = this;
+    this.chunk.mesh.visible = true;
+    this.chunk.mesh.position.set(x, store.maps.ground+1, z);
+    store.addToCD(this.chunk.mesh);
   }
+  hit(store, dmg, dir, type, pos) { /* do not destroy  */ }
   // TODO: Grabbable.
   grab(store, mesh_id) {
     if(!this.taken) {
@@ -2941,14 +2941,6 @@ class PainKillers extends Obj {
       store.player.bleed_timer += 60; // add 60 sec.
       this.taken = true;
     }
-  }
-  create(store, x, y, z) {
-    this.chunk = getModel(store, "painkillers", 0.2, this);
-    this.chunk.owner = this;
-    this.chunk.mesh.owner = this;
-    this.chunk.mesh.visible = true;
-    this.chunk.mesh.position.set(x, store.maps.ground+1, z);
-    store.addToCD(this.chunk.mesh);
   }
   update(store, time, delta) {
     super.update(store, time, delta);
@@ -2967,35 +2959,25 @@ class PainKillers extends Obj {
 }
 
 class PaperPoliceCar extends Obj {
-  constructor() {
-    super();
+  constructor(store, x, y, z) {
+    super(store, "paperpolicecar", x, y, z, 0.6);
     this.base_type = "object";
     this.type = "paperpolicecar";
     this.alive = true;
-  }
-  hit(store, dmg, dir, type, pos) {
-    this.chunk.hit(store, dir, dmg, pos);
-  }
-  create(store, x, y, z) {
-    this.chunk = getModel(store, "paperpolicecar", 0.6, this);
+
     this.chunk.owner = this;
     this.chunk.mesh.visible = true;
     this.chunk.mesh.position.set(x, store.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
-  }
+  } 
 }
 
 class PaperAgent extends Obj {
-  constructor() {
-    super();
+  constructor(store, x, y, z) {
+    super(store, "paperagent", x, y, z, 0.2);
     this.base_type = "object";
     this.type = "paperagent";
+
     this.alive = true;
-  }
-  hit(store, dmg, dir, type, pos) {
-    this.chunk.hit(store, dir, dmg, pos);
-  }
-  create(store, x, y, z) {
-    this.chunk = getModel(store, "paperagent", 0.2, this);
     this.chunk.owner = this;
     this.chunk.mesh.visible = true;
     this.chunk.mesh.position.set(x, store.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
@@ -3003,18 +2985,12 @@ class PaperAgent extends Obj {
 }
 
 class Tree extends Obj {
-  constructor() {
-    super();
+  constructor(store, x, y, z) {
+    super(store, "tree", x, y, z, 0.5);
     this.base_type = "object";
     this.type = "tree";
     this.alive = true;
     this.light = 0;
-  }
-  hit(store, dmg, dir, type, pos) {
-    this.chunk.hit(store, dir, dmg, pos);
-  }
-  create(store, x, y, z) {
-    this.chunk = getModel(store, "tree", 0.5, this);
     this.chunk.owner = this;
     this.chunk.mesh.visible = true;
     this.chunk.mesh.position.set(x, store.maps.ground+(this.chunk.chunk_size_y*this.chunk.blockSize) * 0.5, z);
@@ -3022,26 +2998,13 @@ class Tree extends Obj {
 }
 
 class StreetLamp extends Obj {
-  constructor() {
-    super();
+  constructor(store, x, y, z) {
+    super(store, "street_lamp", x, y, z, 0.4);
     this.base_type = "object";
     this.obj_type = "street_lamp";
     this.alive = true;
     this.light = 0;
-  }
-  hit(store, dmg, dir, type, pos) {
-    if(this.chunk.hit(store, dir, dmg, pos)) {
-      if(type != "missile" && type != "grenade") {
-        store.sounds.PlaySound(store, "bullet_metal", pos, 300);
-      }
-      if (this.chunk.health < 60) {
-        this.alive = false;
-      }
-      return true;
-    }
-    return false;
-  }
-  create(store, x, y, z) {
+
     this.chunk = getModel(store, "streetlamp", 0.4, this);
     this.chunk.owner = this;
     this.chunk.mesh.visible = true;
@@ -3065,29 +3028,27 @@ class StreetLamp extends Obj {
       }
     }
   }
-  update(store, time, delta) {
-
+  hit(store, dmg, dir, type, pos) {
+    if(this.chunk.hit(store, dir, dmg, pos)) {
+      if(type != "missile" && type != "grenade") {
+        store.sounds.PlaySound(store, "bullet_metal", pos, 300);
+      }
+      if (this.chunk.health < 60) {
+        this.alive = false;
+      }
+      return true;
+    }
+    return false;
   }
 }
 
 class UfoSign extends Obj {
-  constructor() {
-    super();
+  constructor(store, x, y, z) {
+    super(store, "ufo_sign", x, y, z, 0.2);
     this.base_type = "object";
-    this.type = "radiation_sign";
+    this.type = "ufo_sign";
     this.alive = true;
     this.light = 0;
-  }
-  // TODO: This *returns*?
-  hit(store, dmg, dir, type, pos) {
-    return this.chunk.hit(store, dir, dmg, pos);
-  }
-  create(store, x, y, z) {
-    this.chunk = getModel(store, "ufo_sign", 0.2, this);
-    this.chunk.owner = this;
-    this.chunk.mesh.visible = true;
-    this.chunk.mesh.rotation.y = Math.PI * 0.5;
-
     // Check rotation depending on wall
     var res = store.world.checkExists(store, new THREE.Vector3(x-1,store.maps.ground+10,z));
     if(res.length > 0) {
@@ -3103,22 +3064,18 @@ class UfoSign extends Obj {
     }
 
     this.chunk.mesh.position.set(x, store.maps.ground+10, z);
+
   }
 }
 
 class RadiationSign extends Obj {
-  constructor() {
-    super();
+  constructor(store, x, y, z) {
+    super(store, "radiation_sign", x, y, z, 0.2);
     this.base_type = "object";
     this.type = "radiation_sign";
     this.alive = true;
     this.light = 0;
-  }
-  hit(store, dmg, dir, type, pos) {
-    this.chunk.hit(store, dir, dmg, pos);
-  }
-  create(store, x, y, z) {
-    this.chunk = getModel(store, "radiation_sign", 0.2, this);
+
     this.chunk.owner = this;
     this.chunk.mesh.visible = true;
     this.chunk.mesh.rotation.y = Math.PI * 0.5;
@@ -3136,20 +3093,28 @@ class RadiationSign extends Obj {
     if(res.length > 0) {
       this.chunk.mesh.rotation.y = Math.PI;
     }
-
     this.chunk.mesh.position.set(x, store.maps.ground+10, z);
+
   }
 }
 
 class DeadHearty extends Obj {
-  constructor() {
-    super();
+  constructor(store, x, y, z) {
+    super(store, "dead_hearty", x, y, z, 1);
     this.base_type = "object";
     this.type = "dead_hearty";
     this.alive = true;
     this.light = 0;
     this.radioactive = true;
     this.radioactive_leak = true;
+
+    this.chunk.owner = this;
+    this.chunk.mesh.visible = true;
+    this.chunk.mesh.rotation.y = Math.random()*Math.PI*2;
+    this.chunk.mesh.position.set(x, store.maps.ground+1, z);
+    this.light = this.green_light.clone();
+    this.light.position.set(0, 3, 0);
+    this.chunk.mesh.add(this.light);
   }
   hit(store, dmg, dir, type, pos) {
     this.chunk.hit(store, dir, dmg, pos);
@@ -3162,25 +3127,20 @@ class DeadHearty extends Obj {
       this.light.intensity = (2-Math.random());
     }
   }
-  create(store, x, y, z) {
-    this.chunk = getModel(store, "dead_hearty", 1, this);
-    this.chunk.owner = this;
-    this.chunk.mesh.visible = true;
-    this.chunk.mesh.rotation.y = Math.random()*Math.PI*2;
-    this.chunk.mesh.position.set(x, store.maps.ground+1, z);
-    this.light = this.green_light.clone();
-    this.light.position.set(0, 3, 0);
-    this.chunk.mesh.add(this.light);
-  }
 }
 
 class BarrelFire extends Obj {
-  constructor() {
-    super();
+  constructor(store, x, y, z) {
+    super(store, "barrel_fire", x, y, z, 0.5);
     this.base_type = "object";
     this.type = "barrel_fire";
     this.alive = true;
     this.light = 0;
+
+    this.chunk.mesh.position.set(x, store.maps.ground+this.chunk.to_y*(1/this.chunk.blockSize), z);
+    this.light = this.yellow_light.clone();
+    this.light.position.set(0, 10, 0);
+    this.chunk.mesh.add(this.light);
   }
   hit(store, dmg, dir, type, pos) {
     if(this.chunk.hit(store, dir, dmg, pos)) {
@@ -3200,24 +3160,22 @@ class BarrelFire extends Obj {
       this.light.distance = (20+Math.random()*5);
     }
   }
-  create(store, x, y, z) {
-    this.chunk = getModel(store, "barrel_fire", 0.5, this);
-    this.chunk.mesh.position.set(x, store.maps.ground+this.chunk.to_y*(1/this.chunk.blockSize), z);
-    this.light = this.yellow_light.clone();
-    this.light.position.set(0, 10, 0);
-    this.chunk.mesh.add(this.light);
-  }
 }
 
 class Barrel extends Obj {
-  constructor() {
-    super();
+  constructor(store, x, y, z) {
+    super(store, "barrel", x, y, z, 0.5);
     this.base_type = "object";
     this.type = "barrel";
     this.alive = true;
     this.light = 0;
     this.radioactive = true;
     this.radioactive_leak = true;
+
+    this.chunk.mesh.position.set(x, store.maps.ground+this.chunk.to_y*(1/this.chunk.blockSize), z);
+    this.light = this.green_light.clone();
+    this.light.position.set(0, 10, 0);
+    this.chunk.mesh.add(this.light);
   }
   hit(store, dmg, dir, type, pos) {
     if(this.chunk.hit(store, dir, dmg, pos)) {
@@ -3237,58 +3195,52 @@ class Barrel extends Obj {
       this.light.distance = (20+Math.random()*5);
     }
   }
-  create(store, x, y, z) {
-    this.chunk = getModel(store, "barrel", 0.5, this);
-    this.chunk.mesh.position.set(x, store.maps.ground+this.chunk.to_y*(1/this.chunk.blockSize), z);
-    this.light = this.green_light.clone();
-    this.light.position.set(0, 10, 0);
-    this.chunk.mesh.add(this.light);
-  }
 }
 
+// TODO: Probably remove this.
 class FBIHQ extends Obj {
-  constructor() {
-    super();
+  constructor(store, x, y, z) {
+    super(store, "fbihq", x, y, z, 1);
     this.base_type = "object";
     this.type = "fbihq";
     this.alive = true;
-  }
-  hit(store, dmg, dir, type, pos) {
-    this.chunk.hit(store, dir, dmg, pos);
-  }
-  create(store, x, y, z) {
-    this.chunk = getModel(store, "fbihq", 1, this);
     this.chunk.mesh.position.set(x, store.maps.ground+this.chunk.chunk_size_y*this.chunk.blockSize * 0.5, z);
   }
 }
 
 class SpiderWeb extends Obj {
-  constructor() {
-    super();
+  constructor(store, x, y, z) {
+    super(store, "spiderweb", x, y, z, 0.2);
     this.base_type = "object";
     this.type = "spiderweb";
     this.alive = true;
     this.light = 0;
-  }
-  hit(store, dmg, dir, type) {
-    this.chunk.explode(store, dir, dmg);
-    this.alive = false;
-  }
-  create(store, x, y, z) {
-    this.chunk = getModel(store, "spiderweb", 0.2, this);
     this.chunk.owner = this;
     this.chunk.mesh.visible = true;
     this.chunk.mesh.position.set(x, store.maps.ground+1, z);
   }
+  // XXX: Destroys on hit.
+  hit(store, dmg, dir, type) {
+    this.chunk.explode(store, dir, dmg);
+    this.alive = false;
+  }
 }
 
 class Lamp1 extends Obj {
-  constructor() {
-    super();
+  constructor(store, x, y, z) {
+    super(store, "lamp1", x, y, z, 1);
     this.base_type = "object";
     this.type = "lamp1";
     this.alive = true;
     this.light = 0;
+    
+    this.chunk.type = "object";
+    this.chunk.owner = this;
+    this.chunk.mesh.visible = true;
+    this.chunk.mesh.position.set(x, store.maps.ground+7, z);
+    this.light = this.yellow_light.clone();
+    this.light.position.set(0, 12, 0);
+    this.chunk.mesh.add(this.light);
   }
   hit(store, dmg, dir, type, pos) {
     this.chunk.hit(store, dir, dmg, pos)
@@ -3301,16 +3253,6 @@ class Lamp1 extends Obj {
     if (this.chunk.health < 60) {
       this.alive = false;
     }
-  }
-  create(store, x, y, z) {
-    this.chunk = getModel(store, "lamp1", 1, this);
-    this.chunk.type = "object";
-    this.chunk.owner = this;
-    this.chunk.mesh.visible = true;
-    this.chunk.mesh.position.set(x, store.maps.ground+7, z);
-    this.light = this.yellow_light.clone();
-    this.light.position.set(0, 12, 0);
-    this.chunk.mesh.add(this.light);
   }
   update(store, time, delta) {
     if (Math.random() < this.light.intensity) {
@@ -3325,24 +3267,18 @@ class Lamp1 extends Obj {
 }
 
 class AmmoCrate extends Obj {
-  constructor() {
-    super();
+  constructor(store, x, y, z) {
+    super(store, "crate", x, y, z, 1);
     this.sides = [];
-  }
-  create(store) {
-    var up = getModel(store, "crate", 1, this);
-    up.mesh.visible = false;
-    up.mesh.rotation.set(Math.PI, 0, 0);
-    up.mesh.position.set(200, 8, 300);
+    this.chunk.mesh.visible = false;
+    this.chunk.mesh.rotation.set(Math.PI, 0, 0);
+    this.chunk.mesh.position.set(200, 8, 300);
   }
 }
 
 class AmmoSniper extends Obj {
-  constructor() {
-    super();
-  }
-  create(store) {
-    super.create(store, "ammo", 0.02);
+  constructor(store, x, y, z) {
+    super(store, "ammo", x, y, z, 0.02);
     for(var i = 0; i < this.max; i++) {
       var c = this.chunk.mesh.clone();
       c.visible = false;
@@ -3359,11 +3295,8 @@ class AmmoSniper extends Obj {
 }
 
 class AmmoP90 extends Obj {
-  constructor() {
-    super();
-  }
-  create(store) {
-    super.create(store, "ammo", 0.009);
+  constructor(store, x, y, z) {
+    super(store, "ammo", x, y, z, 0.009);
     for(var i = 0; i < this.max; i++) {
       var c = this.chunk.mesh.clone();
       c.visible = false;
@@ -3381,11 +3314,8 @@ class AmmoP90 extends Obj {
 }
 
 class Ammo extends Obj {
-  constructor() {
-    super();
-  }
-  create(store) {
-    super.create(store, "ammo", 0.015);
+  constructor(store, x, y, z) {
+    super(store, "ammo", x, y, z, 0.015);
     for(var i = 0; i < this.max; i++) {
       var c = this.chunk.mesh.clone();
       c.visible = false;
@@ -3403,11 +3333,8 @@ class Ammo extends Obj {
 }
 
 class Shell extends Obj {
-  constructor() {
-    super();
-  }
-  create(store) {
-    super.create(store, "shell", 0.025);
+  constructor(store, x, y, z) {
+    super(store, "shell", x, y, z, 0.025);
     for(var i = 0; i < this.max; i++) {
       var c = this.chunk.mesh.clone();
       c.visible = false;
@@ -3424,12 +3351,9 @@ class Shell extends Obj {
 }
 
 class Heart extends Obj {
-  constructor() {
-    super();
+  constructor(store, x, y, z) {
+    super(store, "heart", x, y, z, 0.02);
     this.obj_type = "heart";
-  }
-  create(store) {
-    super.create(store, "heart", 0.2);
   }
   grab(store, mesh_id) {
     for(var i = 0; i < this.active.length; i++) {
