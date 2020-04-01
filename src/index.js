@@ -2144,7 +2144,7 @@ class Chunk {
       }
       this.dirty = true;
 
-      let ffc = new FFChunk(store, chunk, this.owner.base_type);
+      let ffc = new FreeFormChunk(store, chunk, this.owner.base_type);
 
       store.particles.chunkDebris(
         this.mesh.position.x,
@@ -2877,9 +2877,8 @@ class Obj {
   }
 }
 
-class FFChunk extends Obj {
+class FreeFormChunk {
   constructor(store, chunk, baseType) {
-    super();
     this.base_type = "";
     this.type = "ff_chunk";
     this.chunk = chunk;
