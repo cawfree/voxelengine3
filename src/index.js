@@ -1,14 +1,16 @@
+'use-strict'
+
 import "@babel/polyfill";
 
 import * as THREE from 'three';
 import klona from "klona";
 
 const loadModel = (store, name, modelData) => {
-  var model = Vox.LoadModel(modelData[0], name);
-  var p = 0, r = 0, g = 0, b = 0;
-  var chunk = new Chunk(store, 0, 0, 0, model.sx, model.sz, model.sy, name, modelData[1], modelData[2]);
+  let model = Vox.LoadModel(modelData[0], name);
+  let p = 0, r = 0, g = 0, b = 0;
+  let chunk = new Chunk(store, 0, 0, 0, model.sx, model.sz, model.sy, name, modelData[1], modelData[2]);
   chunk.blockSize = modelData[1];
-  for(var i = 0; i < model.data.length; i++) {
+  for(let i = 0; i < model.data.length; i++) {
     p = model.data[i];
     r = (p.val >> 24) & 0xFF;
     g = (p.val >> 16) & 0xFF;
@@ -25,25 +27,25 @@ const loadModel = (store, name, modelData) => {
 
 const loadImageFile = file => new Promise(
   (resolve) => {
-    var image = new Image();
+    let image = new Image();
     image.src = file;
-    var ctx = document.createElement('canvas').getContext('2d');
+    let ctx = document.createElement('canvas').getContext('2d');
     image.onload = () => {
       ctx.canvas.width  = image.width;
       ctx.canvas.height = image.height;
       ctx.drawImage(image, 0, 0);
-      var map = new Array();
-      var imgData = ctx.getImageData(0, 0, image.width, image.height);
+      let map = new Array();
+      let imgData = ctx.getImageData(0, 0, image.width, image.height);
 
-      var list = [];
-      for(var y = 0; y < image.height; y++) {
-        var pos = y * image.width * 4;
+      let list = [];
+      for(let y = 0; y < image.height; y++) {
+        let pos = y * image.width * 4;
         map[y] = new Array();
-        for(var x = 0; x < image.width; x++) {
-          var r = imgData.data[pos++];
-          var g = imgData.data[pos++];
-          var b = imgData.data[pos++];
-          var a = imgData.data[pos++];
+        for(let x = 0; x < image.width; x++) {
+          let r = imgData.data[pos++];
+          let g = imgData.data[pos++];
+          let b = imgData.data[pos++];
+          let a = imgData.data[pos++];
           map[y][x] = {};
           map[y][x].r = r;
           map[y][x].g = g;
@@ -68,9 +70,9 @@ const loadAllModels =  (store, models) => Promise.all(
           return loadImageFile(url)
             .then(
               ([data, width, height]) => {
-                var chunk = new Chunk(store, 0, 0, 0, width, height, modelData[1], key, 1, modelData[2]);
-                for(var i = 0; i < data.length; i++) {
-                  for(var y = 0; y < modelData[1]; y++) {
+                let chunk = new Chunk(store, 0, 0, 0, width, height, modelData[1], key, 1, modelData[2]);
+                for(let i = 0; i < data.length; i++) {
+                  for(let y = 0; y < modelData[1]; y++) {
                     chunk.addBlock(store, data[i].x, data[i].y, y, data[i].r, data[i].g, data[i].b);
                   }
                 }
@@ -154,7 +156,7 @@ class Char {
     this.chunk.mesh.position.set(x, y, z);
   }
   shouldBleedOrGlow(store, res) {
-    for (var i = 0; i < res.length; i++) {
+    for (let i = 0; i < res.length; i++) {
       if (((res[i] >> 24) & 0xFF) > 100 && ((res[i] >> 16) & 0xFF) < 25 && ((res[i] >> 8) & 0xFF) < 25) {
         if (this.add_blood == 0 && Math.random() > 0.5) {
           this.add_blood = 60; // Walking on blood
@@ -187,7 +189,7 @@ class Char {
     }
   }
   sound_hit(store) {
-    var r = Math.random();
+    let r = Math.random();
     if (r < 0.4) {
       r = "blood1";
     } else if (r > 0.4 && r < 0.7) {
@@ -226,7 +228,7 @@ class Char {
   }
   shoot(store) {
     if (this.weapon != 0 && this.loaded && this.can_shoot) {
-      //var light1 = new THREE.PointLight( 0xFFAA00, 3, 10 );
+      //let light1 = new THREE.PointLight( 0xFFAA00, 3, 10 );
       this.weapon.shoot(store, this.chunk.mesh.quaternion, this.chunk.mesh.id, this.chunk.mesh, this.speed / 30);
     }
   }
@@ -234,8 +236,8 @@ class Char {
     // open wound.
     if (this.dying != 0) {
       this.dying_counter++;
-      var max = 5;
-      var step = 0.05;
+      let max = 5;
+      let step = 0.05;
       if(this.dying == 1) {
         if(this.chunk.mesh.rotation.z < Math.PI * 0.5) {
           this.chunk.mesh.rotation.z += step;
@@ -300,7 +302,7 @@ class Char {
             store.sounds.PlaySound(store, "heartbeat", this.chunk.mesh.position, 500);
           }
         }
-        for (var i = 0; i < this.chunk.blood_positions.length; i++) {
+        for (let i = 0; i < this.chunk.blood_positions.length; i++) {
           if (Math.random() > 0.99) {
             store.particles.blood(
               this.chunk.blockSize * this.chunk.blood_positions[i].x + this.chunk.mesh.position.x,
@@ -337,7 +339,7 @@ class Char {
         );
       }
       if(this.radiation_poisoned > 0 && Math.random() > 0.9) {
-        for(var q = 0; q < this.radiation_poisoned; q++) {
+        for(let q = 0; q < this.radiation_poisoned; q++) {
           store.particles.radiation(
             this.chunk.mesh.position.x + (2 - Math.random() * 4),
             this.chunk.to_y + 1,
@@ -354,8 +356,8 @@ class Char {
     }
   }
   cd(store) {
-    var pos = this.chunk.mesh.position;
-    var points = [];
+    let pos = this.chunk.mesh.position;
+    let points = [];
     points[0] = new THREE.Vector3(
       pos.x+this.chunk.chunk_size_x * 0.5,
       pos.y,
@@ -377,13 +379,13 @@ class Char {
       pos.z
     );
 
-    var res = true;
-    for (var i = 0; i < points.length && res; i++) {
+    let res = true;
+    for (let i = 0; i < points.length && res; i++) {
       if (store.world.checkExists(store, points[i]).length > 0) {
         res = false;
       }
     }
-    for (var idx = 0; idx < store.cdList.length && res; idx++) {
+    for (let idx = 0; idx < store.cdList.length && res; idx++) {
       const item = store.cdList[idx];
       if (this.chunk.mesh.id != item.id && item.owner.alive && item.owner.base_type != "weapon" && item.owner.obj_type != "painkillers") {
         if (this.chunk.checkCD(item.position, 6)) {
@@ -397,7 +399,7 @@ class Char {
   hit(store, damage, direction, type, pos) {
     this.bleed_timer = this.chunk.health / 100 * 10;
 
-    var die = false;
+    let die = false;
 
     this.sound_hit(store);
 
@@ -409,7 +411,7 @@ class Char {
       this.dropWeapon(store);
       this.onHit(store);
       this.dying = 0;
-      var r = Math.random();
+      let r = Math.random();
       if(r > 0.8) {
         this.dying = 1;
       } else if(r > 0.5) {
@@ -446,7 +448,7 @@ class Enemy extends Char {
     this.chunk.mesh.position.y = store.maps.ground + 1;
   }
   hit(store, damage, dir, type, pos) {
-    var die = super.hit(store, damage, dir, type, pos);
+    let die = super.hit(store, damage, dir, type, pos);
     if (die & this.moving) {
       this.moving = false;
       // TODO: Could drop something.
@@ -486,10 +488,10 @@ class Enemy extends Char {
         }
       }
       if (this.target.alive || this.target.base_type == "weapon") {
-        var p = this.target.chunk.mesh.position.clone();
+        let p = this.target.chunk.mesh.position.clone();
         p.y = this.chunk.mesh.position.y;
         this.chunk.mesh.lookAt(p);
-        var dist = this.chunk.mesh.position.distanceTo(store.player.chunk.mesh.position);
+        let dist = this.chunk.mesh.position.distanceTo(store.player.chunk.mesh.position);
         if (dist > this.range_from_player && this.weapon != 0) {
           if (dist > store.visible_distance * 0.5) {
             this.target = 0;
@@ -514,7 +516,7 @@ class Enemy extends Char {
     if (this.moving) {
       if (this.cd_check > 0.1) { // 10 fps
         this.cd_check = 0;
-        for(var idx = 0; idx < store.cdList.length; idx++) {
+        for(let idx = 0; idx < store.cdList.length; idx++) {
           const current = store.cdList[idx];
           const { position, id, owner } = current;
           if(this.chunk.checkCD(position, this.view_range_current)) {
@@ -558,7 +560,7 @@ class Enemy extends Char {
 
       this.cd_check += delta;
       this.chunk.mesh.rotation.y -= (1-Math.random()*2)*Math.sin(delta*3); 
-      var pos = this.chunk.mesh.position.clone();
+      let pos = this.chunk.mesh.position.clone();
       pos.y = store.maps.ground;
 
       const res = store.world.checkExists(store, pos);
@@ -773,7 +775,7 @@ class Player extends Char {
     this.keyboard = new THREEx.KeyboardState();
     this.chunk.mesh.rotation.order = 'YXZ';
     store.player = this;
-    var targetObject = new THREE.Object3D();
+    let targetObject = new THREE.Object3D();
     targetObject.position.set(1, 1, 10);
     store.scene.add(targetObject);
     this.flashlight.target = targetObject;
@@ -788,8 +790,8 @@ class Player extends Char {
     this.addWeapon(store, new Shotgun(store));
     this.addBindings(store);
     this.chunk.mesh.add(store.camera);
-    var pos = this.chunk.mesh.position.clone();
-    var point = this.chunk.mesh.localToWorld(new THREE.Vector3(0, 0, 0));
+    let pos = this.chunk.mesh.position.clone();
+    let point = this.chunk.mesh.localToWorld(new THREE.Vector3(0, 0, 0));
     //store.camera.lookAt(point);
     store.camera.rotation.z = Math.PI;
     store.camera.rotation.x =-Math.PI/1.4;
@@ -800,7 +802,7 @@ class Player extends Char {
   onHit(store) {
     super.onHit(store);
     this.chunk.mesh.remove(store.camera);
-    var pos = this.chunk.mesh.position.clone();
+    let pos = this.chunk.mesh.position.clone();
     pos.y = store.maps.ground;
     store.scene.add(store.camera);
     store.camera.position.z = pos.z;
@@ -826,7 +828,7 @@ class Player extends Char {
     setTimeout(() => this.can_switch = true, 200);
 
     // Check if a weapon is loaded, then unload it.
-    var id = this.getWeaponId();
+    let id = this.getWeaponId();
     if(id != -1) {
       this.unloadWeapon(id);
     } else {
@@ -847,7 +849,7 @@ class Player extends Char {
     if (this.weapon == 0) {
       return -1;
     } 
-    for (var i = 0; i < this.weapons.length; i++) {
+    for (let i = 0; i < this.weapons.length; i++) {
       if (this.weapon.chunk.mesh.id == this.weapons[i].chunk.mesh.id) {
         return i;
       }
@@ -855,7 +857,7 @@ class Player extends Char {
     return -1;
   }
   loadWeapon(id) {
-    for (var i = 0; i < this.weapons.length; i++) {
+    for (let i = 0; i < this.weapons.length; i++) {
       if (id != i) {
         this.unloadWeapon(i);
       }
@@ -885,7 +887,7 @@ class Player extends Char {
   }
   dropWeapon(store) {
     if (this.weapon != 0) {
-      var wid = this.getWeaponId();
+      let wid = this.getWeaponId();
       this.unloadWeapon(wid);
       this.weapons[wid].detach(store, this.chunk.mesh, this.chunk.mesh.position);
       this.weapons.splice(wid, 1);
@@ -906,12 +908,12 @@ class Player extends Char {
   }
   mouseMove(jevent, store) {
     if (this.alive) {
-      var event = jevent.originalEvent; // jquery convert
-      var movementX = event.movementX || event.mozMovementX || event.webkitMovementX ||0;
-      var x = movementX*0.001;
-      var axis = new THREE.Vector3(0,1,0);
-      var radians = (Math.PI * -0.5) * x;
-      var rotObjectMatrix = new THREE.Matrix4();
+      let event = jevent.originalEvent; // jquery convert
+      let movementX = event.movementX || event.mozMovementX || event.webkitMovementX ||0;
+      let x = movementX*0.001;
+      let axis = new THREE.Vector3(0,1,0);
+      let radians = (Math.PI * -0.5) * x;
+      let rotObjectMatrix = new THREE.Matrix4();
       rotObjectMatrix.makeRotationAxis(axis.normalize(), radians);
       this.chunk.mesh.matrix.multiply(rotObjectMatrix);
       this.chunk.mesh.rotation.setFromRotationMatrix(this.chunk.mesh.matrix);
@@ -995,7 +997,7 @@ class Player extends Char {
       //this.chunk.mesh.rotation.z = 0.2*Math.sin(time*speed);
       if (this.cd_check > 0.05) {
         this.cd_check = 0;
-        var pos = this.chunk.mesh.position.clone();
+        let pos = this.chunk.mesh.position.clone();
         pos.y = store.maps.ground;
         const res = store.world.checkExists(store, pos);
 
@@ -1004,14 +1006,14 @@ class Player extends Char {
         if (res.length == 0) {
           this.falling = true;
           // Only fall if hole is big enough to fit in :)
-          for (var ofx = -1; ofx <= 1 && this.falling; ofx++) {
-            for (var ofz = -1; ofz <= 1 && this.falling; ofz++) { 
-              for (var ofy = store.maps.ground; ofy >= 0 && this.falling; ofy--) {
-                var post = this.chunk.mesh.position.clone();
+          for (let ofx = -1; ofx <= 1 && this.falling; ofx++) {
+            for (let ofz = -1; ofz <= 1 && this.falling; ofz++) { 
+              for (let ofy = store.maps.ground; ofy >= 0 && this.falling; ofy--) {
+                let post = this.chunk.mesh.position.clone();
                 post.x += ofx;
                 post.y = ofy;
                 post.z += ofz;
-                var r = store.world.checkExists(store, post);
+                let r = store.world.checkExists(store, post);
                 this.falling = !(r.length !== 0);
               }
             }
@@ -1035,7 +1037,7 @@ class Player extends Char {
             store.camera.rotation.x = -Math.PI * 0.5;
           }
         }
-        for (var idx = 0; idx < store.cdList.length; idx++) {
+        for (let idx = 0; idx < store.cdList.length; idx++) {
           const item = store.cdList[idx];
           if (this.chunk.checkCD(item.position, 5)) {
             // TODO: Need to determine if object is grabbable via class
@@ -1094,7 +1096,7 @@ class Player extends Char {
     }
     if (this.keyboard.pressed("R")) {
       this.flashlight.visible = false;
-      for (var i = 0; i < store.maps.loaded.length; i++) {
+      for (let i = 0; i < store.maps.loaded.length; i++) {
         if(store.maps.loaded[i].base_type == "enemy") {
           store.maps.loaded[i].current_view_range = store.maps.loaded[i].view_range;
         }
@@ -1102,7 +1104,7 @@ class Player extends Char {
     }
     if (this.keyboard.pressed("T")) {
       this.flashlight.visible = true;
-      for (var i = 0; i < store.maps.loaded.length; i++) {
+      for (let i = 0; i < store.maps.loaded.length; i++) {
         if (store.maps.loaded[i].base_type == "enemy") {
           store.maps.loaded[i].current_view_range = store.maps.loaded[i].view_range * 2;
         }
@@ -1172,11 +1174,11 @@ class Chunk {
   
     this.material = store.chunk_material;
     this.blocks = new Array(this.chunk_size_x);
-    for (var x = 0; x < this.chunk_size_x; x++) {
+    for (let x = 0; x < this.chunk_size_x; x++) {
       this.blocks[x] = new Array(this.chunk_size_y);
-      for (var y = 0; y < this.chunk_size_y; y++) {
+      for (let y = 0; y < this.chunk_size_y; y++) {
         this.blocks[x][y] = new Array(this.chunk_size_z);
-        for (var z = 0; z < this.chunk_size_z; z++) {
+        for (let z = 0; z < this.chunk_size_z; z++) {
           this.blocks[x][y][z] = 0;
         }
       }
@@ -1193,21 +1195,21 @@ class Chunk {
     return false;
   }
   build(store) {
-    var vertices = [];
-    var colors = [];
-    var cc = 0; // Color counter
-    var r = 0;
-    var g = 0;
-    var b = 0;
+    let vertices = [];
+    let colors = [];
+    let cc = 0; // Color counter
+    let r = 0;
+    let g = 0;
+    let b = 0;
 
     // Block structure
     // BLOCK: [R-color][G-color][B-color][0][00][back_left_right_above_front]
     //           8bit    8bit     8it   2bit(floodfill)     6bit(faces)
 
     // Reset faces
-    for (var x = 0; x < this.chunk_size_x; x++) {
-      for (var y = 0; y < this.chunk_size_y; y++) {
-        for (var z = 0; z < this.chunk_size_z; z++) {
+    for (let x = 0; x < this.chunk_size_x; x++) {
+      for (let y = 0; y < this.chunk_size_y; y++) {
+        for (let z = 0; z < this.chunk_size_z; z++) {
           this.blocks[x][y][z] &= 0xFFFFFFC0;
         }
       }
@@ -1216,15 +1218,15 @@ class Chunk {
     // this.shadow_blocks = [];
     this.total_blocks = 0;
 
-    for (var x = 0; x < this.chunk_size_x; x++) {
-      for (var y = 0; y < this.chunk_size_y; y++) {
-        for (var z = 0; z < this.chunk_size_z; z++) {
+    for (let x = 0; x < this.chunk_size_x; x++) {
+      for (let y = 0; y < this.chunk_size_y; y++) {
+        for (let z = 0; z < this.chunk_size_z; z++) {
           if (this.blocks[x][y][z] == 0) {
             continue; // Skip empty blocks
           }
           this.total_blocks++;
           // Check if hidden
-          var left = 0, right = 0, above = 0, front = 0, back = 0, below = 0;
+          let left = 0, right = 0, above = 0, front = 0, back = 0, below = 0;
           if (z > 0) {
             if (this.blocks[x][y][z - 1] != 0) {
               back = 1;
@@ -1352,19 +1354,19 @@ class Chunk {
             if (!below) {
               // Get below (bit 6)
               if ((this.blocks[x][y][z] & 0x20) == 0) {
-                var maxX = 0;
-                var maxZ = 0;
-                var end = 0;
+                let maxX = 0;
+                let maxZ = 0;
+                let end = 0;
 
-                for (var x_ = x; x_ < this.chunk_size_x; x_++) {
+                for (let x_ = x; x_ < this.chunk_size_x; x_++) {
                   // Check not drawn + same color
                   if ((this.blocks[x_][y][z] & 0x20) == 0 && this.SameColor(this.blocks[x_][y][z], this.blocks[x][y][z])) {
                     maxX++;
                   } else {
                     break;
                   }
-                  var tmpZ = 0;
-                  for (var z_ = z; z_ < this.chunk_size_z; z_++) {
+                  let tmpZ = 0;
+                  for (let z_ = z; z_ < this.chunk_size_z; z_++) {
                     if ((this.blocks[x_][y][z_] & 0x20) == 0 && this.SameColor(this.blocks[x_][y][z_], this.blocks[x][y][z])) {
                       tmpZ++;
                     } else {
@@ -1375,8 +1377,8 @@ class Chunk {
                     maxZ = tmpZ;
                   }
                 }
-                for (var x_ = x; x_ < x + maxX; x_++) {
-                  for (var z_ = z; z_ < z + maxZ; z_++) {
+                for (let x_ = x; x_ < x + maxX; x_++) {
+                  for (let z_ = z; z_ < z + maxZ; z_++) {
                     this.blocks[x_][y][z_] = this.blocks[x_][y][z_] | 0x20;
                   }
                 }
@@ -1407,19 +1409,19 @@ class Chunk {
           if (!above) {
             // Get above (0010)
             if ((this.blocks[x][y][z] & 0x2) == 0) {
-              var maxX = 0;
-              var maxZ = 0;
-              var end = 0;
+              let maxX = 0;
+              let maxZ = 0;
+              let end = 0;
 
-              for (var x_ = x; x_ < this.chunk_size_x; x_++) {
+              for (let x_ = x; x_ < this.chunk_size_x; x_++) {
                 // Check not drawn + same color
                 if ((this.blocks[x_][y][z] & 0x2) == 0 && this.SameColor(this.blocks[x_][y][z], this.blocks[x][y][z])) {
                   maxX++;
                 } else {
                   break;
                 }
-                var tmpZ = 0;
-                for (var z_ = z; z_ < this.chunk_size_z; z_++) {
+                let tmpZ = 0;
+                for (let z_ = z; z_ < this.chunk_size_z; z_++) {
                   if ((this.blocks[x_][y][z_] & 0x2) == 0 && this.SameColor(this.blocks[x_][y][z_], this.blocks[x][y][z])) {
                     tmpZ++;
                   } else {
@@ -1430,8 +1432,8 @@ class Chunk {
                   maxZ = tmpZ;
                 }
               }
-              for (var x_ = x; x_ < x + maxX; x_++) {
-                for (var z_ = z; z_ < z + maxZ; z_++) {
+              for (let x_ = x; x_ < x + maxX; x_++) {
+                for (let z_ = z; z_ < z + maxZ; z_++) {
                   this.blocks[x_][y][z_] = this.blocks[x_][y][z_] | 0x2;
                 }
               }
@@ -1461,18 +1463,18 @@ class Chunk {
             // back  10000
             // this.shadow_blocks.push([x, y, z]);
             if ((this.blocks[x][y][z] & 0x10) == 0) {
-              var maxX = 0;
-              var maxY = 0;
+              let maxX = 0;
+              let maxY = 0;
 
-              for (var x_ = x; x_ < this.chunk_size_x; x_++) {
+              for (let x_ = x; x_ < this.chunk_size_x; x_++) {
                 // Check not drawn + same color
                 if ((this.blocks[x_][y][z] & 0x10) == 0 && this.SameColor(this.blocks[x_][y][z], this.blocks[x][y][z])) {
                   maxX++;
                 } else {
                   break;
                 }
-                var tmpY = 0;
-                for (var y_ = y; y_ < this.chunk_size_y; y_++) {
+                let tmpY = 0;
+                for (let y_ = y; y_ < this.chunk_size_y; y_++) {
                   if ((this.blocks[x_][y_][z] & 0x10) == 0 && this.SameColor(this.blocks[x_][y_][z], this.blocks[x][y][z])) {
                     tmpY++;
                   } else {
@@ -1483,8 +1485,8 @@ class Chunk {
                   maxY = tmpY;
                 }
               }
-              for (var x_ = x; x_ < x + maxX; x_++) {
-                for (var y_ = y; y_ < y + maxY; y_++) {
+              for (let x_ = x; x_ < x + maxX; x_++) {
+                for (let y_ = y; y_ < y + maxY; y_++) {
                   this.blocks[x_][y_][z] = this.blocks[x_][y_][z] | 0x10;
                 }
               }
@@ -1512,18 +1514,18 @@ class Chunk {
           if (!front) {
             // front 0001
             if ((this.blocks[x][y][z] & 0x1) == 0) {
-              var maxX = 0;
-              var maxY = 0;
+              let maxX = 0;
+              let maxY = 0;
 
-              for (var x_ = x; x_ < this.chunk_size_x; x_++) {
+              for (let x_ = x; x_ < this.chunk_size_x; x_++) {
                 // Check not drawn + same color
                 if ((this.blocks[x_][y][z] & 0x1) == 0 && this.SameColor(this.blocks[x_][y][z], this.blocks[x][y][z])) {
                   maxX++;
                 } else {
                   break;
                 }
-                var tmpY = 0;
-                for (var y_ = y; y_ < this.chunk_size_y; y_++) {
+                let tmpY = 0;
+                for (let y_ = y; y_ < this.chunk_size_y; y_++) {
                   if ((this.blocks[x_][y_][z] & 0x1) == 0 && this.SameColor(this.blocks[x_][y_][z], this.blocks[x][y][z])) {
                     tmpY++;
                   } else {
@@ -1534,8 +1536,8 @@ class Chunk {
                   maxY = tmpY;
                 }
               }
-              for (var x_ = x; x_ < x + maxX; x_++) {
-                for (var y_ = y; y_ < y + maxY; y_++) {
+              for (let x_ = x; x_ < x + maxX; x_++) {
+                for (let y_ = y; y_ < y + maxY; y_++) {
                   this.blocks[x_][y_][z] = this.blocks[x_][y_][z] | 0x1;
                 }
               }
@@ -1563,18 +1565,18 @@ class Chunk {
           }
           if (!left) {
             if ((this.blocks[x][y][z] & 0x8) == 0) {
-              var maxZ = 0;
-              var maxY = 0;
+              let maxZ = 0;
+              let maxY = 0;
 
-              for (var z_ = z; z_ < this.chunk_size_z; z_++) {
+              for (let z_ = z; z_ < this.chunk_size_z; z_++) {
                 // Check not drawn + same color
                 if ((this.blocks[x][y][z_] & 0x8) == 0 && this.SameColor(this.blocks[x][y][z_], this.blocks[x][y][z])) {
                   maxZ++;
                 } else {
                   break;
                 }
-                var tmpY = 0;
-                for (var y_ = y; y_ < this.chunk_size_y; y_++) {
+                let tmpY = 0;
+                for (let y_ = y; y_ < this.chunk_size_y; y_++) {
                   if ((this.blocks[x][y_][z_] & 0x8) == 0 && this.SameColor(this.blocks[x][y_][z_], this.blocks[x][y][z])) {
                     tmpY++;
                   } else {
@@ -1585,8 +1587,8 @@ class Chunk {
                   maxY = tmpY;
                 }
               }
-              for (var z_ = z; z_ < z + maxZ; z_++) {
-                for (var y_ = y; y_ < y + maxY; y_++) {
+              for (let z_ = z; z_ < z + maxZ; z_++) {
+                for (let y_ = y; y_ < y + maxY; y_++) {
                   this.blocks[x][y_][z_] = this.blocks[x][y_][z_] | 0x8;
                 }
               }
@@ -1614,18 +1616,18 @@ class Chunk {
           }
           if (!right) {
             if ((this.blocks[x][y][z] & 0x4) == 0) {
-              var maxZ = 0;
-              var maxY = 0;
+              let maxZ = 0;
+              let maxY = 0;
 
-              for (var z_ = z; z_ < this.chunk_size_z; z_++) {
+              for (let z_ = z; z_ < this.chunk_size_z; z_++) {
                 // Check not drawn + same color
                 if ((this.blocks[x][y][z_] & 0x4) == 0 && this.SameColor(this.blocks[x][y][z_], this.blocks[x][y][z])) {
                   maxZ++;
                 } else {
                   break;
                 }
-                var tmpY = 0;
-                for (var y_ = y; y_ < this.chunk_size_y; y_++) {
+                let tmpY = 0;
+                for (let y_ = y; y_ < this.chunk_size_y; y_++) {
                   if ((this.blocks[x][y_][z_] & 0x4) == 0 && this.SameColor(this.blocks[x][y_][z_], this.blocks[x][y][z])) {
                     tmpY++;
                   } else {
@@ -1636,8 +1638,8 @@ class Chunk {
                   maxY = tmpY;
                 }
               }
-              for (var z_ = z; z_ < z + maxZ; z_++) {
-                for (var y_ = y; y_ < y + maxY; y_++) {
+              for (let z_ = z; z_ < z + maxZ; z_++) {
+                for (let y_ = y; y_ < y + maxY; y_++) {
                   this.blocks[x][y_][z_] = this.blocks[x][y_][z_] | 0x4;
                 }
               }
@@ -1669,10 +1671,10 @@ class Chunk {
     this.triangles = vertices.length / 3;
 
     if(this.mesh == undefined) {
-      var starting_blocks = 0;
-      for (var x = 0; x < this.chunk_size_x; x++) {
-        for (var y = 0; y < this.chunk_size_y; y++) {
-          for (var z = 0; z < this.chunk_size_z; z++) {
+      let starting_blocks = 0;
+      for (let x = 0; x < this.chunk_size_x; x++) {
+        for (let y = 0; y < this.chunk_size_y; y++) {
+          for (let z = 0; z < this.chunk_size_z; z++) {
             if (this.blocks[x][y][z] != 0) {
               starting_blocks++;
               this.blocks[x][y][z] &= 0xFFFFFFE0;
@@ -1686,7 +1688,7 @@ class Chunk {
 
 
     if(this.mesh != undefined && this.prev_len >= vertices.length) {
-      for (var i = 0; i < vertices.length; i++) {
+      for (let i = 0; i < vertices.length; i++) {
         this.v.setXYZ(i, vertices[i][0], vertices[i][1], vertices[i][2]);
         this.c.setXYZW(i, colors[i][0], colors[i][1], colors[i][2], 1);
       }
@@ -1701,7 +1703,7 @@ class Chunk {
     } else {
       this.v = new THREE.BufferAttribute(new Float32Array(vertices.length * 3), 3);
       this.c = new THREE.BufferAttribute(new Float32Array(colors.length * 3), 3);
-      for (var i = 0; i < vertices.length; i++) {
+      for (let i = 0; i < vertices.length; i++) {
         this.v.setXYZ(i, vertices[i][0], vertices[i][1], vertices[i][2]);
         this.c.setXYZW(i, colors[i][0], colors[i][1], colors[i][2], 1);
       }
@@ -1743,16 +1745,16 @@ class Chunk {
   }
   rmBlock(store, x, y, z, dir, dmg, local) {
     //this.batch_points[this.bp++] = { x: x, y: y, z: z};
-    var wx = x;
-    var wy = y;
-    var wz = z;
+    let wx = x;
+    let wy = y;
+    let wz = z;
 
     if(!local) {
       x = x - (this.from_x * this.blockSize + this.blockSize) | 0;
       y = y - (this.from_y * this.blockSize + this.blockSize) | 0;
       z = z - (this.from_z * this.blockSize + this.blockSize) | 0;
     } 
-    var max = 0.5;
+    let max = 0.5;
     if(this.total_blocks > 3000) {
       max = 0.98;
     } else if (this.total_blocks > 1000) {
@@ -1762,12 +1764,12 @@ class Chunk {
     } else if(this.total_blocks < 200) {
       max = 0.2;
     }
-    var mp_x = 0; 
-    var mp_y = 0; 
-    var mp_z = 0; 
+    let mp_x = 0; 
+    let mp_y = 0; 
+    let mp_z = 0; 
 
     if (x >= 0 && y >= 0 && z >= 0) {
-      var c = this.blocks[x][y][z];
+      let c = this.blocks[x][y][z];
       if (c != 0) {
         if (this.type == "world") {
           if (Math.random() > 0.4) {
@@ -1778,7 +1780,7 @@ class Chunk {
             mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x * 0.5);
             mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y * 0.5);
             mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z * 0.5);
-            var size = this.blockSize;
+            let size = this.blockSize;
             if(Math.random() > 0.5) {
               size = 1;
             }
@@ -1793,9 +1795,9 @@ class Chunk {
           }
           if(this.owner.radioactive_leak) {
             if(Math.random() > 0.8) {
-              var mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x * 0.5);
-              var mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y * 0.5);
-              var mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z * 0.5);
+              let mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x * 0.5);
+              let mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y * 0.5);
+              let mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z * 0.5);
               store.particles.radioactive_leak(
                 mp_x + x * this.blockSize,
                 mp_y + y * this.blockSize,
@@ -1806,9 +1808,9 @@ class Chunk {
           }
           if (this.owner.radioactive) {
             if(Math.random() > max) {
-              var mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x * 0.5);
-              var mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y * 0.5);
-              var mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z * 0.5);
+              let mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x * 0.5);
+              let mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y * 0.5);
+              let mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z * 0.5);
               store.particles.radioactive_splat(
                 mp_x + x * this.blockSize,
                 mp_y + y * this.blockSize,
@@ -1821,15 +1823,15 @@ class Chunk {
             }
           }
           if (this.owner.base_type == "enemy" || this.owner.base_type == "player") {
-            var size = this.blockSize;
+            let size = this.blockSize;
             if(Math.random() > 0.5) {
               size = 1;
             }
             if(Math.random() > max) {
-              var mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x * 0.5);
-              var mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y * 0.5);
-              var mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z * 0.5);
-              //for (var t = 0; t < 2; t++) {
+              let mp_x = this.mesh.position.x - (this.blockSize*this.chunk_size_x * 0.5);
+              let mp_y = this.mesh.position.y - (this.blockSize*this.chunk_size_y * 0.5);
+              let mp_z = this.mesh.position.z - (this.blockSize*this.chunk_size_z * 0.5);
+              //for (let t = 0; t < 2; t++) {
               store.particles.blood(
                 mp_x + x * this.blockSize,
                 mp_y + y * this.blockSize,
@@ -1887,15 +1889,15 @@ class Chunk {
     if (this.blocks == null) {
       return;
     }
-    var x = 0;
-    var y = 0;
-    var z = 0;
-    var vx = 0, vy = 0, vz = 0, val = 0, offset = 0;
-    var ff = new Array();
+    let x = 0;
+    let y = 0;
+    let z = 0;
+    let vx = 0, vy = 0, vz = 0, val = 0, offset = 5;
+    let ff = new Array();
     power =  power * (1/this.blockSize);
-    var pow = power * power;
+    let pow = power * power;
 
-    var max = 0.5;
+    let max = 0.5;
     if(this.total_blocks > 3000) {
       max = 0.98;
     } else if (this.total_blocks > 1000) {
@@ -1912,8 +1914,8 @@ class Chunk {
       z = Math.random() * this.chunk_size_z | 0;
       y = Math.random() * this.chunk_size_y | 0;
     } else {
-      var p = this.mesh.position.y - (this.chunk_size_y*this.blockSize) * 0.5;
-      var h = pos.y - p;
+      let p = this.mesh.position.y - (this.chunk_size_y*this.blockSize) * 0.5;
+      let h = pos.y - p;
       y = h*(1/this.blockSize) |0;
 
       p = this.mesh.position.x - (this.chunk_size_x * this.blockSize * 0.5);
@@ -1929,17 +1931,16 @@ class Chunk {
     y = y > 0? y: 0;
     z = z > 0? z: 0;
 
-    var offset = 5;
-    if(this.type == "enemy") {
+    if(this.base_type == "enemy") {
       offset = 20;
     }
     // Try to find a point which has a block to not repeat the hits
     if (x >= 0 && y >= 0 && z >= 0 && x < this.chunk_size_x && y < this.chunk_size_y && z < this.chunk_size_z) {
       if((this.blocks[x][y][z] >> 8) == 0) {
-        var found = false;
-        for(var x_ = x-offset; x_ < x+offset; x_++) {
-          for(var z_ = z-offset; z_ < z+offset; z_++) {
-            for(var y_ = y-offset; y_ < y+offset; y_++) {
+        let found = false;
+        for(let x_ = x-offset; x_ < x+offset; x_++) {
+          for(let z_ = z-offset; z_ < z+offset; z_++) {
+            for(let y_ = y-offset; y_ < y+offset; y_++) {
               if (x_ >= 0 && y_ >= 0 && z_ >= 0 && x_ < this.chunk_size_x && y_ < this.chunk_size_y && z_ < this.chunk_size_z) {
                 rx |= 0;
                 ry |= 0;
@@ -1961,9 +1962,9 @@ class Chunk {
     }
     //if (x >= 0 && y >= 0 && z >= 0 && x < this.chunk_size_x && y < this.chunk_size_y && z < this.chunk_size_z) {
     //    if((this.blocks[x][y][z] >> 8) == 0) {
-    //        var found = false;
-    //        for(var x_ = x; x_ < this.chunk_size_x; x_++) {
-    //            for(var z_ = z; z_ < this.chunk_size_z; z_++) {
+    //        let found = false;
+    //        for(let x_ = x; x_ < this.chunk_size_x; x_++) {
+    //            for(let z_ = z; z_ < this.chunk_size_z; z_++) {
     //                if (x_ >= 0 && z_ >= 0 && x_ < this.chunk_size_x  && z_ < this.chunk_size_z) {
     //                    if((this.blocks[x_][y][z_] >> 8) != 0) {
     //                        found = true;
@@ -1979,15 +1980,15 @@ class Chunk {
     //    }
     //}
 
-    var isHit = 0;
-    var from_x = (x - power) < 0? 0: x-power;
-    var from_z = (z - power) < 0? 0: z-power;
-    var from_y = (y - power) < 0? 0: y-power;
-    for (var rx = from_x; rx <= x + power; rx++) {
+    let isHit = 0;
+    let from_x = (x - power) < 0? 0: x-power;
+    let from_z = (z - power) < 0? 0: z-power;
+    let from_y = (y - power) < 0? 0: y-power;
+    for (let rx = from_x; rx <= x + power; rx++) {
       vx = Math.pow((rx - x), 2); //*(rx-x);
-      for (var rz = from_z; rz <= z + power; rz++) {
+      for (let rz = from_z; rz <= z + power; rz++) {
         vz = Math.pow((rz - z), 2) + vx; //*(rz-z);
-        for (var ry = from_y; ry <= y + power; ry++) {
+        for (let ry = from_y; ry <= y + power; ry++) {
           val = Math.pow((ry - y), 2) + vz;
           rx |= 0;
           ry |= 0;
@@ -2034,7 +2035,7 @@ class Chunk {
 
     if(isHit) {
       this.health = (this.current_blocks / this.starting_blocks) * 100;
-      var max_hp = 60;
+      let max_hp = 60;
       if(this.owner.base_type == "enemy" || this.owner.base_type == "player") {
         max_hp = 90;
       }
@@ -2043,15 +2044,15 @@ class Chunk {
       {
 
 
-        for (var x = 0; x < this.chunk_size_x; x++) {
-          for (var y = 0; y < this.chunk_size_y; y++) {
-            for (var z = 0; z < this.chunk_size_z; z++) {
+        for (let x = 0; x < this.chunk_size_x; x++) {
+          for (let y = 0; y < this.chunk_size_y; y++) {
+            for (let z = 0; z < this.chunk_size_z; z++) {
               this.blocks[x][y][z] &= 0xFFFFFF00;
             }
           }
         }
 
-        for (var i = 0; i < ff.length; i++) {
+        for (let i = 0; i < ff.length; i++) {
           this.floodFill(store, ff[i], dir, power);
         }
 
@@ -2066,13 +2067,13 @@ class Chunk {
     return false;
   }
   floodFill(store, start, dir, power) {
-    var ground = 1; //this.mesh.position.y - (this.chunk_size_y*this.blockSize / 2);
-    var stack = new Array();
-    var result = new Array();
+    let ground = 1; //this.mesh.position.y - (this.chunk_size_y*this.blockSize / 2);
+    let stack = new Array();
+    let result = new Array();
     // Keep track of upcoming chunk size.
-    var max_x = 0;
-    var max_y = 0;
-    var max_z = 0;
+    let max_x = 0;
+    let max_y = 0;
+    let max_z = 0;
 
     if((this.blocks[start.x][start.y][start.z] & 0x40) != 0 ||
       (this.blocks[start.x][start.y][start.z] & 0x80) != 0) 
@@ -2082,7 +2083,7 @@ class Chunk {
 
     stack.push(start);
     while (stack.length != 0) {
-      var b = stack.pop();
+      let b = stack.pop();
       if (b.x < 0 || b.y < 0 || b.z < 0 || b.x > this.chunk_size_x || b.y > this.chunk_size_y || b.z > this.chunk_size_z) {
         continue;
       }
@@ -2106,7 +2107,7 @@ class Chunk {
       this.blocks[b.x][b.y][b.z] |= 0x80;
 
       if(b.y < 3) {
-        for(var i = 0; i < result.length; i++) {
+        for(let i = 0; i < result.length; i++) {
           this.blocks[b.x][b.y][b.z] |= 0x40;
           this.blocks[b.x][b.y][b.z] |= 0x80;
         }
@@ -2127,9 +2128,9 @@ class Chunk {
 
 
     if (result.length > 0 && result.length != this.current_blocks) {
-      var chunk = new Chunk(store, 0, 0, 0, max_x, max_y, max_z, "ff_object", this.blockSize, false);
-      for (var i = 0; i < result.length; i++) {
-        var p = result[i][0];
+      let chunk = new Chunk(store, 0, 0, 0, max_x, max_y, max_z, "ff_object", this.blockSize, false);
+      for (let i = 0; i < result.length; i++) {
+        let p = result[i][0];
         chunk.addBlock(store, p.x, p.y, p.z, (result[i][1] >> 24) & 0xFF, (result[i][1] >> 16) & 0xFF, (result[i][1] >> 8) & 0xFF);
         this.blocks[p.x][p.y][p.z] = 0;
         this.current_blocks--;
@@ -2152,9 +2153,9 @@ class Chunk {
   }
   explode(store, dir, damage) {
     if(!damage) { damage = 0; }
-    for (var x = 0; x < this.chunk_size_x; x++) {
-      for (var y = 0; y < this.chunk_size_y; y++) {
-        for (var z = 0; z < this.chunk_size_z; z++) {
+    for (let x = 0; x < this.chunk_size_x; x++) {
+      for (let y = 0; y < this.chunk_size_y; y++) {
+        for (let z = 0; z < this.chunk_size_z; z++) {
           if ((this.blocks[x][y][z] >> 8) != 0) {
             this.rmBlock(store, x, y, z, dir, damage);
           }
@@ -2164,11 +2165,11 @@ class Chunk {
     this.mesh.visible = false;
   }
   virtual_explode(store, pos) {
-    for (var x = 0; x < this.chunk_size_x; x++) {
-      for (var y = 0; y < this.chunk_size_y; y++) {
-        for (var z = 0; z < this.chunk_size_z; z++) {
+    for (let x = 0; x < this.chunk_size_x; x++) {
+      for (let y = 0; y < this.chunk_size_y; y++) {
+        for (let z = 0; z < this.chunk_size_z; z++) {
           if (this.blocks[x][y][z] != 0) {
-            var c = this.blocks[x][y][z];
+            let c = this.blocks[x][y][z];
             if (Math.random() > 0.9) {
               store.particles.debris(
                 pos.x + x * this.blockSize / 2,
@@ -2185,10 +2186,10 @@ class Chunk {
     }
   }
   blockExists_w(pos) {
-    var l = (this.blockSize*this.chunk_size_x * 0.5)*(1/this.blockSize);
-    var x = this.chunk_size_x - (pos.x - (this.mesh.position.x - l)) | 0; 
-    var y = this.chunk_size_y - (pos.y - (this.mesh.position.y - l)) | 0; 
-    var z = this.chunk_size_z - (pos.z - (this.mesh.position.z - l)) | 0; 
+    let l = (this.blockSize*this.chunk_size_x * 0.5)*(1/this.blockSize);
+    let x = this.chunk_size_x - (pos.x - (this.mesh.position.x - l)) | 0; 
+    let y = this.chunk_size_y - (pos.y - (this.mesh.position.y - l)) | 0; 
+    let z = this.chunk_size_z - (pos.z - (this.mesh.position.z - l)) | 0; 
     if(x >= 0 && y >= 0 && z >= 0 && x < this.chunk_size_x && y < this.chunk_size_y && z < this.chunk_size_z) {
       if((this.blocks[x][y][z] >> 8) != 0) {
         return true;
@@ -2287,14 +2288,14 @@ class Main {
     this.sounds.Add({name: "bullet_wall", file: require("../assets/sounds/bullet_wall.mp3")});
     this.sounds.Add({name: "bullet_metal", file: require("../assets/sounds/bullet_metal.mp3")});
 
-    var container = document.getElementById('container');
+    let container = document.getElementById('container');
     this.scene = new THREE.Scene();
     this.clock = new THREE.Clock();
 
     //// Iosmetric view
-    //var aspect = window.innerWidth / window.innerHeight;
-    //var d = 70;
-    //var aspect = window.innerWidth/window.innerHeight;
+    //let aspect = window.innerWidth / window.innerHeight;
+    //let d = 70;
+    //let aspect = window.innerWidth/window.innerHeight;
     //this.camera = new THREE.OrthographicCamera( - d * aspect, d * aspect, d, -d, 1, 3000 );
 
     // Perspective View
@@ -2376,7 +2377,7 @@ class Main {
     this.maps.reset(this);
     this.player.reset(this);
     this.cdList = [];
-    for(var i = 0; i < this.update_objects.length; i++) {
+    for(let i = 0; i < this.update_objects.length; i++) {
       if(this.update_objects[i].chunk) {
         this.scene.remove(this.update_objects[i].chunk.mesh);
       }
@@ -2394,7 +2395,7 @@ class Main {
   }
   addToCD(obj) {
     if (obj.owner == null || obj.owner == "") {
-      var err = new Error();
+      let err = new Error();
       console.log(err.stack);
     }
     if (obj != undefined) {
@@ -2402,7 +2403,7 @@ class Main {
     }
   }
   spliceCDList (index) {
-    var len = this.cdList.length;
+    let len = this.cdList.length;
     if (!len) { return; }
     while (index < len) {
       this.cdList[index] = this.cdList[index + 1];
@@ -2411,7 +2412,7 @@ class Main {
     this.cdList.length--;
   }
   removeFromCD(obj) {
-    for(var i = 0; i < this.cdList.length; i++) {
+    for(let i = 0; i < this.cdList.length; i++) {
       if(this.cdList[i] != undefined) {
         if(this.cdList[i].id == obj.id) {
           this.spliceCDList(i);
@@ -2423,10 +2424,10 @@ class Main {
   render() {
     requestAnimationFrame( this.render.bind(this) );
 
-    var time = (Date.now() - this.t_start)*0.001;
-    var delta = this.clock.getDelta();
+    let time = (Date.now() - this.t_start)*0.001;
+    let delta = this.clock.getDelta();
 
-    for(var f in this.update_objects) {
+    for(let f in this.update_objects) {
       if(this.update_objects[f] == null) { continue; }
       if(this.update_objects[f].update) {
         this.update_objects[f].update(this, time, delta);
@@ -2484,7 +2485,7 @@ class Maps {
     this.ambient_light = 0;
   }
   reset(store) {
-    for(var i = 0; i < this.loaded.length; i++) {
+    for(let i = 0; i < this.loaded.length; i++) {
       if(this.loaded[i].chunk) {
         store.scene.remove(this.loaded[i].chunk.mesh);
       }
@@ -2494,8 +2495,8 @@ class Maps {
     store.scene.remove(this.ambient_light);
   }
   update(store, time, delta) {
-    var t1 = 0;
-    for (var i = 0; i < this.loaded.length; i++) {
+    let t1 = 0;
+    for (let i = 0; i < this.loaded.length; i++) {
       if(this.loaded[i].chunk && this.loaded[i].chunk.dirty) {
         this.loaded[i].chunk.build(store);
         t1 = Date.now();
@@ -2530,16 +2531,19 @@ class Maps {
         ([data, width, height, map]) => {
           this.width = width;
           this.height = height;
-          var walls = [];
-          var floor = [];
-          var wall_map = new Array(width);
-          for (var x = 0; x < width; x++) {
+          let walls = [];
+          let floor = [];
+          let wall_map = new Array(width);
+          let wall_thickness = store.maps.wall_thickness;
+          let wall_height = store.maps.wall_height;
+          let found;
+          for (let x = 0; x < width; x++) {
             wall_map[x] = new Array(height);
           }
 
-          for (var x = 0; x < map.length; x++) {
-            for (var z = 0; z < map[x].length; z++) {
-              var p = map[x][z];
+          for (let x = 0; x < map.length; x++) {
+            for (let z = 0; z < map[x].length; z++) {
+              let p = map[x][z];
               if (p.a == 0) { continue; }
 
               // Black will dissapear in chunk algo.
@@ -2548,21 +2552,19 @@ class Maps {
                 p.g = 1;
                 p.b = 1;
               }
-              var wall_thickness = store.maps.wall_thickness;
-              var wall_height = store.maps.wall_height;
 
               if(p.r == 0x22 && p.g == 0x22 && p.b == 0x22) {
-                for (var y = 0; y < wall_height; y++) {
-                  var pix = store.textures.getPixel(y, x, this.wall2_texture);
+                for (let y = 0; y < wall_height; y++) {
+                  let pix = store.textures.getPixel(y, x, this.wall2_texture);
                   walls.push({ x: x, y: y, z: z, r: pix.r, g: pix.g, b: pix.b });
                   wall_map[x][z] = 1;
                 }
               }
 
               if (map[x + 1][z].a == 0) {
-                for (var y = 0; y < wall_height; y++) {
-                  var pix = store.textures.getPixel(y, z, this.wall_texture);
-                  for (var xx = 0; xx < wall_thickness; xx++) {
+                for (let y = 0; y < wall_height; y++) {
+                  let pix = store.textures.getPixel(y, z, this.wall_texture);
+                  for (let xx = 0; xx < wall_thickness; xx++) {
                     walls.push({ x: x + xx, y: y, z: z, r: pix.r, g: pix.g, b: pix.b });
                     walls.push({ x: x + xx, y: y, z: z - 1, r: pix.r, g: pix.g, b: pix.b });
                     walls.push({ x: x + xx, y: y, z: z + 1, r: pix.r, g: pix.g, b: pix.b });
@@ -2573,9 +2575,9 @@ class Maps {
                 }
               }
               if (map[x - 1][z].a == 0) {
-                for (var y = 0; y < wall_height; y++) {
-                  var pix = store.textures.getPixel(y, z, this.wall_texture);
-                  for (var xx = 0; xx < wall_thickness; xx++) {
+                for (let y = 0; y < wall_height; y++) {
+                  let pix = store.textures.getPixel(y, z, this.wall_texture);
+                  for (let xx = 0; xx < wall_thickness; xx++) {
                     walls.push({ x: x - xx, y: y, z: z, r: pix.r, g: pix.g, b: pix.b });
                     walls.push({ x: x - xx, y: y, z: z - 1, r: pix.r, g: pix.g, b: pix.b });
                     wall_map[x - xx][z - 1] = 1;
@@ -2584,9 +2586,9 @@ class Maps {
                 }
               }
               if (map[x][z + 1].a == 0) {
-                for (var y = 0; y < wall_height; y++) {
-                  var pix = store.textures.getPixel(y, x, this.wall_texture);
-                  for (var zz = 0; zz < wall_thickness; zz++) {
+                for (let y = 0; y < wall_height; y++) {
+                  let pix = store.textures.getPixel(y, x, this.wall_texture);
+                  for (let zz = 0; zz < wall_thickness; zz++) {
                     walls.push({ x: x - 1, y: y, z: z + zz, r: pix.r, g: pix.g, b: pix.b });
                     walls.push({ x: x, y: y, z: z + zz, r: pix.r, g: pix.g, b: pix.b });
                     wall_map[x - 1][z + zz] = 1;
@@ -2595,9 +2597,9 @@ class Maps {
                 }
               }
               if (map[x][z - 1].a == 0) {
-                for (var y = 0; y < wall_height; y++) {
-                  var pix = store.textures.getPixel(y, x, this.wall_texture);
-                  for (var zz = 0; zz < wall_thickness; zz++) {
+                for (let y = 0; y < wall_height; y++) {
+                  let pix = store.textures.getPixel(y, x, this.wall_texture);
+                  for (let zz = 0; zz < wall_thickness; zz++) {
                     walls.push({ x: x - 1, y: y, z: z - zz, r: pix.r, g: pix.g, b: pix.b });
                     walls.push({ x: x, y: y, z: z - zz, r: pix.r, g: pix.g, b: pix.b });
                     wall_map[x][z - zz] = 1;
@@ -2607,18 +2609,18 @@ class Maps {
               }
 
               // Draw floor
-              for (var y = 0; y < store.maps.ground; y++) {
+              for (let y = 0; y < store.maps.ground; y++) {
                 floor.push({ x: x, y: y, z: z, r: p.r, g: p.g, b: p.b });
               }
             }
           }
 
           // Find floor and create chunks for it.
-          var total_chunks = 0;
+          let total_chunks = 0;
           while (true) {
-            var x = 0;
-            var z = 0;
-            var found = false;
+            let x = 0;
+            let z = 0;
+            let found = false;
             for (x = 0; x < width; x++) {
               for (z = 0; z < height; z++) {
                 if (map[x][z].a != 0) {
@@ -2633,17 +2635,17 @@ class Maps {
             }
             // We found a wall position.
             // Get how far on X the wall is.
-            var max_x = 0;
-            var max_z = 1000;
-            var found = false;
-            var max_width = 20;
-            var max_height = 20;
-            for (var x1 = 0; x + x1 < width && x1 < max_width; x1++) {
+            let max_x = 0;
+            let max_z = 1000;
+            found = false;
+            let max_width = 20;
+            let max_height = 20;
+            for (let x1 = 0; x + x1 < width && x1 < max_width; x1++) {
               if (map[x + x1][z].a != 0) {
                 max_x++;
                 // Check Z
-                var mz = 0;
-                for (var z1 = 0; z + z1 < height && z1 < max_height; z1++) {
+                let mz = 0;
+                for (let z1 = 0; z + z1 < height && z1 < max_height; z1++) {
                   if (map[x + x1][z + z1].a != 0) {
                     mz++;
                   } else {
@@ -2657,15 +2659,15 @@ class Maps {
                 break;
               }
             }
-            for (var x_ = x; x_ < x + max_x; x_++) {
-              for (var z_ = z; z_ < z + max_z; z_++) {
+            for (let x_ = x; x_ < x + max_x; x_++) {
+              for (let z_ = z; z_ < z + max_z; z_++) {
                 map[x_][z_].a = 0;
               }
             }
 
             // Now find all blocks within the range.
-            var chunk = new Chunk(store, x, 0, z, max_x, store.maps.ground, max_z, "floor", 1, "world");
-            for (var i = 0; i < floor.length; i++) {
+            let chunk = new Chunk(store, x, 0, z, max_x, store.maps.ground, max_z, "floor", 1, "world");
+            for (let i = 0; i < floor.length; i++) {
               if (floor[i].x >= x && floor[i].x < x + max_x &&
                 floor[i].z >= z && floor[i].z < z + max_z) {
                 chunk.addBlock(store, floor[i].x, floor[i].y, floor[i].z, floor[i].r, floor[i].g, floor[i].b);
@@ -2678,9 +2680,9 @@ class Maps {
 
           // Find wall and create chunks for them.
           while (true) {
-            var x = 0;
-            var z = 0;
-            var found = false;
+            let x = 0;
+            let z = 0;
+            found = false;
             for (x = 0; x < width; x++) {
               for (z = 0; z < height; z++) {
                 if (wall_map[x][z] == 1) {
@@ -2693,19 +2695,19 @@ class Maps {
             if (!found) {
               break;
             }
+            found = false;
             // We found a wall position.
             // Get how far on X the wall is.
-            var max_x = 0;
-            var max_z = 1000;
-            var found = false;
-            var max_width = 20;
-            var max_height = 20;
-            for (var x1 = 0; x + x1 < width && x1 < max_width; x1++) {
+            let max_x = 0;
+            let max_z = 1000;
+            let max_width = 20;
+            let max_height = 20;
+            for (let x1 = 0; x + x1 < width && x1 < max_width; x1++) {
               if (wall_map[x + x1][z] == 1) {
                 max_x++;
                 // Check Z
-                var mz = 0;
-                for (var z1 = 0; z + z1 < height && z1 < max_height; z1++) {
+                let mz = 0;
+                for (let z1 = 0; z + z1 < height && z1 < max_height; z1++) {
                   if (wall_map[x + x1][z + z1] == 1) {
                     mz++;
                   } else {
@@ -2719,21 +2721,21 @@ class Maps {
                 break;
               }
             }
-            for (var x_ = x; x_ < x + max_x; x_++) {
-              for (var z_ = z; z_ < z + max_z; z_++) {
+            for (let x_ = x; x_ < x + max_x; x_++) {
+              for (let z_ = z; z_ < z + max_z; z_++) {
                 wall_map[x_][z_] = 0;
               }
             }
 
             // Now find all blocks within the range.
             // 0.01 = offset so we don't see black borders on the floor.
-            var chunk = 0;
+            let chunk = 0;
             if (max_x > max_z) {
               chunk = new Chunk(store, x - wall_thickness, this.ground, z - wall_thickness, max_x + wall_thickness, wall_height, max_z + wall_thickness, "x", 1, "world");
             } else {
               chunk = new Chunk(store, x - wall_thickness, this.ground, z, max_x + wall_thickness, wall_height, max_z + wall_thickness, "x", 1, "world");
             }
-            for (var i = 0; i < walls.length; i++) {
+            for (let i = 0; i < walls.length; i++) {
               if (walls[i].x >= x && walls[i].x <= x + max_x &&
                 walls[i].z >= z && walls[i].z <= z + max_z) {
                 chunk.addBlock(store, walls[i].x, walls[i].y + this.ground, walls[i].z, walls[i].r, walls[i].g, walls[i].b);
@@ -2745,10 +2747,10 @@ class Maps {
           loadImageFile(objects)
             .then(
               ([data, width, height]) => {
-                var list = [];
-                for (var i = 0; i < data.length; i++) {
+                let list = [];
+                for (let i = 0; i < data.length; i++) {
                   if (data[i].a == 0) { continue; }
-                  for (var k in this.objects) {
+                  for (let k in this.objects) {
                     if (data[i].r == this.objects[k].r && data[i].g == this.objects[k].g && data[i].b == this.objects[k].b) {
 const Entities = Object.freeze({
   /* chars */
@@ -2813,7 +2815,7 @@ class Level1 extends Maps {
   }
   update(store, time, delta) {
     super.update(store, time, delta);
-    for(var i= 0; i < 2; i++) {
+    for(let i= 0; i < 2; i++) {
       store.particles.rain(store);
     }
   }
@@ -2890,9 +2892,9 @@ class Portal extends Obj {
     this.z = z;
   }
   update(store, time, delta) {
-    var x = 0; 
-    var r = 10;
-    for(var a = 0; a < Math.PI*2; a+=Math.PI/4) {
+    let x = 0; 
+    let r = 10;
+    for(let a = 0; a < Math.PI*2; a+=Math.PI/4) {
       x = this.x + r * Math.cos(a)
       z = this.z + r * Math.sin(a)
       store.particles.portalMagic(x, store.maps.ground, z);
@@ -2990,7 +2992,7 @@ class StreetLamp extends Obj {
     // Check rotation depending on wall
     this.chunk.mesh.position.set(x, store.maps.ground+10, z);
 
-    var res = store.world.checkExists(store, new THREE.Vector3(x-1,store.maps.ground+10,z));
+    let res = store.world.checkExists(store, new THREE.Vector3(x-1,store.maps.ground+10,z));
     if(res.length > 0) {
       //     this.chunk.mesh.rotation.y = -Math.PI*2;
       this.chunk.mesh.position.x += 10;
@@ -2998,7 +3000,7 @@ class StreetLamp extends Obj {
     }
     res = store.world.checkExists(store, new THREE.Vector3(x,store.maps.ground+10,z-1));
 
-    for(var i = 0; i < 10; i++) {
+    for(let i = 0; i < 10; i++) {
       res = store.world.checkExists(store, new THREE.Vector3(x+i,store.maps.ground+10,z));
       if(res.length > 0) {
         this.chunk.mesh.position.x -= 10;
@@ -3028,7 +3030,7 @@ class UfoSign extends Obj {
     this.alive = true;
     this.light = 0;
     // Check rotation depending on wall
-    var res = store.world.checkExists(store, new THREE.Vector3(x-1,store.maps.ground+10,z));
+    let res = store.world.checkExists(store, new THREE.Vector3(x-1,store.maps.ground+10,z));
     if(res.length > 0) {
       this.chunk.mesh.rotation.y = -Math.PI * 0.5;
     }
@@ -3059,7 +3061,7 @@ class RadiationSign extends Obj {
     this.chunk.mesh.rotation.y = Math.PI * 0.5;
     this.chunk.mesh.rotation.x = -Math.PI;
     // Check rotation depending on wall
-    var res = store.world.checkExists(store, new THREE.Vector3(x-1,store.maps.ground+10,z));
+    let res = store.world.checkExists(store, new THREE.Vector3(x-1,store.maps.ground+10,z));
     if(res.length > 0) {
       this.chunk.mesh.rotation.y = -Math.PI * 0.5;
     }
@@ -3099,7 +3101,7 @@ class DeadHearty extends Obj {
     this.alive = false;
   }
   update(store, time, delta) {
-    var pos = this.chunk.mesh.position;
+    let pos = this.chunk.mesh.position;
     store.particles.radiation(pos.x+(2-Math.random()*4), pos.y, pos.z+(2-Math.random()*4));
     if(Math.random() > 0.9) {
       this.light.intensity = (2-Math.random());
@@ -3131,7 +3133,7 @@ class BarrelFire extends Obj {
     return false;
   }
   update(store, time, delta) {
-    var pos = this.chunk.mesh.position;
+    let pos = this.chunk.mesh.position;
     store.particles.fire(store, pos.x+(4-Math.random()*8), store.maps.ground+6+this.chunk.to_y*2, pos.z+(4-Math.random()*8));
     if(Math.random() > 0.9) {
       this.light.intensity = 2-Math.random()*0.1;
@@ -3166,7 +3168,7 @@ class Barrel extends Obj {
     return false;
   }
   update(store, time, delta) {
-    var pos = this.chunk.mesh.position;
+    let pos = this.chunk.mesh.position;
     store.particles.radiation(pos.x+(1-Math.random()*2), store.maps.ground+4+this.chunk.to_y*2, pos.z+(1-Math.random()*2));
     if(Math.random() > 0.9) {
       this.light.intensity = 2-Math.random()*0.1;
@@ -3257,8 +3259,8 @@ class AmmoCrate extends Obj {
 class AmmoSniper extends Obj {
   constructor(store, x, y, z) {
     super(store, "ammo", x, y, z, 0.02);
-    for(var i = 0; i < this.max; i++) {
-      var c = this.chunk.mesh.clone();
+    for(let i = 0; i < this.max; i++) {
+      let c = this.chunk.mesh.clone();
       c.visible = false;
       store.scene.add(c);
       this.active.push(c);
@@ -3275,8 +3277,8 @@ class AmmoSniper extends Obj {
 class AmmoP90 extends Obj {
   constructor(store, x, y, z) {
     super(store, "ammo", x, y, z, 0.009);
-    for(var i = 0; i < this.max; i++) {
-      var c = this.chunk.mesh.clone();
+    for(let i = 0; i < this.max; i++) {
+      let c = this.chunk.mesh.clone();
       c.visible = false;
       store.scene.add(c);
       this.active.push(c);
@@ -3294,8 +3296,8 @@ class AmmoP90 extends Obj {
 class Ammo extends Obj {
   constructor(store, x, y, z) {
     super(store, "ammo", x, y, z, 0.015);
-    for(var i = 0; i < this.max; i++) {
-      var c = this.chunk.mesh.clone();
+    for(let i = 0; i < this.max; i++) {
+      let c = this.chunk.mesh.clone();
       c.visible = false;
       store.scene.add(c);
       this.active.push(c);
@@ -3313,8 +3315,8 @@ class Ammo extends Obj {
 class Shell extends Obj {
   constructor(store, x, y, z) {
     super(store, "shell", x, y, z, 0.025);
-    for(var i = 0; i < this.max; i++) {
-      var c = this.chunk.mesh.clone();
+    for(let i = 0; i < this.max; i++) {
+      let c = this.chunk.mesh.clone();
       c.visible = false;
       store.scene.add(c);
       this.active.push(c);
@@ -3333,7 +3335,7 @@ class Heart extends Obj {
     super(store, "heart", x, y, z, 0.02);
   }
   grab(store, mesh_id) {
-    for(var i = 0; i < this.active.length; i++) {
+    for(let i = 0; i < this.active.length; i++) {
       if(this.active[i].id == mesh_id) {
         store.sounds.PlaySound(store, "take_heart", this.active[i].position, 250);
         store.removeFromCD(this.active[i]);
@@ -3343,7 +3345,7 @@ class Heart extends Obj {
   }
   update(store, time, delta) {
     super.update(store, time, delta);
-    for(var i = 0; i < this.active.length; i++) {
+    for(let i = 0; i < this.active.length; i++) {
       if (this.active[i].alive) {
         this.active[i].rotation.y += Math.sin(delta);
         this.active[i].position.y = store.maps.ground+6 + Math.sin(time * 2.5);
@@ -3368,15 +3370,15 @@ class Heart extends Obj {
     }
   }
   add(store, x,y,z) {
-    var m = this.chunk.mesh.clone();
+    let m = this.chunk.mesh.clone();
     store.scene.add(m);
     m.position.set(x,y,z);
     m.visible = true;
     this.active.push(m);
     m.alive = true;
     m.owner = this;
-    var l1 = this.red_light.clone();
-    var l2 = this.red_light.clone();
+    let l1 = this.red_light.clone();
+    let l2 = this.red_light.clone();
     m.add(l1);
     m.add(l2);
     l1.position.y = 2;
@@ -3406,7 +3408,7 @@ function ParticlePool(store, size, type) {
 
   ParticlePool.prototype.update = function (store, time, delta) {
     // Dim lights 
-    for(var i = 0; i < this.lights.length; i++) {
+    for(let i = 0; i < this.lights.length; i++) {
       this.lights[i].intensity -= 0.5;
       if (this.lights[i].intensity <= 0) {
         if (this.lights[i].parent != null) {
@@ -3419,7 +3421,7 @@ function ParticlePool(store, size, type) {
 
     // Clean up shells
     if (this.clean_old_shells > 0.2) {
-      for (var i = 0; i < this.old_shells.length; i++) {
+      for (let i = 0; i < this.old_shells.length; i++) {
         if (this.old_shells[i] == null) {
           continue;
         }
@@ -3434,20 +3436,20 @@ function ParticlePool(store, size, type) {
     this.clean_old_shells += delta;
 
     // Create max particles each frame
-    for (var i = 0; i < 300; i++) {
+    for (let i = 0; i < 300; i++) {
       if (this.queue.length == 0) {
         break;
       }
-      var p = this.queue.pop();
+      let p = this.queue.pop();
       if (this.create(store, p) == -1) {
         this.queue.push(p);
         break;
       }
     }
 
-    var tot = 0;
-    var ts = 0;
-    for (var i = this.update_cnt; i < this.particles.length; i++) {
+    let tot = 0;
+    let ts = 0;
+    for (let i = this.update_cnt; i < this.particles.length; i++) {
       this.update_cnt = i;
       if (this.particles[i].active) {
         if(this.particles[i].type == "grenade" || this.particles[i].type == "missile" || this.particles[i].type == "minigun" || this.particles[i].type == "shell") {
@@ -3467,7 +3469,7 @@ function ParticlePool(store, size, type) {
   };
 
   ParticlePool.prototype.create = function (store, opts) {
-    for (var i = 0; i < this.particles.length; i++) {
+    for (let i = 0; i < this.particles.length; i++) {
       if (!this.particles[i].active) {
         this.particles[i].set(store, opts);
         return this.particles[i];
@@ -3507,8 +3509,8 @@ function ParticlePool(store, size, type) {
   };
 
   ParticlePool.prototype.explosion = function (store, x, y, z, power, type) {
-    var c = 0;
-    for (var i = 0; i < power * 10; i++) {
+    let c = 0;
+    for (let i = 0; i < power * 10; i++) {
       c = 50+ Math.random()*205|0;
       // Add smoke
       this.get({
@@ -3554,7 +3556,7 @@ function ParticlePool(store, size, type) {
       });
     }
     if (type == "missile") {
-      var p = store.p_light.clone();
+      let p = store.p_light.clone();
       p.position.set(x, y, z);
       p.visible = true;
       p.intensity = 20;
@@ -3565,7 +3567,7 @@ function ParticlePool(store, size, type) {
   };
 
   ParticlePool.prototype.chunkDebris = function (x, y, z, chunk, dirx, diry, dirz, power) {
-    var vx, vy, vz, fx, fz;
+    let vx, vy, vz, fx, fz;
     fz = Math.random(); //0.3;//+power/50;
     fx = Math.random(); // 0.3;//+power/50;
     vx = dirx + (1 - Math.random() * 2);
@@ -3604,7 +3606,7 @@ function ParticlePool(store, size, type) {
 
   // Shell from a gun
   ParticlePool.prototype.empty_shell = function (x, y, z, mesh) {
-    var vx, vy, vz, fx, fz;
+    let vx, vy, vz, fx, fz;
     vx = Math.random();
     vy = Math.random();
     vz = Math.random();
@@ -3731,9 +3733,9 @@ function ParticlePool(store, size, type) {
   // Debris 
   ParticlePool.prototype.debris = function (x, y, z, size, r, g, b, virtual, dirx, diry, dirz, stay) {
     if(stay == null) { stay = true; }
-    var vx, vy, vz, fx, fz;
-    var type;
-    var gravity = 9.82;
+    let vx, vy, vz, fx, fz;
+    let type;
+    let gravity = 9.82;
     if (dirx != null) {
       vx = dirx;
       vy = diry + Math.random() * 4;
@@ -3760,8 +3762,8 @@ function ParticlePool(store, size, type) {
       type = "debris";
       y += 2;
     }
-    var bounces = 0;
-    var life = 0;
+    let bounces = 0;
+    let life = 0;
     if(!stay) {
       bounces = 0;
       life = 0.8;
@@ -3793,8 +3795,8 @@ function ParticlePool(store, size, type) {
   };
 
   ParticlePool.prototype.rain = function (store) {
-    var rand1 = Math.random() * store.maps.width;
-    var rand2 = Math.random() * store.maps.height;
+    let rand1 = Math.random() * store.maps.width;
+    let rand2 = Math.random() * store.maps.height;
     this.get({
       type: "rain",
       size: 0.5,
@@ -3816,8 +3818,8 @@ function ParticlePool(store, size, type) {
   };
 
   ParticlePool.prototype.snow = function (store) {
-    var rand1 = Math.random() * store.maps.width;
-    var rand2 = Math.random() * store.maps.height;
+    let rand1 = Math.random() * store.maps.width;
+    let rand2 = Math.random() * store.maps.height;
     this.get({
       type: "snow",
       size: 0.8,
@@ -3839,8 +3841,8 @@ function ParticlePool(store, size, type) {
   };
 
   ParticlePool.prototype.walkSmoke = function (x, y, z) {
-    var rand = -2 + Math.random() * 4;
-    var rand_c = Math.random() * 100 | 0;
+    let rand = -2 + Math.random() * 4;
+    let rand_c = Math.random() * 100 | 0;
     this.get({
       size: 1,
       x: x + rand,
@@ -3861,9 +3863,9 @@ function ParticlePool(store, size, type) {
   };
 
   ParticlePool.prototype.portalMagic = function (x, y, z) {
-    var r = 0; 
-    var g = 0;
-    var b = 0;
+    let r = 0; 
+    let g = 0;
+    let b = 0;
     if(Math.random() > 0.5) {
       r = Math.random() * 50 | 0;
       g = 100 + Math.random() * 100 | 0;
@@ -3919,8 +3921,8 @@ function ParticlePool(store, size, type) {
 
   ParticlePool.prototype.debris_smoke = function (x, y, z, size) {
     // random black/white + fire
-    var r, g, b;
-    var v = Math.random();
+    let r, g, b;
+    let v = Math.random();
     if (v < 0.3) {
       r = 200 + Math.random() * 55;
       g = 150 + Math.random() * 80;
@@ -3969,7 +3971,7 @@ function ParticlePool(store, size, type) {
   };
 
   ParticlePool.prototype.gunSmoke = function (x, y, z, dirx, diry, dirz) {
-    var rand_c = Math.random() * 100 | 0;
+    let rand_c = Math.random() * 100 | 0;
     this.get({
       size: 0.5,
       x: x + (2 - Math.random() * 4),
@@ -4014,7 +4016,7 @@ function ParticlePool(store, size, type) {
   };
 
   ParticlePool.prototype.ammoMissile = function (x, y, z, dirx, diry, dirz, owner, chunk, speed, dmg) {
-    var p = this.get({
+    let p = this.get({
       damage: dmg,
       owner: owner,
       type: 'missile',
@@ -4036,8 +4038,8 @@ function ParticlePool(store, size, type) {
 
   // Ammo for shotgun
   ParticlePool.prototype.ammoShell = function (x, y, z, dirx, diry, dirz, owner, speed, dmg) {
-    var shots = [];
-    for (var i = 0; i < 10; i++) {
+    let shots = [];
+    for (let i = 0; i < 10; i++) {
       shots.push(this.get({
         damage: dmg,
         owner: owner,
@@ -4227,7 +4229,7 @@ function Particle(store, particle_type) {
     if (!this.isVisible(store, new THREE.Vector3(opts.x, opts.y, opts.z))) {
       return;
     }
-    for (var k in opts) {
+    for (let k in opts) {
       this[k] = opts[k];
     }
     this.grav_mass = this.gravity * this.mass;
@@ -4247,7 +4249,7 @@ function Particle(store, particle_type) {
       this.mesh.position.set(this.x, this.y, this.z);
     }
     if (this.light) {
-      var p = store.p_light.clone();
+      let p = store.p_light.clone();
       p.visible = true;
       p.intensity = 15;
       p.distance = 30;
@@ -4260,8 +4262,8 @@ function Particle(store, particle_type) {
   Particle.prototype.reset = function (store) {
     if (this.type == "chunk_debris" || this.type == "empty_shell") {
       if (this.type == "empty_shell") {
-        var found = -1;
-        for (var i = 0; i < store.particles.old_shells.length; i++) {
+        let found = -1;
+        for (let i = 0; i < store.particles.old_shells.length; i++) {
           if (store.particles.old_shells[i] == null) {
             found = i;
             break;
@@ -4581,10 +4583,10 @@ function Particle(store, particle_type) {
   };
 
   Particle.prototype.cd = function (store, time, delta) {
-    var directionVector = new THREE.Vector3(this.vx, this.vy, this.vz);
+    let directionVector = new THREE.Vector3(this.vx, this.vy, this.vz);
 
-    var o = 1;
-    for (var idx = 0; idx < store.cdList.length; idx++) {
+    let o = 1;
+    for (let idx = 0; idx < store.cdList.length; idx++) {
       const item = store.cdList[idx];
       if((item.position.x - item.owner.chunk.chunk_size_x*item.owner.chunk.blockSize * 0.5) <= this.mesh.position.x + o &&
         (item.position.x + item.owner.chunk.chunk_size_x*item.owner.chunk.blockSize * 0.5) >= this.mesh.position.x - o )
@@ -4654,10 +4656,10 @@ function SoundLoader() {
     };
 
     if(position != undefined) {
-      var vector = store.camera.localToWorld(new THREE.Vector3(0,0,0));
-      var distance = position.distanceTo( vector );
+      let vector = store.camera.localToWorld(new THREE.Vector3(0,0,0));
+      let distance = position.distanceTo( vector );
       if ( distance <= radius ) {
-        var vol = 1 * ( 1 - distance / radius );
+        let vol = 1 * ( 1 - distance / radius );
         this.sounds[name].gainNode.gain.value = vol;
       } else {
         this.sounds[name].gainNode.gain.value = 0;
@@ -4673,7 +4675,7 @@ function SoundLoader() {
     if(this.context == undefined) {
       this.context = new AudioContext();
     }
-    var loader = new BufferLoader(this.context,
+    let loader = new BufferLoader(this.context,
       [args.file.default],
       this.Load.bind(this, args.name));
     loader.load();
@@ -4694,11 +4696,11 @@ function BufferLoader(context, urlList, callback) {
   BufferLoader.prototype.loadBuffer = function(url, index) {
     // Load buffer asynchronously
     //console.log("URL: "+url);
-    var request = new XMLHttpRequest();
+    let request = new XMLHttpRequest();
     request.open("GET", url, true);
     request.responseType = "arraybuffer";
 
-    var loader = this;
+    let loader = this;
 
     request.onload = function() {
       // Asynchronously decode the audio file data in request.response
@@ -4728,7 +4730,7 @@ function BufferLoader(context, urlList, callback) {
   };
 
   BufferLoader.prototype.load = function() {
-    for (var i = 0; i < this.urlList.length; ++i)
+    for (let i = 0; i < this.urlList.length; ++i)
       this.loadBuffer(this.urlList[i], i);
   };
 }
@@ -4771,7 +4773,7 @@ function Textures() {
   this.heightMap = {};
 
   Textures.prototype.clean = function() {
-    for(var i = 0; i < this.tex.length; i++) {
+    for(let i = 0; i < this.tex.length; i++) {
       this.tex[i].map = null;
       this.tex[i] = null;
     }
@@ -4786,7 +4788,7 @@ function Textures() {
   };
 
   Textures.prototype.prepare = function() {
-    for(var i = 0; i < this.files.length; i++) {
+    for(let i = 0; i < this.files.length; i++) {
       this.tex[i] = {};
       this.tex[i].file = this.files[i][0];
       if(this.files[i][1] == IMAGE) {
@@ -4800,10 +4802,10 @@ function Textures() {
   Textures.prototype.getPixel = function(x, y, tex_id) {
     // Scale x,y to image size.
     //console.log(this.tex[tex_id], tex_id);
-    var tx = (x/this.tex[tex_id].height)|0; 
-    var xx = x - (tx*this.tex[tex_id].height);
-    var ty = (y/this.tex[tex_id].width)|0; 
-    var yy = y - (ty*this.tex[tex_id].width);
+    let tx = (x/this.tex[tex_id].height)|0; 
+    let xx = x - (tx*this.tex[tex_id].height);
+    let ty = (y/this.tex[tex_id].width)|0; 
+    let yy = y - (ty*this.tex[tex_id].width);
     //console.log(yy,xx);
     if(this.tex[tex_id].map[xx] == undefined) {
       console.log(xx,yy);
@@ -4821,37 +4823,37 @@ function Textures() {
   };
 
   Textures.prototype.loadHeightMap = function(filename, id) {
-    var image = new Image();
+    let image = new Image();
     image.src = filename;
     image.id = id;
-    var ctx = document.createElement('canvas').getContext('2d');
+    let ctx = document.createElement('canvas').getContext('2d');
 
     image.onload = () => {
-      var scale = 1;
+      let scale = 1;
       ctx.canvas.width = image.width;
       ctx.canvas.height = image.height;
 
       this.tex[image.id].width = image.width;
       this.tex[image.id].height = image.height;
 
-      var size = image.width * image.height;
-      var data = new Float32Array( size );
+      let size = image.width * image.height;
+      let data = new Float32Array( size );
 
       ctx.drawImage(image,0,0);
 
-      for ( var i = 0; i < size; i ++ ) {
+      for ( let i = 0; i < size; i ++ ) {
         data[i] = 0
       }
 
-      var imaged = ctx.getImageData(0, 0, image.width, image.height);
-      var pix = imaged.data;
+      let imaged = ctx.getImageData(0, 0, image.width, image.height);
+      let pix = imaged.data;
 
       this.tex[image.id].map = new Array();
-      for(var y = 0; y < image.height; y++) {
-        var pos = y * image.width * 4;
+      for(let y = 0; y < image.height; y++) {
+        let pos = y * image.width * 4;
         this.tex[image.id].map[y] = new Array();
-        for(var x = 0; x < image.width; x++) {
-          var all = pix[pos]+pix[pos+1]+pix[pos+2];
+        for(let x = 0; x < image.width; x++) {
+          let all = pix[pos]+pix[pos+1]+pix[pos+2];
           pos++;
           pos++;
           pos++;
@@ -4863,10 +4865,10 @@ function Textures() {
   };
 
   Textures.prototype.load = function(filename, id) {
-    var image = new Image();
+    let image = new Image();
     image.src = filename;
     image.id = id;
-    var ctx = document.createElement('canvas').getContext('2d');
+    let ctx = document.createElement('canvas').getContext('2d');
     image.onload = () => {
       ctx.canvas.width  = image.width;
       ctx.canvas.height = image.height;
@@ -4874,15 +4876,15 @@ function Textures() {
       this.tex[image.id].width = image.width;
       this.tex[image.id].height = image.height;
       this.tex[image.id].map = new Array();
-      var imgData = ctx.getImageData(0, 0, image.width, image.height);
-      for(var y = 0; y < image.height; y++) {
-        var pos = y * image.width * 4;
+      let imgData = ctx.getImageData(0, 0, image.width, image.height);
+      for(let y = 0; y < image.height; y++) {
+        let pos = y * image.width * 4;
         this.tex[image.id].map[y] = new Array();
-        for(var x = 0; x < image.width; x++) {
-          var r = imgData.data[pos++];
-          var g = imgData.data[pos++];
-          var b = imgData.data[pos++];
-          var a = imgData.data[pos++];
+        for(let x = 0; x < image.width; x++) {
+          let r = imgData.data[pos++];
+          let g = imgData.data[pos++];
+          let b = imgData.data[pos++];
+          let a = imgData.data[pos++];
           this.tex[image.id].map[y][x] = {'r': r, 'g': g, 'b': b, 'a': a};
         }
       }
@@ -4896,8 +4898,8 @@ function Textures() {
 // Random number generator (faster than Math.random())
 // https://en.wikipedia.org/wiki/Linear_feedback_shift_register
 //////////////////////////////////////////////////////////////////////
-  var lfsr = (function(){
-    var max = Math.pow(2, 16),
+  let lfsr = (function(){
+    let max = Math.pow(2, 16),
       period = 0,
       seed, out;
     return {
@@ -4905,7 +4907,7 @@ function Textures() {
         out = seed = val || Math.round(Math.random() * max);
       },
       rand : function() {
-        var bit;
+        let bit;
         // From http://en.wikipedia.org/wiki/Linear_feedback_shift_register
         bit  = ((out >> 0) ^ (out >> 2) ^ (out >> 3) ^ (out >> 5) ) & 1;
         out =  (out >> 1) | (bit << 15);
@@ -4954,33 +4956,33 @@ class Vox {
     return buffer[from]| (buffer[from+1] << 8) |  (buffer[from+2] << 16) | (buffer[from+3] << 24);
   }
   static LoadModel(data, name) {
-    var colors = [];
-    var colors2 = undefined;
-    var voxelData = [];
+    let colors = [];
+    let colors2 = undefined;
+    let voxelData = [];
 
-    var map = new Array();
-    var sizex = 0, sizey = 0, sizez = 0;
+    let map = new Array();
+    let sizex = 0, sizey = 0, sizez = 0;
 
     if (data) {
-      var buffer = new Uint8Array(data);
+      let buffer = new Uint8Array(data);
 
-      var i = 0;
-      var type = String.fromCharCode(parseInt(buffer[i++]))+
+      let i = 0;
+      let type = String.fromCharCode(parseInt(buffer[i++]))+
         String.fromCharCode(parseInt(buffer[i++]))+
         String.fromCharCode(parseInt(buffer[i++]))+
         String.fromCharCode(parseInt(buffer[i++]));
-      var version = this.readInt(buffer, i);
+      let version = this.readInt(buffer, i);
       i += 4;
 
       while(i < buffer.length) {
-        var id = String.fromCharCode(parseInt(buffer[i++]))+
+        let id = String.fromCharCode(parseInt(buffer[i++]))+
           String.fromCharCode(parseInt(buffer[i++]))+
           String.fromCharCode(parseInt(buffer[i++]))+
           String.fromCharCode(parseInt(buffer[i++]));
 
-        var chunkSize = this.readInt(buffer, i) & 0xFF;
+        let chunkSize = this.readInt(buffer, i) & 0xFF;
         i += 4;
-        var childChunks = this.readInt(buffer, i) & 0xFF;
+        let childChunks = this.readInt(buffer, i) & 0xFF;
         i += 4;
 
         if(id == "SIZE") {
@@ -4991,33 +4993,33 @@ class Vox {
           sizez = this.readInt(buffer, i) & 0xFF;
           i += 4;
 
-          for(var x = 0; x < sizex; x++) {
+          for(let x = 0; x < sizex; x++) {
             map[x] = new Array();
-            for(var y = 0; y < sizey; y++) {
+            for(let y = 0; y < sizey; y++) {
               map[x][y] = new Array();
             }
           }
           // i += chunkSize - 4 * 3;
         } else if (id == "XYZI") {
-          var numVoxels = this.readInt(buffer, i);
+          let numVoxels = this.readInt(buffer, i);
           i += 4;
           voxelData = new Array(numVoxels);
-          for (var n = 0; n < voxelData.length; n++) {
+          for (let n = 0; n < voxelData.length; n++) {
             voxelData[n] = new VoxelData(buffer, i);
             i += 4;
           }
         } else if (id == "MAIN") {
         } else if (id == "PACK") {
-          var numModels = this.readInt(buffer, i);
+          let numModels = this.readInt(buffer, i);
           i += 4;
         } else if (id == "MATT") {
         } else if (id == "RGBA") {
           colors2 = new Array(255);
-          for (var n = 0; n <= 254; n++ ) {
-            var r = buffer[i++] & 0xFF;
-            var g = buffer[i++] & 0xFF;
-            var b = buffer[i++] & 0xFF;
-            var a = buffer[i++] & 0xFF;
+          for (let n = 0; n <= 254; n++ ) {
+            let r = buffer[i++] & 0xFF;
+            let g = buffer[i++] & 0xFF;
+            let b = buffer[i++] & 0xFF;
+            let a = buffer[i++] & 0xFF;
             colors2[n+1] = {'r': r, 'g': g, 'b': b, 'a': a};
           }
         } else {
@@ -5028,15 +5030,15 @@ class Vox {
       if (voxelData == null || voxelData.length == 0) {
         return null;
       }
-      for (var n = 0; n < voxelData.length; n++) {
+      for (let n = 0; n < voxelData.length; n++) {
         if(colors2 == undefined) {
-          var c = Vox.voxColors[voxelData[n].color-1];
-          var r = (c & 0xff0000) >> 16;
-          var g = (c & 0x00ff00) >> 8;
-          var b = (c & 0x0000ff);
+          let c = Vox.voxColors[voxelData[n].color-1];
+          let r = (c & 0xff0000) >> 16;
+          let g = (c & 0x00ff00) >> 8;
+          let b = (c & 0x0000ff);
           voxelData[n].val = (r & 0xFF) << 24 | (g & 0xFF) << 16 | (b & 0xFF) << 8;
         } else {
-          var color = colors2[voxelData[n].color];
+          let color = colors2[voxelData[n].color];
           voxelData[n].val = (color.r & 0xFF) << 24 | (color.g & 0xFF) << 16 | (color.b & 0xFF) << 8;
         }
       }
@@ -5138,10 +5140,10 @@ class Shotgun extends Weapon {
   }
   fire(store, q, id, shooter, speed) {
     store.sounds.PlaySound(store, "shotgun", store.player.chunk.mesh.position, 250);
-    var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-    var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
+    let point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
+    let dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
 
-    for (var i = 0; i < 10; i++) {
+    for (let i = 0; i < 10; i++) {
       store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
       store.particles.smoke(point.x + (1 - Math.random() * 2), point.y + (1 - Math.random() * 2), point.z + (1 - Math.random() * 2), 0.5);
     }
@@ -5162,10 +5164,10 @@ class Sniper extends Weapon {
   fire(store, q, id, shooter, speed) {
     store.sounds.PlaySound(store, "sniper", store.player.chunk.mesh.position, 300);
 
-    var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-    var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
+    let point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
+    let dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
 
-    for(var i = 0; i < 2; i++) {
+    for(let i = 0; i < 2; i++) {
       store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
       store.particles.smoke(point.x, point.y, point.z, 0.4);
     }
@@ -5184,10 +5186,10 @@ class Pistol extends Weapon {
   }
   fire(store, q, id, shooter, speed) {
     store.sounds.PlaySound(store, "pistol", store.player.chunk.mesh.position, 450);
-    var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-    var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
+    let point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
+    let dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
 
-    for(var i = 0; i < 2; i++) {
+    for(let i = 0; i < 2; i++) {
       store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
       store.particles.smoke(point.x, point.y, point.z, 0.4);
     }
@@ -5206,10 +5208,10 @@ class GrenadeLauncher extends Weapon {
   }
   fire(store, q, id, shooter, speed) {
     store.sounds.PlaySound(store, "grenadelauncher", store.player.chunk.mesh.position, 450);
-    var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-    var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
+    let point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
+    let dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
 
-    for(var i = 0; i < 2; i++) {
+    for(let i = 0; i < 2; i++) {
       store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
       store.particles.smoke(point.x, point.y, point.z, 0.4);
     }
@@ -5227,10 +5229,10 @@ class P90 extends Weapon {
   }
   fire(store, q, id, shooter, speed) {
     store.sounds.PlaySound(store, "p90", store.player.chunk.mesh.position, 350);
-    var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-    var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
+    let point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
+    let dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
 
-    for(var i = 0; i < 2; i++) {
+    for(let i = 0; i < 2; i++) {
       store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
       store.particles.smoke(point.x, point.y, point.z, 0.4);
     }
@@ -5248,10 +5250,10 @@ class Minigun extends Weapon {
   }
   fire(store, q, id, shooter, speed) {
     store.sounds.PlaySound(store, "minigun", store.player.chunk.mesh.position, 250);
-    var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-    var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
+    let point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
+    let dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
 
-    for(var i = 0; i < 5; i++) {
+    for(let i = 0; i < 5; i++) {
       store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
       store.particles.smoke(point.x, point.y, point.z, 0.4);
     }
@@ -5270,10 +5272,10 @@ class Ak47 extends Weapon {
   fire(store, q, id, shooter, speed) {
     store.sounds.PlaySound(store, "ak47", store.player.chunk.mesh.position, 350);
 
-    var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-    var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
+    let point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
+    let dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
 
-    for(var i = 0; i < 5; i++) {
+    for(let i = 0; i < 5; i++) {
       store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
       store.particles.smoke(point.x, point.y, point.z, 0.4);
     }
@@ -5291,11 +5293,11 @@ class RocketLauncher extends Weapon {
   }
   fire(store, q, id, shooter, speed) {
     store.sounds.PlaySound(store, "rocket", store.player.chunk.mesh.position, 350);
-    var point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
-    var dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
+    let point = this.chunk.mesh.localToWorld(new THREE.Vector3(60, -1, 0));
+    let dir = new THREE.Vector3(0, 0, Math.PI).applyQuaternion(q);
     store.particles.ammoMissile(point.x, point.y, point.z, dir.x, dir.y, dir.z, this, null, speed, this.damage);
 
-    for(var i = 0; i < 50; i++) {
+    for(let i = 0; i < 50; i++) {
       store.particles.gunSmoke(point.x, point.y, point.z, dir.x, dir.y, dir.z);
       store.particles.smoke(point.x+(1-Math.random()*2), point.y + (1-Math.random()*2), point.z+(1-Math.random()*2), 0.5);
     }
@@ -5321,7 +5323,7 @@ class World {
     this.textures.prepare();
   }
   reset(store) {
-    for (var i = 0; i < this.chunks.length; i++) {
+    for (let i = 0; i < this.chunks.length; i++) {
       if(this.chunks[i].mesh) {
         store.scene.remove(this.chunks[i].mesh);
       }
@@ -5334,12 +5336,12 @@ class World {
     this.rpc_max = 0;
   }
   removeBatch(store, points) {
-    for(var i = 0; i < points.length; i++) {
-      var c = this.getChunkId(store, points[i].x, points[i].y, points[i].z, false);
+    for(let i = 0; i < points.length; i++) {
+      let c = this.getChunkId(store, points[i].x, points[i].y, points[i].z, false);
       if(c.length == 0) { 
         continue; 
       }
-      for (var n = 0; n < c.length; n++) {
+      for (let n = 0; n < c.length; n++) {
         this.chunks[c[n]].rmBlock(store, points[i].x, points[i].y, points[i].z);
       }
     }
@@ -5350,9 +5352,9 @@ class World {
     y |= 0;
     z |= 0;
 
-    var finds = [];
-    var c = 0;
-    for (var i = 0; i < this.chunks.length; i++) {
+    let finds = [];
+    let c = 0;
+    for (let i = 0; i < this.chunks.length; i++) {
       // Split for perf.
       if (x >= this.chunks[i].from_x && x <= this.chunks[i].to_x) {
         if(z >= this.chunks[i].from_z && z <= this.chunks[i].to_z) {
@@ -5367,18 +5369,18 @@ class World {
     }
     if (create) {
       // Create chunk based on world division by obj_size_x.
-      var pos_x = (x/this.obj_size_x)|0;
-      var pos_y = (y/this.obj_size_y)|0;
-      var pos_z = (z/this.obj_size_z)|0;
+      let pos_x = (x/this.obj_size_x)|0;
+      let pos_y = (y/this.obj_size_y)|0;
+      let pos_z = (z/this.obj_size_z)|0;
 
-      var chunk = new Chunk(
+      let chunk = new Chunk(
         store,
         pos_x * this.obj_size_x,
         pos_y * this.obj_size_y,
         pos_z * this.obj_size_z,
         this.obj_size_x, this.obj_size_y, this.obj_size_z,
         "CREATED", 1, "world");
-      var i = this.addChunk(chunk);
+      let i = this.addChunk(chunk);
       return [i];
     }
     return [];
@@ -5398,15 +5400,15 @@ class World {
     y |= 0;
     z |= 0;
 
-    var pow = power*power;
+    let pow = power*power;
 
-    var list = [];
-    var vx = 0, vy = 0, vz = 0, val = 0, offset = 0;
-    for (var rx = x-power; rx <= x+power; rx++) {
+    let list = [];
+    let vx = 0, vy = 0, vz = 0, val = 0, offset = 0;
+    for (let rx = x-power; rx <= x+power; rx++) {
       vx = Math.pow((rx-x), 2); 
-      for (var rz = z-power; rz <= z+power; rz++) {
+      for (let rz = z-power; rz <= z+power; rz++) {
         vz = Math.pow((rz-z),2)+vx; 
-        for (var ry = y-power; ry <= y+power; ry++) {
+        for (let ry = y-power; ry <= y+power; ry++) {
           if (ry > 0) {
             val = Math.pow((ry-y),2) + vz;
             if (val <= pow) {
@@ -5417,12 +5419,12 @@ class World {
       }
     }
     if (type == "missile" || type == "grenade") {
-      var pos = 0;
-      var pxp = x+power*2;
-      var pxm = x-power*2;
-      var pzp = z+power*2;
-      var pzm = z-power*2;
-      for (var i = 0; i < store.cdList.length; i++) {
+      let pos = 0;
+      let pxp = x+power*2;
+      let pxm = x-power*2;
+      let pzp = z+power*2;
+      let pzm = z-power*2;
+      for (let i = 0; i < store.cdList.length; i++) {
         const { owner } = store.cdList[i];
         if (owner) {
           const { hit } = owner;
@@ -5443,14 +5445,14 @@ class World {
     pos.x |= 0;
     pos.y |= 0;
     pos.z |= 0;
-    var c = this.getChunkId(store, pos.x, pos.y, pos.z, false);
+    let c = this.getChunkId(store, pos.x, pos.y, pos.z, false);
     if(c.length == 0) {
       return [];
     }
 
-    var list = [];
-    for(var i = 0; i < c.length; i++) {
-      var r = this.chunks[c[i]].checkExists(store, pos.x, pos.y, pos.z);
+    let list = [];
+    for(let i = 0; i < c.length; i++) {
+      let r = this.chunks[c[i]].checkExists(store, pos.x, pos.y, pos.z);
       if(r != -1) {
         list.push(r);
       }
@@ -5461,14 +5463,14 @@ class World {
     x |= 0;
     y |= 0;
     z |= 0;
-    var c = this.getChunkId(store, x,y,z, true);
+    let c = this.getChunkId(store, x,y,z, true);
     if(c.length != 0) {
-      for (var i = 0; i < c.length; i++) {
+      for (let i = 0; i < c.length; i++) {
         // Do not add blood to non-existing blocks.
         if(this.chunks[c[i]].blockExists(x, y, z)) {
           this.chunks[c[i]].addBlock(store, x, y, z, r, g, b);
           if(r <= 50  && g >= 200 && b < 105 && b >= 50) {
-            for(var p = 0; p < this.radioactive_blocks.length; p++) {
+            for(let p = 0; p < this.radioactive_blocks.length; p++) {
               if(this.radioactive_blocks[p].x == x &&
                 this.radioactive_blocks[p].y == y &&
                 this.radioactive_blocks[p].z == z)
@@ -5478,7 +5480,7 @@ class World {
             }
             this.radioactive_blocks[this.rpc_max++] = [x,y,z];
           } else {
-            for(var p = 0; p < this.radioactive_blocks.length; p++) {
+            for(let p = 0; p < this.radioactive_blocks.length; p++) {
               if(this.radioactive_blocks[p].x == x &&
                 this.radioactive_blocks[p].y == y &&
                 this.radioactive_blocks[p].z == z) {
@@ -5495,9 +5497,9 @@ class World {
     x |= 0;
     y |= 0;
     z |= 0;
-    var c = this.getChunkId(store, x,y,z, true);
+    let c = this.getChunkId(store, x,y,z, true);
     if(c.length != 0) {
-      for (var i = 0; i < c.length; i++) {
+      for (let i = 0; i < c.length; i++) {
         this.chunks[c[i]].addBlock(store, x, y, z, r, g, b);
       }
     }
@@ -5507,9 +5509,9 @@ class World {
       return;
     }
 
-    for(var i = 0; i < this.chunks.length; i++) {
+    for(let i = 0; i < this.chunks.length; i++) {
       if(this.chunks[i].dirty) {
-        var t1 = Date.now();
+        let t1 = Date.now();
         this.chunks[i].build(store);
         if((Date.now() - t1) > 5) {
           break;
@@ -5518,8 +5520,8 @@ class World {
     }
 
     if(this.radioactive_blocks.length > 0) {
-      var v = 0;
-      for(var i = 0; i < 10; i++) {
+      let v = 0;
+      for(let i = 0; i < 10; i++) {
         v = Math.random()*this.radioactive_blocks.length|0;
         if(this.radioactive_blocks[v] != 0) {
           if(this.checkExists(store, new THREE.Vector3(this.radioactive_blocks[v][0], this.radioactive_blocks[v][1], this.radioactive_blocks[v][2])).length == 0) {
