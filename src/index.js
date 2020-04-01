@@ -350,34 +350,33 @@ class Char {
           }
         }
       }
-      if (!this.moving) {
-        this.speed = 0;
-      }
+      this.speed = this.moving ? this.speed : 0;
     }
   }
   cd(store) {
-    let pos = this.chunk.mesh.position;
-    let points = [];
-    points[0] = new THREE.Vector3(
-      pos.x+this.chunk.chunk_size_x * 0.5,
-      pos.y,
-      pos.z
-    );
-    points[1] = new THREE.Vector3(
-      pos.x,
-      pos.y,
-      pos.z+this.chunk.chunk_size_z * 0.5,
-    );
-    points[2] = new THREE.Vector3(
-      pos.x,
-      pos.y,
-      pos.z-this.chunk.chunk_size_z * 0.5,
-    );
-    points[3] = new THREE.Vector3(
-      pos.x-this.chunk.chunk_size_x * 0.5,
-      pos.y,
-      pos.z
-    );
+    const pos = this.chunk.mesh.position;
+    const points = [
+      new THREE.Vector3(
+        pos.x+this.chunk.chunk_size_x * 0.5,
+        pos.y,
+        pos.z
+      ),
+      new THREE.Vector3(
+        pos.x,
+        pos.y,
+        pos.z+this.chunk.chunk_size_z * 0.5,
+      ),
+      new THREE.Vector3(
+        pos.x,
+        pos.y,
+        pos.z-this.chunk.chunk_size_z * 0.5,
+      ),
+      new THREE.Vector3(
+        pos.x-this.chunk.chunk_size_x * 0.5,
+        pos.y,
+        pos.z
+      ),
+    ];
 
     let res = true;
     for (let i = 0; i < points.length && res; i++) {
@@ -387,6 +386,7 @@ class Char {
     }
     for (let idx = 0; idx < store.cdList.length && res; idx++) {
       const item = store.cdList[idx];
+      // TODO: Need a flag for defining if something can collide or not.
       if (this.chunk.mesh.id != item.id && item.owner.alive && item.owner.base_type != "weapon" && item.owner.obj_type != "painkillers") {
         if (this.chunk.checkCD(item.position, 6)) {
           res = false;
@@ -604,7 +604,6 @@ class Dudo extends Enemy {
     if (Math.random() > 0.4) {
       this.addWeapon(store, new Shotgun(store));
       this.weapon.attach(store, this.chunk.mesh);
-      this.unloadWeapon();
     }
   }
   loadWeapon() {
@@ -638,7 +637,6 @@ class AgentBlack extends Enemy {
       this.addWeapon(store, new Pistol(store));
     }
     this.weapon.attach(store, this.chunk.mesh);
-    this.unloadWeapon();
 
   }
   die(store) {
@@ -675,7 +673,6 @@ class Agent extends Enemy {
       this.addWeapon(store, new Shotgun(store));
     }
     this.weapon.attach(store, this.chunk.mesh);
-    this.unloadWeapon();
   }
   die(store) {
     this.chunk.mesh.position.y = store.maps.ground + 1;
@@ -706,11 +703,9 @@ class Greenie extends Enemy {
     if (Math.random() > 0.4) {
       this.addWeapon(store, new P90(store));
       this.weapon.attach(store, this.chunk.mesh);
-      this.unloadWeapon();
     } else {
       this.addWeapon(store, new Shotgun(store));
       this.weapon.attach(store, this.chunk.mesh);
-      this.unloadWeapon();
     }
   }
   loadWeapon() {
@@ -742,7 +737,6 @@ class Hearty extends Enemy {
       this.addWeapon(store, new RocketLauncher(store));
     }
     this.weapon.attach(store, this.chunk.mesh);
-    this.unloadWeapon();
   }
   loadWeapon() {
     super.loadWeapon();
@@ -2403,36 +2397,35 @@ class Main {
     }
   }
   spliceCDList (index) {
-    let len = this.cdList.length;
-    if (!len) { return; }
+    const len = this.cdList.length || 0;
     while (index < len) {
       this.cdList[index] = this.cdList[index + 1];
-      index++
+      index += 1;
     }
-    this.cdList.length--;
+    this.cdList.length -= 1;
   }
   removeFromCD(obj) {
     for(let i = 0; i < this.cdList.length; i++) {
-      if(this.cdList[i] != undefined) {
-        if(this.cdList[i].id == obj.id) {
-          this.spliceCDList(i);
-          return;
-        }
+      const item = this.cdList[i];
+      if (item !== undefined && item.id === obj.id) {
+        this.spliceCDList(i);
+        return;
       }
     }
   }
   render() {
-    requestAnimationFrame( this.render.bind(this) );
+    requestAnimationFrame(() => this.render());
 
-    let time = (Date.now() - this.t_start)*0.001;
-    let delta = this.clock.getDelta();
+    const time = (Date.now() - this.t_start) * 0.001;
+    const delta = this.clock.getDelta();
 
     for(let f in this.update_objects) {
-      if(this.update_objects[f] == null) { continue; }
-      if(this.update_objects[f].update) {
-        this.update_objects[f].update(this, time, delta);
-      } else {
-        this.update_objects[f] = null;
+      if(this.update_objects[f] != null) {
+        if(this.update_objects[f].update) {
+          this.update_objects[f].update(this, time, delta);
+        } else {
+          this.update_objects[f] = null;
+        }
       }
     }
 
@@ -4339,17 +4332,6 @@ function Particle(store, particle_type) {
 
     if (this.life > 0 && this.active) { // || this.mesh.position.y < -5) {
       this.fy = this.grav_mass;
-      // this.fx = this.grav_mass * this.flip;
-      // this.fz = this.fx;
-      //if (this.flip > 0) {
-      //    this.flip = -0.5;
-      //} else {
-      //    this.flip = 0.5;
-      //}
-
-      //this.fy += this.air_area * this.vy * this.vy;
-      //this.fx += this.air_area * this.vx * this.vx;
-      //this.fz += this.air_area * this.vz * this.vz;
       this.fy += this.air_area * this.vy * this.vy;
       this.fx = this.air_area * this.vx * this.vx;
       this.fz = this.air_area * this.vz * this.vz;
@@ -4358,7 +4340,6 @@ function Particle(store, particle_type) {
       this.dx = this.vx * delta + (this.avg_ax * 0.0005);
       this.dz = this.vz * delta + (this.avg_az * 0.0005);
 
-      // 10
       this.mesh.position.x += this.dx * 10 * this.fx_;
       this.mesh.position.z += this.dz * 10 * this.fz_;
       this.mesh.position.y += this.dy * 10;
@@ -4424,9 +4405,6 @@ function Particle(store, particle_type) {
           this.addBloodToGround(store);
           break;
         case "minigun":
-          // if (Math.random() > 0.9) {
-          //     store.particles.smoke(this.mesh.position.x, this.mesh.position.y, this.mesh.position.z, 0.3); //, this.mesh.rotation);
-          // }
           this.cd(store, time, delta);
           break;
         case "missile":
@@ -5338,9 +5316,6 @@ class World {
   removeBatch(store, points) {
     for(let i = 0; i < points.length; i++) {
       let c = this.getChunkId(store, points[i].x, points[i].y, points[i].z, false);
-      if(c.length == 0) { 
-        continue; 
-      }
       for (let n = 0; n < c.length; n++) {
         this.chunks[c[n]].rmBlock(store, points[i].x, points[i].y, points[i].z);
       }
@@ -5421,6 +5396,7 @@ class World {
         }
       }
     }
+    // XXX: Need a flag for something which can destroy
     if (type == "missile" || type == "grenade") {
       let pos = 0;
       let pxp = x+power*2;
@@ -5452,7 +5428,6 @@ class World {
     if(c.length == 0) {
       return [];
     }
-
     let list = [];
     for(let i = 0; i < c.length; i++) {
       let r = this.chunks[c[i]].checkExists(store, pos.x, pos.y, pos.z);
@@ -5466,30 +5441,28 @@ class World {
     x |= 0;
     y |= 0;
     z |= 0;
-    let c = this.getChunkId(store, x,y,z, true);
-    if(c.length != 0) {
-      for (let i = 0; i < c.length; i++) {
-        // Do not add blood to non-existing blocks.
-        if(this.chunks[c[i]].blockExists(x, y, z)) {
-          this.chunks[c[i]].addBlock(store, x, y, z, r, g, b);
-          if(r <= 50  && g >= 200 && b < 105 && b >= 50) {
-            for(let p = 0; p < this.radioactive_blocks.length; p++) {
-              if(this.radioactive_blocks[p].x == x &&
-                this.radioactive_blocks[p].y == y &&
-                this.radioactive_blocks[p].z == z)
-              {
-                return;
-              }
+    const c = this.getChunkId(store, x,y,z, true);
+    for (let i = 0; i < c.length; i++) {
+      // Do not add blood to non-existing blocks.
+      if(this.chunks[c[i]].blockExists(x, y, z)) {
+        this.chunks[c[i]].addBlock(store, x, y, z, r, g, b);
+        if(r <= 50  && g >= 200 && b < 105 && b >= 50) {
+          for(let p = 0; p < this.radioactive_blocks.length; p++) {
+            if(this.radioactive_blocks[p].x == x &&
+              this.radioactive_blocks[p].y == y &&
+              this.radioactive_blocks[p].z == z)
+            {
+              return;
             }
-            this.radioactive_blocks[this.rpc_max++] = [x,y,z];
-          } else {
-            for(let p = 0; p < this.radioactive_blocks.length; p++) {
-              if(this.radioactive_blocks[p].x == x &&
-                this.radioactive_blocks[p].y == y &&
-                this.radioactive_blocks[p].z == z) {
-                this.radioactive_blocks[p] = 0;
-                break;
-              }
+          }
+          this.radioactive_blocks[this.rpc_max++] = [x,y,z];
+        } else {
+          for(let p = 0; p < this.radioactive_blocks.length; p++) {
+            if(this.radioactive_blocks[p].x == x &&
+              this.radioactive_blocks[p].y == y &&
+              this.radioactive_blocks[p].z == z) {
+              this.radioactive_blocks[p] = 0;
+              break;
             }
           }
         }
@@ -5501,10 +5474,8 @@ class World {
     y |= 0;
     z |= 0;
     let c = this.getChunkId(store, x,y,z, true);
-    if(c.length != 0) {
-      for (let i = 0; i < c.length; i++) {
-        this.chunks[c[i]].addBlock(store, x, y, z, r, g, b);
-      }
+    for (let i = 0; i < c.length; i++) {
+      this.chunks[c[i]].addBlock(store, x, y, z, r, g, b);
     }
   }
   update(store, time, delta) {
@@ -5514,11 +5485,7 @@ class World {
 
     for(let i = 0; i < this.chunks.length; i++) {
       if(this.chunks[i].dirty) {
-        let t1 = Date.now();
         this.chunks[i].build(store);
-        if((Date.now() - t1) > 5) {
-          break;
-        }
       }
     }
 
