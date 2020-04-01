@@ -122,7 +122,8 @@ const getModel = (store, name, size = 1, obj) => {
 }
 
 class Char {
-  constructor() {
+  // XXX: callers define the model
+  constructor(store, model, x, y, z, size = 1) {
     this.hp = 0;
     this.chunk = 0;
     this.init_pos = new THREE.Vector3(0, 0, 0);
@@ -145,6 +146,12 @@ class Char {
     this.dying_counter = 0;
     this.green_light = new THREE.PointLight(0x00FF00, 2, 10);
     this.radiation_light = 0;
+
+    this.chunk = getModel(store, model, size, this);
+    this.init_pos.x = x;
+    this.init_pos.y = y;
+    this.init_pos.z = z;
+    this.chunk.mesh.position.set(x, y, z);
   }
   shouldBleedOrGlow(store, res) {
     for (var i = 0; i < res.length; i++) {
@@ -193,16 +200,6 @@ class Char {
       // TODO: Something really interesting going here. Forces integer, maybe?
       store.sounds.PlaySound(store, "hit" + (1 + Math.random() * 2 | 0), this.chunk.mesh.position, 500);
     }
-  }
-  create(store, model, x, y, z, size) {
-    if(!size) { size = 1; }
-
-    this.chunk = getModel(store, model, size, this);
-
-    this.init_pos.x = x;
-    this.init_pos.y = y;
-    this.init_pos.z = z;
-    this.chunk.mesh.position.set(x, y, z);
   }
   addWeapon(store, weapon) {
     if (this.weapon == 0 && !this.flee) {
@@ -428,9 +425,9 @@ class Char {
 }
 
 class Enemy extends Char {
-  constructor() {
-    super();
-    this.base_type = "enemy";
+  constructor(store, model, x, y, z, size = 1) {
+    super(store, model, x, y, z, size);
+    this.base_type = "enemy"; // global property defs
     this.view_range = 50;
     this.view_range_current = 50;
     this.run_speed = 20;
@@ -441,6 +438,9 @@ class Enemy extends Char {
     this.range_from_player = 30;
     this.follow_timer = 0;
     this.shoot_ability = 0.5;
+
+    this.run_speed = 20; //+Math.random()*50;
+    this.moving = true;
   }
   die(store) {
     this.chunk.mesh.position.y = store.maps.ground + 1;
@@ -465,12 +465,6 @@ class Enemy extends Char {
       }
     }
     return die;
-  }
-  create(store, model, x, y, z, size) {
-    if(!size) { size = 1; }
-    super.create(store, model, x, y, z, size);
-    this.run_speed = 20; //+Math.random()*50;
-    this.moving = true;
   }
   update(store, time, delta) {
     super.update(store, time, delta);
@@ -599,15 +593,12 @@ class Enemy extends Char {
 }
 
 class Dudo extends Enemy {
-  constructor(x, y, z) {
-    super();
+  constructor(store, x, y, z) {
+    super(store, "dudo", x, y + store.maps.ground + 5, z, 1);
     this.obj_type = "dudo";
     this.run_speed = 30;
     this.walk_speed = 15;
-    this.y_offset = 5;
-  }
-  create(store, x, y, z) {
-    super.create(store, this.obj_type, x, store.maps.ground + this.y_offset, z);
+
     this.chunk.mesh.rotation.order = 'YXZ';
     if (Math.random() > 0.4) {
       this.addWeapon(store, new Shotgun(store));
@@ -632,9 +623,8 @@ class Dudo extends Enemy {
 }
 
 class AgentBlack extends Enemy {
-  constructor(x, y, z) {
-    super();
-    this.y_offset = 7;
+  constructor(store, x, y, z) {
+    super(store, "agentblack", x, y + store.maps.ground + 7, z, 0.5);
     this.run_speed = 40;
     this.walk_speed = 15;
     this.obj_type = "agentblack";
@@ -673,19 +663,12 @@ class AgentBlack extends Enemy {
 }
 
 class Agent extends Enemy {
-  constructor(x, y, z) {
-    super();
-    this.y_offset = 7;
+  constructor(store, x, y, z) {
+    super(store, "agent", x, y + store.maps.ground + 7, z, 0.5);
     this.run_speed = 40;
     this.walk_speed = 15;
     this.obj_type = "agent";
     this.shoot_ability = 0.5;
-  }
-  die(store) {
-    this.chunk.mesh.position.y = store.maps.ground + 1;
-  }
-  create(store, x, y, z) {
-    super.create(store, this.obj_type, x, store.maps.ground + this.y_offset, z, 0.5);
     this.chunk.mesh.rotation.order = 'YXZ';
     if (Math.random() > 0.8) {
       this.addWeapon(store, new Pistol(store));
@@ -696,6 +679,9 @@ class Agent extends Enemy {
     }
     this.weapon.attach(store, this.chunk.mesh);
     this.unloadWeapon();
+  }
+  die(store) {
+    this.chunk.mesh.position.y = store.maps.ground + 1;
   }
   loadWeapon() {
     super.loadWeapon();
@@ -714,15 +700,12 @@ class Agent extends Enemy {
 }
 
 class Greenie extends Enemy {
-  constructor(x, y, z) {
-    super();
-    this.y_offset = 5;
+  constructor(store, x, y, z) {
+    super(store, "greenie", x, y + store.maps.ground + 5, z, 1);
     this.run_speed = 40;
     this.walk_speed = 15;
     this.obj_type = "greenie";
-  }
-  create(store, x, y, z) {
-    super.create(store, this.obj_type, x, store.maps.ground + this.y_offset, z, 1);
+
     this.chunk.mesh.rotation.order = 'YXZ';
     if (Math.random() > 0.4) {
       this.addWeapon(store, new P90(store));
@@ -751,15 +734,12 @@ class Greenie extends Enemy {
 }
 
 class Hearty extends Enemy {
-  constructor(x, y, z) {
-    super();
+  constructor(store, x, y, z) {
+    super(store, "hearty", x, y + store.maps.ground + 6, z, 1);
     this.obj_type = "hearty";
     this.run_speed = 50;
     this.walk_speed = 15;
-    this.y_offset = 6;
-  }
-  create (store, x, y, z) {
-    super.create(store, this.obj_type, x, store.maps.ground + this.y_offset, z);
+
     this.chunk.mesh.rotation.order = 'YXZ';
     if (Math.random() > 0.4) {
       this.addWeapon(store, new Sniper(store));
@@ -786,39 +766,18 @@ class Hearty extends Enemy {
 }
 
 class Player extends Char {
-  constructor(x, y, z) {
-    super();
+  constructor(store, x, y, z) {
+    super(store, "player", x, y + store.maps.ground + 6, z, 1);
     this.obj_type = "player";
     this.base_type = "player";
     this.run_speed = 50;
     this.keyboard = 0;
-    this.y_offset = 6;
     this.weapons = [];
     this.can_switch = true;
     this.falling = false;
     this.flashlight = new THREE.SpotLight(0xFFFFFF);
     this.footsteps = false;
-  }
-  onHit(store) {
-    super.onHit(store);
-    this.chunk.mesh.remove(store.camera);
-    var pos = this.chunk.mesh.position.clone();
-    pos.y = store.maps.ground;
-    store.scene.add(store.camera);
-    store.camera.position.z = pos.z;
-    store.camera.position.x = pos.x;
-    store.camera.position.y = 150;
-    store.camera.rotation.x = Math.PI * -0.5;
-    setTimeout(() => store.reset(), 3000);
-  }
-  reset(store) {
-    this.removeBindings(store);
-    this.weapons = [];
-    store.scene.remove(this.flashlight);
-    this.keyboard = null;
-  }
-  create(store, x, y, z) {
-    super.create(store, this.obj_type, x, store.maps.ground + this.y_offset, z);
+
     this.keyboard = new THREEx.KeyboardState();
     this.chunk.mesh.rotation.order = 'YXZ';
     store.player = this;
@@ -844,6 +803,25 @@ class Player extends Char {
     store.camera.rotation.x =-Math.PI/1.4;
     store.camera.position.y = 150;
     store.camera.position.z = -120;
+
+  }
+  onHit(store) {
+    super.onHit(store);
+    this.chunk.mesh.remove(store.camera);
+    var pos = this.chunk.mesh.position.clone();
+    pos.y = store.maps.ground;
+    store.scene.add(store.camera);
+    store.camera.position.z = pos.z;
+    store.camera.position.x = pos.x;
+    store.camera.position.y = 150;
+    store.camera.rotation.x = Math.PI * -0.5;
+    setTimeout(() => store.reset(), 3000);
+  }
+  reset(store) {
+    this.removeBindings(store);
+    this.weapons = [];
+    store.scene.remove(this.flashlight);
+    this.keyboard = null;
   }
   shiftWeapon() {
     if (this.weapons.length == 0) {
@@ -2823,8 +2801,8 @@ class Maps {
 
                       if (!!charEntityTypes[k]) {
                         console.log(`Alloc Char ${k}`);
-                        o = new charEntityTypes[k]();
-                        o.create(store, data[i].y, 0, data[i].x);
+                        // store, x, y, z (size is not up to us)
+                        o = new charEntityTypes[k](store, data[i].y, 0, data[i].x);
                         this.loaded.push(o);
                         if (k == "Player") {
                           store.player = o;
