@@ -1171,64 +1171,63 @@ const cloneChunk = (store, chunk) => {
 
 // TODO: Okay, so this isn't really a class, it's some weird mutatable object.
 //       Needs a heavy refactor about getModel.
-function Chunk(store, x, y, z, cx, cy, cz, id, bs, type) {
-  this.type = type;
-  this.id = id;
-  this.from_x = x;
-  this.from_y = y;
-  this.from_z = z;
-  this.to_x = x+bs*cx;
-  this.to_y = y+bs*cy;
-  this.to_z = z+bs*cz;
-  this.chunk_size_x = cx;
-  this.chunk_size_y = cy;
-  this.chunk_size_z = cz;
-  this.blockSize = bs;
-  this.owner = "";
-  this.mesh = undefined;
-  this.blocks = 0;
-  this.wireframe = false;
-  this.triangles = 0;
-  this.total_blocks = 0;
-  this.skips = 0;
-  this.starting_blocks = 0;
-  this.current_blocks = 0;
-  this.blood_positions = [];
-  this.health = 100;
-  this.dirty = true;
-  this.positions = 0;
-  this.colors = 0;
-  this.geometry = 0;
-  this.v = 0;
-  this.c = 0;
-  this.prev_len = 0;
-  this.offset = 0;
-
-  this.material = store.chunk_material;
-  this.blocks = new Array(this.chunk_size_x);
-  for (var x = 0; x < this.chunk_size_x; x++) {
-    this.blocks[x] = new Array(this.chunk_size_y);
-    for (var y = 0; y < this.chunk_size_y; y++) {
-      this.blocks[x][y] = new Array(this.chunk_size_z);
-      for (var z = 0; z < this.chunk_size_z; z++) {
-        this.blocks[x][y][z] = 0;
+class Chunk {
+  constructor(store, x, y, z, cx, cy, cz, id, bs, type) {
+    this.type = type;
+    this.id = id;
+    this.from_x = x;
+    this.from_y = y;
+    this.from_z = z;
+    this.to_x = x+bs*cx;
+    this.to_y = y+bs*cy;
+    this.to_z = z+bs*cz;
+    this.chunk_size_x = cx;
+    this.chunk_size_y = cy;
+    this.chunk_size_z = cz;
+    this.blockSize = bs;
+    this.owner = "";
+    this.mesh = undefined;
+    this.blocks = 0;
+    this.wireframe = false;
+    this.triangles = 0;
+    this.total_blocks = 0;
+    this.skips = 0;
+    this.starting_blocks = 0;
+    this.current_blocks = 0;
+    this.blood_positions = [];
+    this.health = 100;
+    this.dirty = true;
+    this.positions = 0;
+    this.colors = 0;
+    this.geometry = 0;
+    this.v = 0;
+    this.c = 0;
+    this.prev_len = 0;
+    this.offset = 0;
+  
+    this.material = store.chunk_material;
+    this.blocks = new Array(this.chunk_size_x);
+    for (var x = 0; x < this.chunk_size_x; x++) {
+      this.blocks[x] = new Array(this.chunk_size_y);
+      for (var y = 0; y < this.chunk_size_y; y++) {
+        this.blocks[x][y] = new Array(this.chunk_size_z);
+        for (var z = 0; z < this.chunk_size_z; z++) {
+          this.blocks[x][y][z] = 0;
+        }
       }
     }
   }
-
-  Chunk.prototype.destroy = function (store) {
+  destroy(store) {
     store.scene.remove(this.mesh);
     this.blocks = null;
-  };
-
-  Chunk.prototype.SameColor = function (block1, block2) {
+  }
+  SameColor(block1, block2) {
     if (((block1 >> 8) & 0xFFFFFF) == ((block2 >> 8) & 0xFFFFFF) && block1 != 0 && block2 != 0) {
       return true;
     }
     return false;
-  };
-
-  Chunk.prototype.build = function (store) {
+  }
+  build(store) {
     var vertices = [];
     var colors = [];
     var cc = 0; // Color counter
@@ -1776,9 +1775,8 @@ function Chunk(store, x, y, z, cx, cy, cz, id, bs, type) {
       }
     }
     this.dirty = false;
-  };
-
-  Chunk.prototype.rmBlock = function (store, x, y, z, dir, dmg, local) {
+  }
+  rmBlock(store, x, y, z, dir, dmg, local) {
     //this.batch_points[this.bp++] = { x: x, y: y, z: z};
     var wx = x;
     var wy = y;
@@ -1885,9 +1883,8 @@ function Chunk(store, x, y, z, cx, cy, cz, id, bs, type) {
       }
       this.current_blocks--;
     }
-  };
-
-  Chunk.prototype.addBlock = function (store, x, y, z, r, g, b) {
+  }
+  addBlock(store, x, y, z, r, g, b) {
     x -= this.from_x * this.blockSize;
     y -= this.from_y * this.blockSize;
     z -= this.from_z * this.blockSize;
@@ -1904,9 +1901,8 @@ function Chunk(store, x, y, z, cx, cy, cz, id, bs, type) {
       (b & 0xFF) << 8 |
       0 & 0xFF;
     this.dirty = true;
-  };
-
-  Chunk.prototype.blockExists = function(x, y, z) {
+  }
+  blockExists(x, y, z) {
     x -= this.from_x * this.blockSize;
     y -= this.from_y * this.blockSize;
     z -= this.from_z * this.blockSize;
@@ -1921,9 +1917,8 @@ function Chunk(store, x, y, z, cx, cy, cz, id, bs, type) {
       return true;
     }
     return false;
-  };
-
-  Chunk.prototype.hit = function (store, dir, power, pos) {
+  }
+  hit(store, dir, power, pos) {
     if (this.blocks == null) {
       return;
     }
@@ -2104,9 +2099,8 @@ function Chunk(store, x, y, z, cx, cy, cz, id, bs, type) {
       return true;
     }
     return false;
-  };
-
-  Chunk.prototype.floodFill = function (store, start, dir, power) {
+  }
+  floodFill(store, start, dir, power) {
     var ground = 1; //this.mesh.position.y - (this.chunk_size_y*this.blockSize / 2);
     var stack = new Array();
     var result = new Array();
@@ -2190,9 +2184,8 @@ function Chunk(store, x, y, z, cx, cy, cz, id, bs, type) {
         power
       );
     }
-  };
-
-  Chunk.prototype.explode = function (store, dir, damage) {
+  }
+  explode(store, dir, damage) {
     if(!damage) { damage = 0; }
     for (var x = 0; x < this.chunk_size_x; x++) {
       for (var y = 0; y < this.chunk_size_y; y++) {
@@ -2204,9 +2197,8 @@ function Chunk(store, x, y, z, cx, cy, cz, id, bs, type) {
       }
     }
     this.mesh.visible = false;
-  };
-
-  Chunk.prototype.virtual_explode = function (store, pos) {
+  }
+  virtual_explode(store, pos) {
     for (var x = 0; x < this.chunk_size_x; x++) {
       for (var y = 0; y < this.chunk_size_y; y++) {
         for (var z = 0; z < this.chunk_size_z; z++) {
@@ -2226,9 +2218,8 @@ function Chunk(store, x, y, z, cx, cy, cz, id, bs, type) {
         }
       }
     }
-  };
-
-  Chunk.prototype.blockExists_w = function(pos) {
+  }
+  blockExists_w(pos) {
     var l = (this.blockSize*this.chunk_size_x * 0.5)*(1/this.blockSize);
     var x = this.chunk_size_x - (pos.x - (this.mesh.position.x - l)) | 0; 
     var y = this.chunk_size_y - (pos.y - (this.mesh.position.y - l)) | 0; 
@@ -2239,10 +2230,8 @@ function Chunk(store, x, y, z, cx, cy, cz, id, bs, type) {
       }
     }
     return false;
-  };
-
-
-  Chunk.prototype.checkExists = function (store, x, y, z) {
+  }
+  checkExists(store, x, y, z) {
     x -= this.from_x * this.blockSize + this.blockSize;
     y -= this.from_y * this.blockSize + this.blockSize;
     z -= this.from_z * this.blockSize + this.blockSize;
@@ -2255,9 +2244,8 @@ function Chunk(store, x, y, z, cx, cy, cz, id, bs, type) {
       }
     }
     return -1;
-  };
-
-  Chunk.prototype.checkCD = function(vec, range) {
+  }
+  checkCD(vec, range) {
     if(vec.x <= this.mesh.position.x + range &&
       vec.x >= this.mesh.position.x - range)
     {
@@ -2268,10 +2256,8 @@ function Chunk(store, x, y, z, cx, cy, cz, id, bs, type) {
       }
     }
     return false;
-  };
-
-
-};
+  }
+}
 
 (!Detector.webgl) && Detector.addGetWebGLMessage();
 
