@@ -2784,17 +2784,10 @@ class Maps {
                 var list = [];
                 for (var i = 0; i < data.length; i++) {
                   if (data[i].a == 0) { continue; }
-                  var found = 0;
                   for (var k in this.objects) {
                     if (data[i].r == this.objects[k].r && data[i].g == this.objects[k].g && data[i].b == this.objects[k].b) {
-
-                      const entityTypes = {
+                      const objEntityTypes = {
                         Portal,
-                        PainKillers,
-                        PaperPoliceCar,
-                        PaperAgent,
-                        Tree,
-                        StreetLamp,
                         UfoSign,
                         RadiationSign,
                         DeadHearty,
@@ -2802,42 +2795,48 @@ class Maps {
                         Barrel,
                         FBIHQ,
                         SpiderWeb,
-                        Lamp1,
                         AmmoCrate,
                         AmmoSniper,
                         AmmoP90,
                         Ammo,
                         Shell,
                         Heart,
-                        Greenie,
-                        Agent,
-                        AgentBlack,
-                        Hearty,
                         DeadHearty,
-                        Player,
-                        Dudo,
                         Lamp1,
-                        Greenie,
-                        Barrel,
                         BarrelFire,
-                        FBIHQ,
                         Tree,
                         StreetLamp,
-                        PaperAgent,
                         PaperPoliceCar,
                         PainKillers,
                       };
+                      const charEntityTypes = {
+                        Agent,
+                        AgentBlack,
+                        Greenie,
+                        PaperAgent,
+                        Hearty,
+                        Player,
+                        Dudo,
+                      };
 
-                      var o = new entityTypes[k]();
+                      let o;
 
-                      o.create(store, data[i].y, 0, data[i].x);
-                      this.loaded.push(o);
-                      if (k == "Player") {
-                        store.player = o;
+                      if (!!charEntityTypes[k]) {
+                        console.log(`Alloc Char ${k}`);
+                        o = new charEntityTypes[k]();
+                        o.create(store, data[i].y, 0, data[i].x);
+                        this.loaded.push(o);
+                        if (k == "Player") {
+                          store.player = o;
+                        }
+                      } else if (!!objEntityTypes[k]) {
+                        console.log(`Alloc Obj ${k}`);
+                        o = new objEntityTypes[k]();
+                        o.create(store, data[i].y, 0, data[i].x);
+                        this.loaded.push(o);
                       }
-                      found = 0;
+
                     }
-                    if (found) { break; }
                   }
                 }
               }
