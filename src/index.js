@@ -2160,9 +2160,7 @@ function Chunk(store, x, y, z, cx, cy, cz, id, bs, type) {
       }
       this.dirty = true;
 
-      let ffc = new FFChunk(store, chunk);
-      ffc.base_type = this.owner.base_type;
-      chunk.build(store);
+      let ffc = new FFChunk(store, chunk, this.owner.base_type);
 
       store.particles.chunkDebris(
         this.mesh.position.x,
@@ -2273,12 +2271,11 @@ class Main {
     this.particles_box = 0;
     this.t_start = Date.now();
     this.maps = 0;
-    this.world = new World();
+    this.textures = new Textures();
     this.update_objects = [];
     this.cdList = [];
     this.player = 0;
     this.visible_distance = 250; // from player to hide chunks + enemies.
-    this.textures = new Textures();
     this.chunk_material = 0;
     this.objects = {};
     this.ff_objects = [];
@@ -2290,6 +2287,7 @@ class Main {
     this.p_light = new THREE.PointLight(0xFFAA00, 1, 10);
   }
   async init() {
+    this.world = new World(this);
     this.sounds.Add({name: "sniper", file: require("../assets/sounds/sniper.wav.mp3")});
     this.sounds.Add({name: "take_heart", file: require("../assets/sounds/heart.wav.mp3")});
     this.sounds.Add({name: "walk1", file: require("../assets/sounds/walk1.wav.mp3")});
@@ -2385,8 +2383,6 @@ class Main {
       },
     );
 
-
-    this.world.init(this);
 
     this.particles = new ParticlePool(this, 2000, 0);
     this.particles_box = new ParticlePool(this, 1000, 1);
@@ -2907,12 +2903,12 @@ class Obj {
 }
 
 class FFChunk extends Obj {
-  constructor(store, chunk) {
+  constructor(store, chunk, baseType) {
     super();
     this.base_type = "";
     this.type = "ff_chunk";
     this.chunk = chunk;
-    this.base_type = chunk.owner.base_type;
+    this.base_type = baseType;
     this.chunk.owner = this;
     this.chunk.build(store);
     store.maps.loaded.push(this);
@@ -5442,7 +5438,7 @@ class RocketLauncher extends Weapon {
 }
 
 class World {
-  constructor() {
+  constructor(store) {
     this.obj_size_x = 16;
     this.obj_size_z = 16;
     this.obj_size_y = 2;
@@ -5456,6 +5452,8 @@ class World {
     this.rpc_max = 0;
     this.obj_type = "world";
     this.base_type = "world";
+    this.textures = new Textures();
+    this.textures.prepare();
   }
   reset(store) {
     for (var i = 0; i < this.chunks.length; i++) {
@@ -5469,10 +5467,6 @@ class World {
     this.rebuild_idx = 0;
     this.rpc = 0;
     this.rpc_max = 0;
-  }
-  init(store) {
-    this.textures = new Textures();
-    this.textures.prepare();
   }
   removeBatch(store, points) {
     for(var i = 0; i < points.length; i++) {
