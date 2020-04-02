@@ -1913,7 +1913,7 @@ class Chunk {
     y = y > 0? y: 0;
     z = z > 0? z: 0;
 
-    if(this.base_type == "enemy") {
+    if(this.type == "enemy") {
       offset = 20;
     }
     
@@ -2808,7 +2808,7 @@ class FreeFormChunk {
 class Portal extends Obj {
   constructor(store, x, y, z) {
     super(store, "portal", x, y, z, 1);
-    this.type = "portal";
+    this.base_type = "portal";
     this.alive = true;
     this.x = x;
     this.y = y;
@@ -2869,7 +2869,6 @@ class PaperPoliceCar extends Obj {
   constructor(store, x, y, z) {
     super(store, "paperpolicecar", x, y, z, 0.6);
     this.base_type = "object";
-    this.type = "paperpolicecar";
     this.alive = true;
 
     this.chunk.owner = this;
@@ -2882,7 +2881,6 @@ class PaperAgent extends Obj {
   constructor(store, x, y, z) {
     super(store, "paperagent", x, y, z, 0.2);
     this.base_type = "object";
-    this.type = "paperagent";
 
     this.alive = true;
     this.chunk.owner = this;
@@ -2949,7 +2947,6 @@ class UfoSign extends Obj {
   constructor(store, x, y, z) {
     super(store, "ufo_sign", x, y, z, 0.2);
     this.base_type = "object";
-    this.type = "ufo_sign";
     this.alive = true;
     this.light = 0;
     // Check rotation depending on wall
@@ -2975,7 +2972,6 @@ class RadiationSign extends Obj {
   constructor(store, x, y, z) {
     super(store, "radiation_sign", x, y, z, 0.2);
     this.base_type = "object";
-    this.type = "radiation_sign";
     this.alive = true;
     this.light = 0;
 
@@ -3005,7 +3001,6 @@ class DeadHearty extends Obj {
   constructor(store, x, y, z) {
     super(store, "dead_hearty", x, y, z, 1);
     this.base_type = "object";
-    this.type = "dead_hearty";
     this.alive = true;
     this.light = 0;
     this.radioactive = true;
@@ -3036,7 +3031,6 @@ class BarrelFire extends Obj {
   constructor(store, x, y, z) {
     super(store, "barrel_fire", x, y, z, 0.5);
     this.base_type = "object";
-    this.type = "barrel_fire";
     this.alive = true;
     this.light = 0;
 
@@ -3069,7 +3063,6 @@ class Barrel extends Obj {
   constructor(store, x, y, z) {
     super(store, "barrel", x, y, z, 0.5);
     this.base_type = "object";
-    this.type = "barrel";
     this.alive = true;
     this.light = 0;
     this.radioactive = true;
@@ -3105,7 +3098,6 @@ class FBIHQ extends Obj {
   constructor(store, x, y, z) {
     super(store, "fbihq", x, y, z, 1);
     this.base_type = "object";
-    this.type = "fbihq";
     this.alive = true;
     this.chunk.mesh.position.set(x, store.maps.ground+this.chunk.chunk_size_y*this.chunk.blockSize * 0.5, z);
   }
@@ -3115,7 +3107,6 @@ class SpiderWeb extends Obj {
   constructor(store, x, y, z) {
     super(store, "spiderweb", x, y, z, 0.2);
     this.base_type = "object";
-    this.type = "spiderweb";
     this.alive = true;
     this.light = 0;
     this.chunk.owner = this;
@@ -3133,7 +3124,6 @@ class Lamp1 extends Obj {
   constructor(store, x, y, z) {
     super(store, "lamp1", x, y, z, 1);
     this.base_type = "object";
-    this.type = "lamp1";
     this.alive = true;
     this.light = 0;
     
