@@ -41,7 +41,6 @@ class Game {
     //this.sprite_material = new THREE.SpriteMaterial({ color: 0xffffff });
     //this.chunk_material = new THREE.MeshPhongMaterial({ vertexColors: THREE.VertexColors, wireframe: false });
 
-    this.p_light = new THREE.PointLight(0xFFAA00, 1, 10);
   }
   async init() {
     this.world = new World(this);

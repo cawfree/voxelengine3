@@ -163,7 +163,10 @@ export default class ParticlePool {
       });
     }
     if (type == "missile") {
-      let p = store.p_light.clone();
+
+      const { getState } = store;
+      const { model } = getState();
+      let p = model.getIn(['light', 'point']).clone();
       p.position.set(x, y, z);
       p.visible = true;
       p.intensity = 20;

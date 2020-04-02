@@ -3,6 +3,9 @@ import * as THREE from "three";
 
 export default Map(
   {
+    light: Map(
+      point: new THREE.PointLight(0xFFAA00, 1, 10),
+    ),
     material: Map(
       {
         box: new THREE.MeshPhongMaterial({

@@ -96,7 +96,9 @@ export default class Particle {
       this.mesh.position.set(this.x, this.y, this.z);
     }
     if (this.light) {
-      let p = store.p_light.clone();
+      const { getState } = store;
+      const { model } = getState();
+      let p = model.getIn(['light', 'point']).clone();
       p.visible = true;
       p.intensity = 15;
       p.distance = 30;
