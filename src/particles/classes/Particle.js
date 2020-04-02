@@ -55,10 +55,17 @@ export default class Particle {
     this.stay = true;
 
     this.particle_type = particle_type;
+
+    const { getState } = store;
+    const { model } = getState();
+
     if (particle_type == 0) {
-      this.mesh = new THREE.Sprite(store.sprite_material.clone());
+      this.mesh = new THREE.Sprite(model.getIn(['material', 'sprite']).clone());
     } else {
-      this.mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), store.box_material.clone());
+      this.mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(1, 1, 1),
+        model.getIn(['material', 'box']).clone(),
+      );
     }
 
     store.scene.add(this.mesh);

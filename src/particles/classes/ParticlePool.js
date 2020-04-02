@@ -173,21 +173,12 @@ export default class ParticlePool {
     }
   }
   chunkDebris(x, y, z, chunk, dirx, diry, dirz, power) {
-    let vx, vy, vz, fx, fz;
-    fz = Math.random(); //0.3;//+power/50;
-    fx = Math.random(); // 0.3;//+power/50;
-    vx = dirx + (1 - Math.random() * 2);
-    vy = diry + Math.random() * 4;
-    vz = dirz + (1 - Math.random() * 2);
-    type = "chunk_debris";
-    //   if(chunk.current_blocks > 0) {
-    //       mass = 1/(chunk.current_blocks*0.01); 
-    //       console.log(mass);
-    //   }
-    //   if(mass > 1) { 
-    //       mass = 1;
-    //   }
-
+    const fz = Math.random();
+    const fx = Math.random();
+    const vx = dirx + (1 - Math.random() * 2);
+    const vy = diry + Math.random() * 4;
+    const vz = dirz + (1 - Math.random() * 2);
+    const type = "chunk_debris";
     this.get({
       chunk: chunk,
       chunk_mesh: chunk.mesh,
@@ -207,7 +198,6 @@ export default class ParticlePool {
       vy: vy,
       vz: vz
     });
-    //   console.log("C:",chunk.current_blocks, "M:",mass, "VX:",vx, "VY:",vy*mass, "VZ:",vz, "FX:",fx, "FZ:",fz);
   }
   empty_shell(x, y, z, mesh) {
     let vx, vy, vz, fx, fz;

@@ -36,7 +36,10 @@ export default class Chunk {
     this.prev_len = 0;
     this.offset = 0;
   
-    this.material = store.chunk_material;
+    const { getState } = store;
+    const { model } = getState();
+    this.material = model.getIn(['material', 'chunk']);
+
     this.blocks = [...Array(this.chunk_size_x)];
     for (let x = 0; x < this.chunk_size_x; x++) {
       this.blocks[x] = [...Array(this.chunk_size_y)];

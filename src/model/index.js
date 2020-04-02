@@ -2,6 +2,8 @@ import klona from "klona";
 
 import { Chunk } from "../chunk";
 
+export { default as reducer } from "./reducer";
+
 export const getModel = (store, name, size = 1, obj) => { 
   const new_obj = cloneChunk(store, store.models[name]);
   new_obj.owner = obj;

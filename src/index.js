@@ -12,37 +12,35 @@ import { loadAllModels } from "./io";
 import { Shell, Ammo, AmmoP90, AmmoSniper, Heart } from "./item";
 import { ParticlePool } from "./particles";
 
+import configureStore from "./configureStore";
+
 // TODO: Okay, so this isn't really a class, it's some weird mutatable object.
 //       Needs a heavy refactor about getModel.
 (!Detector.webgl) && Detector.addGetWebGLMessage();
 
-class Main {
+class Game {
   constructor() {
-    this.renderer = 0;
+    // TODO: Eventually, everything will reference this.
+    const { dispatch, getState } = configureStore();
+
+    this.dispatch = dispatch;
+    this.getState = getState;
+
     this.controls = 0;
-    this.camera = 0;
-    this.scene = 0;
-    this.stats = 0;
-    this.clock = 0;
-    this.light1 = 0;
-    this.particles = 0;
-    this.particles_box = 0;
     this.t_start = Date.now();
-    this.maps = 0;
     this.textures = new Textures();
     this.update_objects = [];
     this.cdList = [];
     this.player = 0;
     this.visible_distance = 250; // from player to hide chunks + enemies.
-    this.chunk_material = 0;
     this.objects = {};
     this.ff_objects = [];
     this.sounds = new SoundLoader();
  
+    //this.box_material = new THREE.MeshPhongMaterial({ color: 0xffffff });
+    //this.sprite_material = new THREE.SpriteMaterial({ color: 0xffffff });
+    //this.chunk_material = new THREE.MeshPhongMaterial({ vertexColors: THREE.VertexColors, wireframe: false });
 
-    this.box_material = new THREE.MeshPhongMaterial({ color: 0xffffff });
-    this.sprite_material = new THREE.SpriteMaterial({ color: 0xffffff });
-    this.chunk_material = new THREE.MeshPhongMaterial({ vertexColors: THREE.VertexColors, wireframe: false });
     this.p_light = new THREE.PointLight(0xFFAA00, 1, 10);
   }
   async init() {
@@ -78,7 +76,6 @@ class Main {
     this.sounds.Add({name: "bullet_wall", file: require("../assets/sounds/bullet_wall.mp3")});
     this.sounds.Add({name: "bullet_metal", file: require("../assets/sounds/bullet_metal.mp3")});
 
-    let container = document.getElementById('container');
     this.scene = new THREE.Scene();
     this.clock = new THREE.Clock();
 
@@ -92,6 +89,7 @@ class Main {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
+    let container = document.getElementById('container');
     container.appendChild( this.renderer.domElement );
     this.stats = new Stats();
     container.appendChild( this.stats.dom );
@@ -135,15 +133,13 @@ class Main {
       },
     );
 
-    // TODO: Some generic like these necessitate externalized caching.
-    this.objects["shell"] = new Shell(this);
-    this.objects["ammo"] = new Ammo(this);
-    this.objects["ammo_p90"] = new AmmoP90(this);
-    this.objects["ammo_sniper"] = new AmmoSniper(this);
-    this.objects["heart"] = new Heart(this);
-
-
-
+    this.objects = Object.freeze({
+      ['shell']: new Shell(this),
+      ['ammo']: new Ammo(this),
+      ['ammo_p90']: new AmmoP90(this),
+      ['ammo_sniper']: new AmmoSniper(this),
+      ['heart']: new Heart(this),
+    });
     this.particles = new ParticlePool(this, 2000, 0);
     this.particles_box = new ParticlePool(this, 1000, 1);
 
@@ -768,7 +764,4 @@ class World {
   }
 }
 
-(async () => {
-  await new Main().init();
-  // TODO: Sequential stuff...
-})();
+window.Game = Game;
